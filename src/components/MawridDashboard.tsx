@@ -109,7 +109,17 @@ export default function MawridDashboard() {
   // Credit Notes state
   const [creditNotes, setCreditNotes] = useState<CreditNote[]>(() => {
     const saved = localStorage.getItem("mawrid_credit_notes");
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((cn: any) => ({
+          ...cn,
+          items: cn.items || [{ name: cn.notes || "بند الإشعار دائن", quantity: 1, price: cn.amount }]
+        }));
+      } catch (e) {
+        // fallback
+      }
+    }
     return [
       {
         id: "cn-1",
@@ -118,6 +128,7 @@ export default function MawridDashboard() {
         amount: 25000,
         issueDate: "2026-05-15",
         status: "active",
+        items: [{ name: "خصم ترويجي للمواد الخام الربع السنوي", quantity: 1, price: 25000 }],
         notes: "خصم ترويجي للمواد الخام الربع السنوي"
       }
     ];
@@ -129,7 +140,8 @@ export default function MawridDashboard() {
     creditNoteNumber: "",
     amount: 0,
     issueDate: "2026-06-07",
-    notes: ""
+    notes: "",
+    items: [{ name: "", quantity: 1, price: 0 }]
   });
 
   // AI Support chatbot state
@@ -324,8 +336,20 @@ export default function MawridDashboard() {
     e.preventDefault();
     if (!checkPermission("create")) return;
 
-    if (!newCreditNote.supplierId || !newCreditNote.creditNoteNumber || newCreditNote.amount <= 0) {
-      showToast("يرجى تعبئة كافة الحقول الإجبارية وإدخال قيمة صحيحة للإشعار الدائن.", "error");
+    if (!newCreditNote.supplierId || !newCreditNote.creditNoteNumber) {
+      showToast("يرجى تعبئة كافة الحقول الإجبارية للإشعار الدائن.", "error");
+      return;
+    }
+
+    const calculatedCNTotal = newCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    if (calculatedCNTotal <= 0) {
+      showToast("يرجى إضافة بند واحد على الأقل بقيمة أكبر من الصفر.", "error");
+      return;
+    }
+
+    const hasEmptyItem = newCreditNote.items.some(item => !item.name.trim() || item.price <= 0);
+    if (hasEmptyItem) {
+      showToast("يرجى التأكد من كتابة وصف كافة البنود وتحديد سعر أكبر من الصفر.", "error");
       return;
     }
 
@@ -333,9 +357,10 @@ export default function MawridDashboard() {
       id: "cn-" + Date.now(),
       creditNoteNumber: newCreditNote.creditNoteNumber,
       supplierId: newCreditNote.supplierId,
-      amount: newCreditNote.amount,
+      amount: calculatedCNTotal,
       issueDate: newCreditNote.issueDate,
       status: "active",
+      items: newCreditNote.items,
       notes: newCreditNote.notes
     };
 
@@ -346,9 +371,34 @@ export default function MawridDashboard() {
       creditNoteNumber: "",
       amount: 0,
       issueDate: "2026-06-07",
-      notes: ""
+      notes: "",
+      items: [{ name: "", quantity: 1, price: 0 }]
     });
     showToast(`تم تسجيل الإشعار الدائن رقم ${createdCN.creditNoteNumber} للمورد بنجاح.`);
+  };
+
+  // Credit Note Form Item handlers
+  const handleCNAddItemRow = () => {
+    setNewCreditNote({
+      ...newCreditNote,
+      items: [...newCreditNote.items, { name: "", quantity: 1, price: 0 }]
+    });
+  };
+
+  const handleCNRemoveItemRow = (index: number) => {
+    if (newCreditNote.items.length === 1) return;
+    const filtered = newCreditNote.items.filter((_, i) => i !== index);
+    setNewCreditNote({ ...newCreditNote, items: filtered });
+  };
+
+  const handleCNUpdateItemRow = (index: number, field: string, value: any) => {
+    const updatedItems = newCreditNote.items.map((item, i) => {
+      if (i === index) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    });
+    setNewCreditNote({ ...newCreditNote, items: updatedItems });
   };
 
   // Delete Credit Note handler
@@ -2612,7 +2662,7 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-950">إضافة إشعار دائن جديد للمورد</h3>
@@ -2661,24 +2711,87 @@ export default function MawridDashboard() {
               </div>
 
               <div>
-                <label className="text-slate-500 block mb-1">قيمة الإشعار الدائن (ج.م) *</label>
-                <input 
-                  type="number" 
-                  min="1"
-                  required
-                  value={newCreditNote.amount || ""}
-                  onChange={(e) => setNewCreditNote({ ...newCreditNote, amount: parseFloat(e.target.value) || 0 })}
-                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-bold text-slate-900 font-mono text-sm"
-                  placeholder="مثال: 5000"
-                />
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-slate-500 block font-bold">تفاصيل بنود الإشعار الدائن *</label>
+                  <button 
+                    type="button"
+                    onClick={handleCNAddItemRow}
+                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>إضافة بند جديد</span>
+                  </button>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  {/* Item Column Headers */}
+                  <div className="flex items-center gap-2 px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
+                    <div className="flex-1 text-right">الوصف (اسم البند أو الخدمة) *</div>
+                    <div className="w-20 text-center">الكمية *</div>
+                    <div className="w-28 text-left">سعر الوحدة *</div>
+                    <div className="w-28 text-left">قيمة الإجمالي</div>
+                    <div className="w-8"></div>
+                  </div>
+
+                  {newCreditNote.items.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-150">
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="مثل: خصم توريد مواد خام، إلخ..."
+                        value={item.name}
+                        onChange={(e) => handleCNUpdateItemRow(index, "name", e.target.value)}
+                        className="flex-1 border border-slate-200 rounded p-1.5 bg-white text-slate-900"
+                      />
+                      <input 
+                        type="number" 
+                        required
+                        min="1"
+                        placeholder="الكمية"
+                        value={item.quantity}
+                        onChange={(e) => handleCNUpdateItemRow(index, "quantity", parseInt(e.target.value) || 1)}
+                        className="w-20 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-center"
+                      />
+                      <input 
+                        type="number" 
+                        required
+                        min="0"
+                        step="any"
+                        placeholder="سعر الوحدة"
+                        value={item.price}
+                        onChange={(e) => handleCNUpdateItemRow(index, "price", parseFloat(e.target.value) || 0)}
+                        className="w-28 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-left"
+                      />
+                      <div className="w-28 font-mono font-bold text-slate-900 text-left bg-slate-100 border border-slate-200 rounded p-1.5 select-none overflow-hidden text-ellipsis whitespace-nowrap">
+                        {(item.quantity * item.price).toLocaleString()} ج.م
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCNRemoveItemRow(index)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 rounded cursor-pointer"
+                        title="حذف هذا البند"
+                      >
+                        <XCircle className="w-4.5 h-4.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total Display */}
+              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex justify-between items-center select-none text-slate-800">
+                <span className="text-emerald-800 font-bold">إجمالي قيمة الإشعار الدائن:</span>
+                <span className="text-emerald-700 text-base font-black font-mono">
+                  {newCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
+                </span>
               </div>
 
               <div>
-                <label className="text-slate-500 block mb-1">السبب / بيان الإشعار</label>
+                <label className="text-slate-500 block mb-1">السبب / بيان الملاحظات</label>
                 <textarea 
                   value={newCreditNote.notes}
                   onChange={(e) => setNewCreditNote({ ...newCreditNote, notes: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 h-20"
+                  className="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 h-16"
                   placeholder="سبب الخصم أو الإشعار الدائن المسلم من المورد..."
                 />
               </div>
