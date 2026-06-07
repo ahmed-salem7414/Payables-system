@@ -16,7 +16,7 @@ import {
   PieChart, Pie, Cell, Legend, LineChart, Line
 } from "recharts";
 
-import { Supplier, Invoice, Payment, BackupRecord, UserRole, BankConfig, SupportMessage } from "../types";
+import { Supplier, Invoice, Payment, BackupRecord, UserRole, BankConfig, SupportMessage, CreditNote } from "../types";
 import { INITIAL_SUPPLIERS, INITIAL_INVOICES, INITIAL_PAYMENTS, INITIAL_BACKUPS, LOCAL_BANKS_SELECTION } from "../data";
 
 export default function MawridDashboard() {
@@ -106,6 +106,32 @@ export default function MawridDashboard() {
   // Edit Supplier form state
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
 
+  // Credit Notes state
+  const [creditNotes, setCreditNotes] = useState<CreditNote[]>(() => {
+    const saved = localStorage.getItem("mawrid_credit_notes");
+    if (saved) return JSON.parse(saved);
+    return [
+      {
+        id: "cn-1",
+        creditNoteNumber: "CN-2026-001",
+        supplierId: "sup-1",
+        amount: 25000,
+        issueDate: "2026-05-15",
+        status: "active",
+        notes: "خصم ترويجي للمواد الخام الربع السنوي"
+      }
+    ];
+  });
+
+  const [showAddCreditNoteModal, setShowAddCreditNoteModal] = useState(false);
+  const [newCreditNote, setNewCreditNote] = useState({
+    supplierId: "",
+    creditNoteNumber: "",
+    amount: 0,
+    issueDate: "2026-06-07",
+    notes: ""
+  });
+
   // AI Support chatbot state
   const [supportMessages, setSupportMessages] = useState<SupportMessage[]>(() => {
     const saved = localStorage.getItem("mawrid_chat_history");
@@ -180,6 +206,10 @@ export default function MawridDashboard() {
   useEffect(() => {
     localStorage.setItem("mawrid_linked_banks", JSON.stringify(linkedBanks));
   }, [linkedBanks]);
+
+  useEffect(() => {
+    localStorage.setItem("mawrid_credit_notes", JSON.stringify(creditNotes));
+  }, [creditNotes]);
 
   // Generate Payment Alerts based on system time and invoice due dates
   useEffect(() => {
@@ -287,6 +317,61 @@ export default function MawridDashboard() {
     setSuppliers(suppliers.map(s => s.id === editingSupplier.id ? editingSupplier : s));
     setEditingSupplier(null);
     showToast(`تم تعديل بيانات المورد ${editingSupplier.name} بنجاح.`);
+  };
+
+  // Submit new credit note handler
+  const handleAddCreditNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!checkPermission("create")) return;
+
+    if (!newCreditNote.supplierId || !newCreditNote.creditNoteNumber || newCreditNote.amount <= 0) {
+      showToast("يرجى تعبئة كافة الحقول الإجبارية وإدخال قيمة صحيحة للإشعار الدائن.", "error");
+      return;
+    }
+
+    const createdCN: CreditNote = {
+      id: "cn-" + Date.now(),
+      creditNoteNumber: newCreditNote.creditNoteNumber,
+      supplierId: newCreditNote.supplierId,
+      amount: newCreditNote.amount,
+      issueDate: newCreditNote.issueDate,
+      status: "active",
+      notes: newCreditNote.notes
+    };
+
+    setCreditNotes([...creditNotes, createdCN]);
+    setShowAddCreditNoteModal(false);
+    setNewCreditNote({
+      supplierId: "",
+      creditNoteNumber: "",
+      amount: 0,
+      issueDate: "2026-06-07",
+      notes: ""
+    });
+    showToast(`تم تسجيل الإشعار الدائن رقم ${createdCN.creditNoteNumber} للمورد بنجاح.`);
+  };
+
+  // Delete Credit Note handler
+  const handleDeleteCreditNote = (id: string, cnNumber: string) => {
+    if (!checkPermission("delete")) return;
+
+    if (window.confirm(`هل أنت متأكد من رغبتك في حذف الإشعار الدائن رقم ${cnNumber} نهائياً؟`)) {
+      setCreditNotes(creditNotes.filter(cn => cn.id !== id));
+      showToast(`تم حذف الإشعار الدائن ${cnNumber} بنجاح.`);
+    }
+  };
+
+  // Mark/Toggle Credit Note status handler
+  const handleToggleCreditNoteStatus = (id: string) => {
+    if (!checkPermission("write")) return;
+    setCreditNotes(creditNotes.map(cn => {
+      if (cn.id === id) {
+        const nextStatus = cn.status === "active" ? "applied" : "active";
+        return { ...cn, status: nextStatus };
+      }
+      return cn;
+    }));
+    showToast("تم تحديث حالة الإشعار الدائن بنجاح.");
   };
 
   // Add Invoice Form Item handlers
@@ -408,6 +493,17 @@ export default function MawridDashboard() {
     setInvoices(invoices.map(i => i.id === editingInvoice.id ? updatedInvoice : i));
     setEditingInvoice(null);
     showToast(`تم تعديل الفاتورة رقم ${updatedInvoice.invoiceNumber} بنجاح.`);
+  };
+
+  // Delete Invoice handler
+  const handleDeleteInvoice = (id: string, invoiceNumber: string) => {
+    if (!checkPermission("delete")) return;
+
+    if (window.confirm(`هل أنت متأكد من رغبتك في حذف الفاتورة رقم ${invoiceNumber} نهائياً؟`)) {
+      setPayments(payments.filter(p => p.invoiceId !== id));
+      setInvoices(invoices.filter(i => i.id !== id));
+      showToast(`تم حذف الفاتورة رقم ${invoiceNumber} بنجاح.`);
+    }
   };
 
   // Instant local bank settlement triggers (Real-time Simulation)
@@ -1078,20 +1174,102 @@ export default function MawridDashboard() {
                               <span className="text-slate-300 text-xs">{sup.address}</span>
                             </div>
                           </div>
+
+                          {/* Credit Notes (إشعارات دائنة) Section */}
+                          {(() => {
+                            const supCreditNotes = creditNotes.filter(cn => cn.supplierId === sup.id);
+                            return (
+                              <div className="mt-4 pt-4 border-t border-slate-800">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                                    <FileText className="w-3.5 h-3.5 text-emerald-450 text-emerald-450 text-emerald-400" />
+                                    <span>الإشعارات الدائنة ({supCreditNotes.length})</span>
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      if (!checkPermission("write")) return;
+                                      setNewCreditNote({
+                                        supplierId: sup.id,
+                                        creditNoteNumber: `CN-2026-${Math.floor(100 + Math.random() * 900)}`,
+                                        amount: 0,
+                                        issueDate: "2026-06-07",
+                                        notes: ""
+                                      });
+                                      setShowAddCreditNoteModal(true);
+                                    }}
+                                    className="text-[10px] bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 font-bold px-2.5 py-1 rounded-lg border border-emerald-500/20 flex items-center gap-1 cursor-pointer transition-colors"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                    <span>إضافة إشعار</span>
+                                  </button>
+                                </div>
+                                
+                                {supCreditNotes.length === 0 ? (
+                                  <p className="text-[10px] text-slate-500 italic">لا توجد إشعارات دائنة نشطة.</p>
+                                ) : (
+                                  <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                                    {supCreditNotes.map((cn) => (
+                                      <div key={cn.id} className="flex items-center justify-between bg-[#0f172a] p-2 rounded-lg border border-slate-800 text-[10px]">
+                                        <div className="flex flex-col">
+                                          <span className="font-semibold text-white">{cn.creditNoteNumber} <span className="text-slate-500 font-mono">({cn.issueDate})</span></span>
+                                          {cn.notes && <span className="text-slate-400 text-[9px] truncate max-w-[150px]">{cn.notes}</span>}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-bold text-emerald-400 font-mono">{cn.amount.toLocaleString()} ج.م</span>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleToggleCreditNoteStatus(cn.id)}
+                                            className={`px-1.5 py-0.5 rounded text-[8px] font-bold border transition-colors cursor-pointer ${
+                                              cn.status === "active"
+                                                ? "bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/25"
+                                                : "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700"
+                                            }`}
+                                            title={cn.status === "active" ? "اضغط لتعيين كمنتهى/مُطبّق" : "اضغط لتعيين كنشط"}
+                                          >
+                                            {cn.status === "active" ? "نشط" : "مُطبّق"}
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteCreditNote(cn.id, cn.creditNoteNumber)}
+                                            className="text-slate-500 hover:text-rose-400 p-0.5 rounded hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                            title="حذف الإشعار"
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
 
-                        <div className="mt-5 pt-4 border-t border-slate-800 flex items-center justify-between text-xs bg-[#0f172a]/60 -mx-5 -mb-5 px-5 py-3 rounded-b-2xl">
-                          <div>
-                            <span className="text-slate-400">إجمالي الفواتير:</span>
-                            <span className="font-bold text-white mx-1">{supTotal.toLocaleString()} ج.م</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400">المديونية الحالية:</span>
-                            <span className={`font-bold ${supPending > 0 ? "text-red-400" : "text-emerald-400"} mx-1`}>
-                              {supPending.toLocaleString()} ج.م
-                            </span>
-                          </div>
-                        </div>
+                        {(() => {
+                          const supInvoices = invoices.filter(i => i.supplierId === sup.id);
+                          const supTotal = supInvoices.reduce((sum, i) => sum + i.totalAmount, 0);
+                          const supPending = supInvoices.filter(i => i.status === "unpaid").reduce((sum, i) => sum + i.totalAmount, 0);
+                          const activeCNTotal = creditNotes
+                            .filter(cn => cn.supplierId === sup.id && cn.status === "active")
+                            .reduce((sum, cn) => sum + cn.amount, 0);
+                          const netPending = Math.max(0, supPending - activeCNTotal);
+
+                          return (
+                            <div className="mt-5 pt-4 border-t border-slate-800 flex items-center justify-between text-xs bg-[#0f172a]/60 -mx-5 -mb-5 px-5 py-3 rounded-b-2xl">
+                              <div>
+                                <span className="text-slate-400 block mb-0.5">إجمالي الفواتير / دائنة:</span>
+                                <span className="font-bold text-white">{supTotal.toLocaleString()} <span className="text-[10px] text-slate-400">ج.م</span> {activeCNTotal > 0 && <span className="text-emerald-400 font-mono text-[10px]">(-{activeCNTotal.toLocaleString()})</span>}</span>
+                              </div>
+                              <div className="text-left">
+                                <span className="text-slate-400 block mb-0.5">الصافي بعد الإشعارات:</span>
+                                <span className={`font-bold ${netPending > 0 ? "text-red-400" : "text-emerald-400"}`}>
+                                  {netPending.toLocaleString()} <span className="text-[10px]">ج.م</span>
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                       </motion.div>
                     );
@@ -1215,8 +1393,17 @@ export default function MawridDashboard() {
                               className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-350 hover:text-white text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
                               title="تعديل بيانات الفاتورة"
                             >
-                              <Edit className="w-3.5 h-3.5 text-emerald-450 text-emerald-400" />
+                              <Edit className="w-3.5 h-3.5 text-emerald-400" />
                               <span>تعديل</span>
+                            </button>
+
+                            <button 
+                              onClick={() => handleDeleteInvoice(inv.id, inv.invoiceNumber)}
+                              className="flex items-center gap-1.5 bg-slate-800 hover:bg-rose-950 hover:text-rose-400 hover:border-rose-900/50 active:bg-rose-900 border border-slate-700 text-slate-350 hover:text-white text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                              title="حذف الفاتورة نهائياً"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                              <span>حذف</span>
                             </button>
 
                             {inv.status === "unpaid" ? (
@@ -2411,6 +2598,104 @@ export default function MawridDashboard() {
                 >
                   <Save className="w-4 h-4" />
                   <span>حفظ التعديلات</span>
+                </button>
+              </div>
+
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: ADD CREDIT NOTE */}
+      {showAddCreditNoteModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-950">إضافة إشعار دائن جديد للمورد</h3>
+              <button type="button" onClick={() => setShowAddCreditNoteModal(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddCreditNote} className="space-y-4 text-xs">
+              
+              <div>
+                <label className="text-slate-500 block mb-1">المورد المستهدف</label>
+                <select 
+                  disabled
+                  value={newCreditNote.supplierId}
+                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-100 font-semibold text-slate-700 focus:outline-none cursor-not-allowed"
+                >
+                  {suppliers.map(s => (
+                    <option key={s.id} value={s.id}>{s.name} - {s.company}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">رقم الإشعار الدائن *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={newCreditNote.creditNoteNumber}
+                    onChange={(e) => setNewCreditNote({ ...newCreditNote, creditNoteNumber: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-bold text-slate-900"
+                    placeholder="CN-2026-XYZ"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">تاريخ الإصدار *</label>
+                  <input 
+                    type="date" 
+                    required
+                    value={newCreditNote.issueDate}
+                    onChange={(e) => setNewCreditNote({ ...newCreditNote, issueDate: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-500 block mb-1">قيمة الإشعار الدائن (ج.م) *</label>
+                <input 
+                  type="number" 
+                  min="1"
+                  required
+                  value={newCreditNote.amount || ""}
+                  onChange={(e) => setNewCreditNote({ ...newCreditNote, amount: parseFloat(e.target.value) || 0 })}
+                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-bold text-slate-900 font-mono text-sm"
+                  placeholder="مثال: 5000"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-500 block mb-1">السبب / بيان الإشعار</label>
+                <textarea 
+                  value={newCreditNote.notes}
+                  onChange={(e) => setNewCreditNote({ ...newCreditNote, notes: e.target.value })}
+                  className="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 h-20"
+                  placeholder="سبب الخصم أو الإشعار الدائن المسلم من المورد..."
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                <button 
+                  type="button"
+                  onClick={() => setShowAddCreditNoteModal(false)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                >
+                  إلغاء وعودة
+                </button>
+                <button 
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer"
+                >
+                  تسجيل الإشعار الدائن
                 </button>
               </div>
 

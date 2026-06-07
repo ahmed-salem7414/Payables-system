@@ -70,3 +70,14 @@ export interface BankConfig {
   apiKey: string;
   isLinked: boolean;
 }
+
+export interface CreditNote {
+  id: string;
+  creditNoteNumber: string; // رقم الإشعار الدائن
+  supplierId: string;       // المورد المرتبط
+  amount: number;           // قيمة الإشعار الدائن
+  issueDate: string;        // تاريخ الإصدار
+  status: 'active' | 'applied'; // حالة الإشعار (نشط / مطبق)
+  notes?: string;           // ملاحظات
+}
+
