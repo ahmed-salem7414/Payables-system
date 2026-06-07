@@ -114,7 +114,8 @@ export default function MawridDashboard() {
         const parsed = JSON.parse(saved);
         return parsed.map((cn: any) => ({
           ...cn,
-          items: cn.items || [{ name: cn.notes || "بند الإشعار دائن", quantity: 1, price: cn.amount }]
+          items: cn.items || [{ name: cn.notes || "بند الإشعار دائن", quantity: 1, price: cn.amount }],
+          dueDate: cn.dueDate || cn.issueDate || "2026-06-22"
         }));
       } catch (e) {
         // fallback
@@ -127,6 +128,7 @@ export default function MawridDashboard() {
         supplierId: "sup-1",
         amount: 25000,
         issueDate: "2026-05-15",
+        dueDate: "2026-06-15",
         status: "active",
         items: [{ name: "خصم ترويجي للمواد الخام الربع السنوي", quantity: 1, price: 25000 }],
         notes: "خصم ترويجي للمواد الخام الربع السنوي"
@@ -140,6 +142,7 @@ export default function MawridDashboard() {
     creditNoteNumber: "",
     amount: 0,
     issueDate: "2026-06-07",
+    dueDate: "",
     notes: "",
     items: [{ name: "", quantity: 1, price: 0 }]
   });
@@ -359,6 +362,7 @@ export default function MawridDashboard() {
       supplierId: newCreditNote.supplierId,
       amount: calculatedCNTotal,
       issueDate: newCreditNote.issueDate,
+      dueDate: newCreditNote.dueDate || new Date(Date.now() + 15 * 24 * 3600 * 1000).toISOString().split("T")[0],
       status: "active",
       items: newCreditNote.items,
       notes: newCreditNote.notes
@@ -371,6 +375,7 @@ export default function MawridDashboard() {
       creditNoteNumber: "",
       amount: 0,
       issueDate: "2026-06-07",
+      dueDate: "",
       notes: "",
       items: [{ name: "", quantity: 1, price: 0 }]
     });
@@ -1243,7 +1248,9 @@ export default function MawridDashboard() {
                                         creditNoteNumber: `CN-2026-${Math.floor(100 + Math.random() * 900)}`,
                                         amount: 0,
                                         issueDate: "2026-06-07",
-                                        notes: ""
+                                        dueDate: "2026-06-22",
+                                        notes: "",
+                                        items: [{ name: "", quantity: 1, price: 0 }]
                                       });
                                       setShowAddCreditNoteModal(true);
                                     }}
@@ -1261,8 +1268,24 @@ export default function MawridDashboard() {
                                     {supCreditNotes.map((cn) => (
                                       <div key={cn.id} className="flex items-center justify-between bg-[#0f172a] p-2 rounded-lg border border-slate-800 text-[10px]">
                                         <div className="flex flex-col">
-                                          <span className="font-semibold text-white">{cn.creditNoteNumber} <span className="text-slate-500 font-mono">({cn.issueDate})</span></span>
+                                          <span className="font-semibold text-white">
+                                            {cn.creditNoteNumber}{" "}
+                                            <span className="text-slate-500 font-mono text-[9px]">
+                                              ({cn.issueDate})
+                                            </span>
+                                          </span>
+                                          {cn.dueDate && (
+                                            <span className="text-slate-450 text-[9px]">
+                                              استحقاق: <span className="font-mono text-slate-350">{cn.dueDate}</span>
+                                            </span>
+                                          )}
                                           {cn.notes && <span className="text-slate-400 text-[9px] truncate max-w-[150px]">{cn.notes}</span>}
+                                          {cn.items && cn.items.length > 0 && (
+                                            <div className="text-[9px] text-emerald-400 max-w-[180px] truncate mt-0.5" title={cn.items.map(item => `${item.name} (${item.quantity} × ${item.price.toLocaleString()} ج.م)`).join("\n")}>
+                                              <span className="text-slate-500">البنود: </span>
+                                              {cn.items.map(item => `${item.name} (${item.quantity}×)`).join("، ")}
+                                            </div>
+                                          )}
                                         </div>
                                         <div className="flex items-center gap-2">
                                           <span className="font-bold text-emerald-400 font-mono">{cn.amount.toLocaleString()} ج.م</span>
@@ -2673,22 +2696,21 @@ export default function MawridDashboard() {
 
             <form onSubmit={handleAddCreditNote} className="space-y-4 text-xs">
               
-              <div>
-                <label className="text-slate-500 block mb-1">المورد المستهدف</label>
-                <select 
-                  disabled
-                  value={newCreditNote.supplierId}
-                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-100 font-semibold text-slate-700 focus:outline-none cursor-not-allowed"
-                >
-                  {suppliers.map(s => (
-                    <option key={s.id} value={s.id}>{s.name} - {s.company}</option>
-                  ))}
-                </select>
-              </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-slate-500 block mb-1">رقم الإشعار الدائن *</label>
+                  <label className="text-slate-500 block mb-1">اختر المورد المرتبط</label>
+                  <select 
+                    disabled
+                    value={newCreditNote.supplierId}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-100 font-semibold text-slate-700 focus:outline-none cursor-not-allowed"
+                  >
+                    {suppliers.map(s => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.company})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">رقم الإشعار الدائن الصادر *</label>
                   <input 
                     type="text" 
                     required
@@ -2698,21 +2720,34 @@ export default function MawridDashboard() {
                     placeholder="CN-2026-XYZ"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-slate-500 block mb-1">تاريخ الإصدار *</label>
+                  <label className="text-slate-500 block mb-1">تاريخ الاستحقاق المتوقع *</label>
                   <input 
                     type="date" 
                     required
-                    value={newCreditNote.issueDate}
-                    onChange={(e) => setNewCreditNote({ ...newCreditNote, issueDate: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold text-slate-900"
+                    value={newCreditNote.dueDate}
+                    onChange={(e) => setNewCreditNote({ ...newCreditNote, dueDate: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold text-slate-900 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">البيانات / مذكرات عامة</label>
+                  <input 
+                    type="text" 
+                    value={newCreditNote.notes}
+                    onChange={(e) => setNewCreditNote({ ...newCreditNote, notes: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-950 font-semibold"
+                    placeholder="خصم ترويجي للمواد الخام الربع السنوي"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-slate-500 block font-bold">تفاصيل بنود الإشعار الدائن *</label>
+                  <label className="text-slate-500 block font-bold">بنود الإشعار وقائمة التوريد الدائنة:</label>
                   <button 
                     type="button"
                     onClick={handleCNAddItemRow}
@@ -2784,16 +2819,6 @@ export default function MawridDashboard() {
                 <span className="text-emerald-700 text-base font-black font-mono">
                   {newCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
                 </span>
-              </div>
-
-              <div>
-                <label className="text-slate-500 block mb-1">السبب / بيان الملاحظات</label>
-                <textarea 
-                  value={newCreditNote.notes}
-                  onChange={(e) => setNewCreditNote({ ...newCreditNote, notes: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 h-16"
-                  placeholder="سبب الخصم أو الإشعار الدائن المسلم من المورد..."
-                />
               </div>
 
               <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">

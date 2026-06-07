@@ -77,6 +77,7 @@ export interface CreditNote {
   supplierId: string;       // المورد المرتبط
   amount: number;           // قيمة الإشعار الدائن
   issueDate: string;        // تاريخ الإصدار
+  dueDate: string;          // تاريخ الاستحقاق المتوقع
   status: 'active' | 'applied'; // حالة الإشعار (نشط / مطبق)
   items: Array<{ name: string; quantity: number; price: number }>; // تفاصيل بنود الإشعار الدائن
   notes?: string;           // ملاحظات
