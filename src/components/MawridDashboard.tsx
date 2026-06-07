@@ -8,7 +8,7 @@ import {
   Users, Receipt, CreditCard, Bell, FileText, Database, MessageSquare, 
   ShieldAlert, Plus, Trash2, Download, CheckCircle2, XCircle, AlertTriangle, 
   RefreshCw, TrendingUp, Building, Check, Key, Upload, Activity, 
-  UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save, Edit, Search
+  UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save, Edit, Search, Wallet
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -78,6 +78,33 @@ export default function MawridDashboard() {
       isLinked: b.id === "bme" // Pre-link National / Banque Misr
     }));
   });
+
+  // Safe / Cash Cabinet Balance States
+  const [safeBalance, setSafeBalance] = useState<number>(() => {
+    const saved = localStorage.getItem("mawrid_safe_balance");
+    if (saved) return Number(saved);
+    return 1500000; // Default 1.5 Million EGP
+  });
+
+  useEffect(() => {
+    localStorage.setItem("mawrid_safe_balance", safeBalance.toString());
+  }, [safeBalance]);
+
+  const [showSafeDepositModal, setShowSafeDepositModal] = useState(false);
+  const [safeDepositAmount, setSafeDepositAmount] = useState<number>(100000);
+
+  // New settlement modal states
+  const [showSettleInvoiceModal, setShowSettleInvoiceModal] = useState(false);
+  const [invoiceToSettle, setInvoiceToSettle] = useState<Invoice | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"bank_transfer" | "cash">("bank_transfer");
+  const [selectedPaymentBank, setSelectedPaymentBank] = useState<string>("");
+
+  useEffect(() => {
+    const activeBank = linkedBanks.find(b => b.isLinked);
+    if (activeBank) {
+      setSelectedPaymentBank(activeBank.bankName);
+    }
+  }, [linkedBanks]);
 
   // Local settlement simulator terminal state
   const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState<Invoice | null>(null);
@@ -562,73 +589,148 @@ export default function MawridDashboard() {
     }
   };
 
-  // Instant local bank settlement triggers (Real-time Simulation)
-  const executeSettlementSimulate = (invoice: Invoice) => {
+  // Initiate payment/settlement process by showing method selection modal
+  const handleInitiateSettleInvoice = (invoice: Invoice) => {
     if (!checkPermission("write")) return;
+    setInvoiceToSettle(invoice);
+    setSelectedPaymentMethod("bank_transfer");
+    // Default to the first linked bank if available
+    const activeBank = linkedBanks.find(b => b.isLinked);
+    if (activeBank) {
+      setSelectedPaymentBank(activeBank.bankName);
+    } else {
+      setSelectedPaymentBank("");
+    }
+    setShowSettleInvoiceModal(true);
+  };
+
+  // Execute settlement with the selected method (local bank transfer or physical safe)
+  const executeFinalSettlement = (invoice: Invoice, method: "bank_transfer" | "cash", bankName?: string) => {
+    setShowSettleInvoiceModal(false);
     
     const supplier = suppliers.find(s => s.id === invoice.supplierId);
     if (!supplier) {
-      showToast("فشل السحب، لم يتم تحديد المورد للفاتورة.", "error");
+      showToast("فشل السداد، لم يتم تحديد المورد للفاتورة المسجلة.", "error");
       return;
     }
 
-    // Direct check if banking is configured
-    const userBank = linkedBanks.find(b => b.isLinked);
-    if (!userBank) {
-      showToast("فشل التسوية، يرجى ربط بنك محلي واحد على الأقل في الإعدادات لتفعيل التحويل الفوري.", "error");
-      setActiveTab("banking");
-      return;
+    if (method === "bank_transfer") {
+      const userBank = linkedBanks.find(b => b.bankName === bankName && b.isLinked) || linkedBanks.find(b => b.isLinked);
+      if (!userBank) {
+        showToast("فشل التسوية، يرجى ربط بنك محلي واحد على الأقل في الإعدادات لتفعيل التحويل الفوري.", "error");
+        setActiveTab("banking");
+        return;
+      }
+
+      setPaymentGatewayBank(userBank.bankName);
+      setSelectedInvoiceForPayment(invoice);
+      setSettlementLogs([]);
+      setIsSettlingProcess(true);
+      setSettlementProgress(0);
+
+      const steps = [
+        { text: `📡 جاري تهيئة الاتصال فوري عبر قنوات التسوية الفورية مع البنك المحلي المرتبط (${userBank.bankName})...`, progress: 10, wait: 400 },
+        { text: `🔑 جاري تأكيد الرموز الأمنية المشفرة وتصريح الـ API لـ "مورد"...`, progress: 25, wait: 800 },
+        { text: `🏦 التحقق من رصيد الحساب المصدق رقم: ${userBank.accountNumber}...`, progress: 40, wait: 1200 },
+        { text: `💸 إرسال طلب تحويل فوري للمبلغ (${invoice.totalAmount.toLocaleString()} ج.م) لحساب المورد المستلم بنجاح...`, progress: 60, wait: 1900 },
+        { text: `📥 جاري إرسال المستحقات لحساب المورد: ${supplier.company} (حساب IBAN: ${supplier.bankAccount})...`, progress: 80, wait: 2400 },
+        { text: `✅ استلام رد تأكيدي من البنك المركزي المصري (CBE RTGS). رمز المعاملة: TXN-BM-${Math.floor(100000 + Math.random() * 900000)}`, progress: 100, wait: 3000 }
+      ];
+
+      steps.forEach((step, i) => {
+        setTimeout(() => {
+          setSettlementLogs(prev => [...prev, step.text]);
+          setSettlementProgress(step.progress);
+
+          if (step.progress === 100) {
+            setTimeout(() => {
+              // Update Invoice Status
+              setInvoices(prev => prev.map(inv => {
+                if (inv.id === invoice.id) {
+                  return { ...inv, status: "paid" };
+                }
+                return inv;
+              }));
+
+              // Record custom payment
+              const newPayment: Payment = {
+                id: "pay-" + Date.now(),
+                supplierId: invoice.supplierId,
+                invoiceId: invoice.id,
+                amount: invoice.totalAmount,
+                paymentDate: new Date().toISOString().split("T")[0],
+                method: userBank.bankName.includes("فوري") ? "fawry" : "bank_transfer",
+                transRef: `RTGS-EG-${Math.floor(102931238 + Math.random() * 928374823)}`
+              };
+
+              setPayments(prev => [newPayment, ...prev]);
+              setIsSettlingProcess(false);
+              setSelectedInvoiceForPayment(null);
+              showToast(`تم سداد الفاتورة ${invoice.invoiceNumber} بالكامل وتسويتها لحظياً عبر البنك!`);
+            }, 600);
+          }
+        }, step.wait);
+      });
+    } else {
+      // Cash Safe / Treasury Settlement
+      if (safeBalance < invoice.totalAmount) {
+        showToast("خطأ: رصيد الخزينة الرئيسية غير كافٍ لسداد الفاتورة نقداً! يرجى تغذية الخزينة أولاً.", "error");
+        return;
+      }
+
+      setPaymentGatewayBank("الخزينة الرئيسية للمنشأة");
+      setSelectedInvoiceForPayment(invoice);
+      setSettlementLogs([]);
+      setIsSettlingProcess(true);
+      setSettlementProgress(0);
+
+      const steps = [
+        { text: `📡 جاري فتح قفل الخزينة الرقمية الآمنة لشركة "مورد"...`, progress: 15, wait: 400 },
+        { text: `🔑 مطابقة التواقيع الصلاحية وإذن الصرف النقدي المولد للفاتورة رقم: ${invoice.invoiceNumber}...`, progress: 35, wait: 800 },
+        { text: `🧮 التحقق من كفاية السيولة النقدية (الرصيد الحالي: ${safeBalance.toLocaleString()} ج.م)...`, progress: 55, wait: 1200 },
+        { text: `💵 عد وفرز أوراق البنكنوت فئة (200 ج.م و 100 ج.م) بقيمة إجمالية ${invoice.totalAmount.toLocaleString()} ج.م...`, progress: 75, wait: 1900 },
+        { text: `📝 إصدار وتوثيق سند صرف الخزينة العاجل رقم: CSH-VOUCH-${Math.floor(1000 + Math.random() * 9000)}...`, progress: 90, wait: 2400 },
+        { text: `✅ تم تسليم المبلغ نقداً لمندوب المورد والتسوية للخزية بنجاح!`, progress: 100, wait: 3000 }
+      ];
+
+      steps.forEach((step, i) => {
+        setTimeout(() => {
+          setSettlementLogs(prev => [...prev, step.text]);
+          setSettlementProgress(step.progress);
+
+          if (step.progress === 100) {
+            setTimeout(() => {
+              // Deduct from Balance
+              setSafeBalance(prev => prev - invoice.totalAmount);
+
+              // Update Invoice Status
+              setInvoices(prev => prev.map(inv => {
+                if (inv.id === invoice.id) {
+                  return { ...inv, status: "paid" };
+                }
+                return inv;
+              }));
+
+              // Record custom payment
+              const newPayment: Payment = {
+                id: "pay-" + Date.now(),
+                supplierId: invoice.supplierId,
+                invoiceId: invoice.id,
+                amount: invoice.totalAmount,
+                paymentDate: new Date().toISOString().split("T")[0],
+                method: "cash",
+                transRef: `CSH-VOUCH-${Math.floor(100000 + Math.random() * 900000)}`
+              };
+
+              setPayments(prev => [newPayment, ...prev]);
+              setIsSettlingProcess(false);
+              setSelectedInvoiceForPayment(null);
+              showToast(`تم سداد الفاتورة ${invoice.invoiceNumber} نقداً بالكامل وخصمها من خزينة المنشأة!`);
+            }, 600);
+          }
+        }, step.wait);
+      });
     }
-
-    setSelectedInvoiceForPayment(invoice);
-    setSettlementLogs([]);
-    setIsSettlingProcess(true);
-    setSettlementProgress(0);
-
-    // Dynamic fake RTGS terminal logger
-    const steps = [
-      { text: `📡 جاري تهيئة الاتصال فوري عبر قنوات التسوية الفورية مع البنك المحلي المرتبط (${userBank.bankName})...`, progress: 10, wait: 400 },
-      { text: `🔑 جاري تأكيد الرموز الأمنية المشفرة وتصريح الـ API لـ "مورد"...`, progress: 25, wait: 800 },
-      { text: `🏦 التحقق من رصيد الحساب المصدق رقم: ${userBank.accountNumber}...`, progress: 40, wait: 1200 },
-      { text: `💸 إرسال طلب تحويل فوري للمبلغ (${invoice.totalAmount.toLocaleString()} ج.م) لحساب المورد المستلم بنجاح...`, progress: 60, wait: 1900 },
-      { text: `📥 جاري إرسال المستحقات لحساب المورد: ${supplier.company} (حساب IBAN: ${supplier.bankAccount})...`, progress: 80, wait: 2400 },
-      { text: `✅ استلام رد تأكيدي من البنك المركزي المصري (CBE RTGS). رمز المعاملة: TXN-BM-${Math.floor(100000 + Math.random() * 900000)}`, progress: 100, wait: 3000 }
-    ];
-
-    steps.forEach((step, i) => {
-      setTimeout(() => {
-        setSettlementLogs(prev => [...prev, step.text]);
-        setSettlementProgress(step.progress);
-
-        if (step.progress === 100) {
-          setTimeout(() => {
-            // Update Invoice Status
-            setInvoices(prev => prev.map(inv => {
-              if (inv.id === invoice.id) {
-                return { ...inv, status: "paid" };
-              }
-              return inv;
-            }));
-
-            // Record custom payment
-            const newPayment: Payment = {
-              id: "pay-" + Date.now(),
-              supplierId: invoice.supplierId,
-              invoiceId: invoice.id,
-              amount: invoice.totalAmount,
-              paymentDate: new Date().toISOString().split("T")[0],
-              method: userBank.bankName.includes("فوري") ? "fawry" : "bank_transfer",
-              transRef: `RTGS-EG-${Math.floor(102931238 + Math.random() * 928374823)}`
-            };
-
-            setPayments(prev => [newPayment, ...prev]);
-            setIsSettlingProcess(false);
-            setSelectedInvoiceForPayment(null);
-            showToast(`تم سداد الفاتورة ${invoice.invoiceNumber} بالكامل وتسويتها لحظياً عبر البنك!`);
-          }, 600);
-        }
-      }, step.wait);
-    });
   };
 
   // Toggle bank linkage status
@@ -1067,7 +1169,7 @@ export default function MawridDashboard() {
         <div className="flex-1 min-w-0">
           
           {/* Dashboard Summary Statistics Bar (Always rendered at the top of content tabs in screen) */}
-          <div className="no-print grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="no-print grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
             
             <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-md flex items-center justify-between">
               <div>
@@ -1108,6 +1210,22 @@ export default function MawridDashboard() {
               </div>
               <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400">
                 <ShieldAlert className="w-5 h-5" />
+              </div>
+            </div>
+
+            <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-[#d97706]/5 border-amber-500/30 bg-[#1e2d3b]/80 shadow-md flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-400 font-medium">رصيد الخزينة (كاش)</p>
+                <p className="text-lg md:text-xl font-bold text-amber-400 mt-1">{safeBalance.toLocaleString()} <span className="text-[10px] font-bold text-amber-500">ج.م</span></p>
+                <button 
+                  onClick={() => setShowSafeDepositModal(true)}
+                  className="mt-1.5 text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-900 font-extrabold px-2 py-0.5 rounded cursor-pointer transition-colors block text-center"
+                >
+                  تغذية الخزينة +
+                </button>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400">
+                <Wallet className="w-5 h-5" />
               </div>
             </div>
 
@@ -1537,11 +1655,11 @@ export default function MawridDashboard() {
 
                                 {inv.status === "unpaid" ? (
                                   <button 
-                                    onClick={() => executeSettlementSimulate(inv)}
+                                    onClick={() => handleInitiateSettleInvoice(inv)}
                                     className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-colors"
                                   >
                                     <CreditCard className="w-4 h-4" />
-                                    <span>سداد وتسوية بنكية</span>
+                                    <span>سداد وتسوية الفاتورة</span>
                                   </button>
                                 ) : (
                                   <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl flex items-center gap-1">
@@ -1854,10 +1972,10 @@ export default function MawridDashboard() {
                                 <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                                   <span className="text-emerald-400 font-mono font-bold text-xs">{inv.totalAmount.toLocaleString()} ج.م</span>
                                   <button
-                                    onClick={() => executeSettlementSimulate(inv)}
+                                    onClick={() => handleInitiateSettleInvoice(inv)}
                                     className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg whitespace-nowrap cursor-pointer transition-colors"
                                   >
-                                    تشغيل تسوية
+                                    تشغيل السداد والتسوية
                                   </button>
                                 </div>
                               </div>
@@ -2230,6 +2348,237 @@ export default function MawridDashboard() {
       <footer className="no-print text-center text-[11px] text-slate-400 border-t border-slate-200 mt-12 pt-6 max-w-7xl mx-auto w-full">
         <p>نظام مورد الذكي المتكامل للمدفوعات والمشتريات © 2026. كافة الحقوق محفوظة لحساب وسلامة البيانات الاستثمارية.</p>
       </footer>
+
+      {/* MODAL: CHOOSE SETTLEMENT METHOD */}
+      {showSettleInvoiceModal && invoiceToSettle && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print text-right" dir="rtl">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-slate-900 text-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-700 space-y-4"
+          >
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-bold text-white">سداد وتصفية الفاتورة: {invoiceToSettle.invoiceNumber}</h3>
+              </div>
+              <button 
+                onClick={() => setShowSettleInvoiceModal(false)} 
+                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 transition-colors cursor-pointer"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Invoice details summary */}
+              <div className="bg-[#1e293b] rounded-xl p-4 border border-slate-800 space-y-2">
+                <div className="flex justify-between items-center text-slate-300">
+                  <span>المورّد المستحق:</span>
+                  <span className="font-bold text-white">
+                    {suppliers.find(s => s.id === invoiceToSettle.supplierId)?.company || "مورد غير معروف"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-slate-300">
+                  <span>تاريخ الاستحقاق:</span>
+                  <span className="font-mono text-white">{invoiceToSettle.dueDate}</span>
+                </div>
+                <div className="flex justify-between items-center border-t border-slate-800 pt-2">
+                  <span className="text-slate-200 font-bold">بند القيمة المطلوبة:</span>
+                  <span className="text-base font-black text-emerald-400 font-mono">
+                    {invoiceToSettle.totalAmount.toLocaleString()} ج.م
+                  </span>
+                </div>
+              </div>
+
+              {/* Payment Method Tabs */}
+              <div>
+                <label className="text-slate-400 font-bold mb-2 block">اختر طريقة السداد التسووي:</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPaymentMethod("bank_transfer")}
+                    className={`p-3.5 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+                      selectedPaymentMethod === "bank_transfer"
+                        ? "bg-emerald-600/20 border-emerald-500 text-white font-bold ring-2 ring-emerald-500/10"
+                        : "bg-slate-850 border-slate-800 text-slate-405 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                    }`}
+                  >
+                    <Building className="w-5 h-5 text-emerald-400" />
+                    <span className="font-bold">تحويل بنكي فوري (RTGS)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPaymentMethod("cash")}
+                    className={`p-3.5 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+                      selectedPaymentMethod === "cash"
+                        ? "bg-amber-600/20 border-amber-500 text-white font-bold ring-2 ring-amber-500/10"
+                        : "bg-slate-850 border-slate-800 text-slate-405 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                    }`}
+                  >
+                    <Wallet className="w-5 h-5 text-amber-400" />
+                    <span className="font-bold">صرف نقدي من الخزينة</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Bank Selection parameters */}
+              {selectedPaymentMethod === "bank_transfer" && (
+                <div className="space-y-3 bg-[#0f172a] p-3.5 rounded-xl border border-slate-800">
+                  <p className="text-slate-400 font-bold mb-1">اختر البنك المحلي المخصّوم منه:</p>
+                  
+                  {linkedBanks.filter(b => b.isLinked).length === 0 ? (
+                    <div className="text-amber-400 font-semibold p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-center leading-relaxed">
+                      ⚠️ لا يوجد أي حساب بنكي نشط حالياً! يرجى الانتقال إلى تبويب "التكامل البنكي" لربط حساب في البنك الأهلي أو بنك مصر.
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedPaymentBank}
+                      onChange={(e) => setSelectedPaymentBank(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 text-xs text-white p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold"
+                    >
+                      {linkedBanks.filter(b => b.isLinked).map((b) => (
+                        <option key={b.bankName} value={b.bankName}>
+                          {b.bankName} ({b.accountNumber})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  
+                  <div className="text-[10px] text-slate-500 font-light mt-1 text-center">
+                    سيتم إجراء تسوية فوريّ ولحظية وإيداع المدفوعات في الـ IBAN المقيد للمورد تلقائياً.
+                  </div>
+                </div>
+              )}
+
+              {/* Cash safe selection parameters */}
+              {selectedPaymentMethod === "cash" && (
+                <div className="space-y-3 bg-[#0f172a] p-3.5 rounded-xl border border-slate-800">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">السيولة النقدية المتوفرة بالخزينة:</span>
+                    <span className={`font-mono font-black text-sm ${safeBalance >= invoiceToSettle.totalAmount ? "text-amber-400" : "text-rose-450 text-rose-400"}`}>
+                      {safeBalance.toLocaleString()} ج.م
+                    </span>
+                  </div>
+
+                  {safeBalance < invoiceToSettle.totalAmount ? (
+                    <div className="p-3 bg-rose-500/15 border border-rose-500/20 text-rose-300 rounded-lg space-y-2">
+                       <p className="font-semibold text-center">⚠️ رصيد الخزينة الحالي غير كافٍ لتسديد هذه الفاتورة نقداً!</p>
+                       <button
+                         type="button"
+                         onClick={() => {
+                           setShowSettleInvoiceModal(false);
+                           setSafeDepositAmount(invoiceToSettle.totalAmount - safeBalance);
+                           setShowSafeDepositModal(true);
+                         }}
+                         className="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-2 rounded-lg text-[11px] cursor-pointer text-center"
+                       >
+                         قم بتغذية الخزينة الآن بقيمة العجز ({ (invoiceToSettle.totalAmount - safeBalance).toLocaleString() } ج.م) +
+                       </button>
+                    </div>
+                  ) : (
+                    <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-300 text-center font-medium">
+                      ✓ السيولة متاحة وسيتم الخصم التلقائي وتسجيل الحركة في القيود المالية لقسم الحسابات.
+                    </div>
+                  )}
+
+                  <div className="text-[10px] text-slate-500 font-light text-center">
+                    سيتم إصدار إذن صرف خزينة الكتروني فوري وتحديث تقرير الأرصدة.
+                  </div>
+                </div>
+              )}
+
+              {/* Submit details */}
+              <div className="flex gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => executeFinalSettlement(invoiceToSettle, selectedPaymentMethod, selectedPaymentBank)}
+                  disabled={selectedPaymentMethod === "cash" && safeBalance < invoiceToSettle.totalAmount}
+                  className={`flex-1 py-3 px-4 font-bold rounded-xl text-center cursor-pointer transition-all ${
+                    selectedPaymentMethod === "cash" && safeBalance < invoiceToSettle.totalAmount
+                      ? "bg-slate-800 text-slate-500 cursor-not-allowed"
+                      : "bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-lg font-bold"
+                  }`}
+                >
+                  تأكيد وإجراء التسوية والدفع الفوري
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSettleInvoiceModal(false)}
+                  className="bg-slate-800 hover:bg-slate-700 active:bg-slate-950 border border-slate-800 text-slate-300 font-bold px-4 py-3 rounded-xl cursor-pointer"
+                >
+                  إلغاء
+                </button>
+              </div>
+
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: REPLENISH SAFE/TREASURY */}
+      {showSafeDepositModal && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 no-print text-right" dir="rtl">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-[#1e293b] text-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-700 space-y-4"
+          >
+            <div className="flex items-center justify-between border-b border-slate-700 pb-3">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-amber-400" />
+                <h3 className="text-base font-bold text-white">تغذية الخزينة النقدية (كاش)</h3>
+              </div>
+              <button 
+                onClick={() => setShowSafeDepositModal(false)} 
+                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 transition-colors cursor-pointer"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div>
+                <p className="text-xs text-slate-300 mb-2 leading-relaxed font-semibold">أدخل بموجبه قيمة المبلغ المراد إيداعه أو تحويله من الحساب الجاري البنكي لخزينة الشركة لتوفير سيولة كاش كافية:</p>
+                
+                <div className="relative">
+                  <input 
+                    type="number"
+                    value={safeDepositAmount}
+                    onChange={(e) => setSafeDepositAmount(Math.max(1, Number(e.target.value)))}
+                    className="w-full bg-[#0f172a] border border-slate-700 rounded-xl p-3 pr-4 pl-12 font-mono text-base font-bold text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    placeholder="100,000"
+                  />
+                  <div className="absolute left-3 top-3.5 text-xs text-slate-400 font-bold font-mono">ج.م</div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-slate-850 border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSafeBalance(prev => prev + safeDepositAmount);
+                    showToast(`تم إيداع مبلغ ${safeDepositAmount.toLocaleString()} ج.م وتغذية خزينة المنشأة بنجاح.`);
+                    setShowSafeDepositModal(false);
+                  }}
+                  className="flex-1 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-900 font-extrabold py-3 px-4 rounded-xl text-center cursor-pointer shadow-md text-xs font-bold"
+                >
+                  إيداع وتغذية الخزينة
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSafeDepositModal(false)}
+                  className="bg-slate-800 hover:bg-slate-750 active:bg-slate-900 border border-slate-755 border-slate-700 text-slate-300 font-bold px-4 py-3 rounded-xl cursor-pointer text-xs"
+                >
+                  إلغاء
+                </button>
+              </div>
+
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* MODAL: ADD SUPPLIER */}
       {showAddSupplierModal && (
