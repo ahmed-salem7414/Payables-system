@@ -103,6 +103,9 @@ export default function MawridDashboard() {
   // Edit Invoice form state
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
 
+  // Edit Supplier form state
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+
   // AI Support chatbot state
   const [supportMessages, setSupportMessages] = useState<SupportMessage[]>(() => {
     const saved = localStorage.getItem("mawrid_chat_history");
@@ -267,6 +270,23 @@ export default function MawridDashboard() {
     // Filter invoices associated
     setInvoices(invoices.filter(i => i.supplierId !== id));
     showToast(`تم حذف المورد ${name} وكافة بياناته بنجاح.`);
+  };
+
+  // Edit Supplier handler
+  const handleUpdateSupplier = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!checkPermission("write")) return;
+
+    if (!editingSupplier) return;
+
+    if (!editingSupplier.name || !editingSupplier.company) {
+      showToast("يرجى إدخال اسم المورد واسم الشركة على الأقل.", "error");
+      return;
+    }
+
+    setSuppliers(suppliers.map(s => s.id === editingSupplier.id ? editingSupplier : s));
+    setEditingSupplier(null);
+    showToast(`تم تعديل بيانات المورد ${editingSupplier.name} بنجاح.`);
   };
 
   // Add Invoice Form Item handlers
@@ -1019,13 +1039,25 @@ export default function MawridDashboard() {
                               <h3 className="text-base font-bold text-white mt-2">{sup.name}</h3>
                               <p className="text-xs text-emerald-400 font-semibold">{sup.company}</p>
                             </div>
-                            <button 
-                              onClick={() => handleDeleteSupplier(sup.id, sup.name)}
-                              className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
-                              title="حذف هذا المورد"
-                            >
-                              <Trash2 className="w-4.5 h-4.5" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button 
+                                onClick={() => {
+                                  if (!checkPermission("write")) return;
+                                  setEditingSupplier(sup);
+                                }}
+                                className="p-1.5 text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors cursor-pointer"
+                                title="تعديل بيانات المورد"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteSupplier(sup.id, sup.name)}
+                                className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                                title="حذف هذا المورد"
+                              >
+                                <Trash2 className="w-4.5 h-4.5" />
+                              </button>
+                            </div>
                           </div>
 
                           <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-800 text-xs text-slate-300">
@@ -2005,12 +2037,21 @@ export default function MawridDashboard() {
                 </div>
 
                 <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  {/* Item Column Headers */}
+                  <div className="flex items-center gap-2 px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
+                    <div className="flex-1 text-right">الوصف (اسم البند أو الخدمة) *</div>
+                    <div className="w-20 text-center">الكمية *</div>
+                    <div className="w-28 text-left">سعر الوحدة *</div>
+                    <div className="w-28 text-left">قيمة الإجمالي</div>
+                    <div className="w-8"></div>
+                  </div>
+
                   {newInvoice.items.map((item, index) => (
                     <div key={index} className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-150">
                       <input 
                         type="text" 
                         required
-                        placeholder="اسم الصنف / الخدمة"
+                        placeholder="مثال: توريد مواد خام، شحن، إلخ..."
                         value={item.name}
                         onChange={(e) => handleUpdateItemRow(index, "name", e.target.value)}
                         className="flex-1 border border-slate-200 rounded p-1.5 bg-white text-slate-900"
@@ -2022,21 +2063,26 @@ export default function MawridDashboard() {
                         placeholder="الكمية"
                         value={item.quantity}
                         onChange={(e) => handleUpdateItemRow(index, "quantity", parseInt(e.target.value) || 1)}
-                        className="w-16 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-center"
+                        className="w-20 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-center"
                       />
                       <input 
                         type="number" 
                         required
                         min="0"
+                        step="any"
                         placeholder="سعر الوحدة"
                         value={item.price}
                         onChange={(e) => handleUpdateItemRow(index, "price", parseFloat(e.target.value) || 0)}
-                        className="w-24 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-left"
+                        className="w-28 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-left"
                       />
+                      <div className="w-28 font-mono font-bold text-slate-900 text-left bg-slate-100 border border-slate-200 rounded p-1.5 select-none overflow-hidden text-ellipsis whitespace-nowrap">
+                        {(item.quantity * item.price).toLocaleString()} ج.م
+                      </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveItemRow(index)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 rounded"
+                        className="p-1.5 text-slate-400 hover:text-red-500 rounded cursor-pointer"
+                        title="حذف هذا البند"
                       >
                         <XCircle className="w-4.5 h-4.5" />
                       </button>
@@ -2051,7 +2097,7 @@ export default function MawridDashboard() {
                   onClick={() => setShowAddInvoiceModal(false)}
                   className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
                 >
-                  إلغاء
+                  إلغاء وعودة
                 </button>
                 <button 
                   type="submit"
@@ -2161,12 +2207,21 @@ export default function MawridDashboard() {
                 </div>
 
                 <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  {/* Item Column Headers */}
+                  <div className="flex items-center gap-2 px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
+                    <div className="flex-1 text-right">الوصف (اسم البند أو الخدمة) *</div>
+                    <div className="w-20 text-center">الكمية *</div>
+                    <div className="w-28 text-left">سعر الوحدة *</div>
+                    <div className="w-28 text-left">قيمة الإجمالي</div>
+                    <div className="w-8"></div>
+                  </div>
+
                   {editingInvoice.items.map((item, index) => (
                     <div key={index} className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-150">
                       <input 
                         type="text" 
                         required
-                        placeholder="اسم الصنف / الخدمة"
+                        placeholder="مثل: توريد مواد خام، شحن، إلخ..."
                         value={item.name}
                         onChange={(e) => handleUpdateEditItemRow(index, "name", e.target.value)}
                         className="flex-1 border border-slate-200 rounded p-1.5 bg-white text-slate-900"
@@ -2178,21 +2233,26 @@ export default function MawridDashboard() {
                         placeholder="الكمية"
                         value={item.quantity}
                         onChange={(e) => handleUpdateEditItemRow(index, "quantity", parseInt(e.target.value) || 1)}
-                        className="w-16 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-center"
+                        className="w-20 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-center"
                       />
                       <input 
                         type="number" 
                         required
                         min="0"
+                        step="any"
                         placeholder="سعر الوحدة"
                         value={item.price}
                         onChange={(e) => handleUpdateEditItemRow(index, "price", parseFloat(e.target.value) || 0)}
-                        className="w-24 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-left"
+                        className="w-28 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-left"
                       />
+                      <div className="w-28 font-mono font-bold text-slate-900 text-left bg-slate-100 border border-slate-200 rounded p-1.5 select-none overflow-hidden text-ellipsis whitespace-nowrap">
+                        {(item.quantity * item.price).toLocaleString()} ج.م
+                      </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveEditItemRow(index)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 rounded"
+                        className="p-1.5 text-slate-400 hover:text-red-500 rounded cursor-pointer"
+                        title="حذف هذا البند"
                       >
                         <XCircle className="w-4.5 h-4.5" />
                       </button>
@@ -2215,6 +2275,142 @@ export default function MawridDashboard() {
                 >
                   <Save className="w-4 h-4" />
                   <span>حفظ التعديلات الحالية</span>
+                </button>
+              </div>
+
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT SUPPLIER */}
+      {editingSupplier && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-950">تعديل بيانات المورد</h3>
+              <button onClick={() => setEditingSupplier(null)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateSupplier} className="space-y-4 text-xs">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">اسم المورد الكامل *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={editingSupplier.name}
+                    onChange={(e) => setEditingSupplier({ ...editingSupplier, name: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold"
+                    placeholder="م. محمد العربي"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">اسم الشركة / المؤسسة *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={editingSupplier.company}
+                    onChange={(e) => setEditingSupplier({ ...editingSupplier, company: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold"
+                    placeholder="مجموعة السويدي كابلات"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">رقم الهاتف التواصل *</label>
+                  <input 
+                    type="tel" 
+                    required
+                    value={editingSupplier.phone}
+                    onChange={(e) => setEditingSupplier({ ...editingSupplier, phone: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono"
+                    placeholder="01012345678"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">البريد الإلكتروني</label>
+                  <input 
+                    type="email" 
+                    value={editingSupplier.email}
+                    onChange={(e) => setEditingSupplier({ ...editingSupplier, email: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
+                    placeholder="supplier@company.eg"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-500 block mb-1">رقم الحساب البنكي / International IBAN *</label>
+                <input 
+                  type="text" 
+                  required
+                  value={editingSupplier.bankAccount}
+                  onChange={(e) => setEditingSupplier({ ...editingSupplier, bankAccount: e.target.value })}
+                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-[11px]"
+                  placeholder="EG000000000000000000000000000"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">فئة النشاط المورّد</label>
+                  <select
+                    value={editingSupplier.category}
+                    onChange={(e) => setEditingSupplier({ ...editingSupplier, category: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 font-semibold"
+                  >
+                    <option value="مواد خام">مواد خام</option>
+                    <option value="شحن ولوجستيات">شحن ولوجستيات</option>
+                    <option value="خدمات مكتبية وتكنولوجيا">خدمات مكتبية وتكنولوجيا</option>
+                    <option value="تعبئة وتغليف">تعبئة وتغليف</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">العنوان والمقر</label>
+                  <input 
+                    type="text" 
+                    value={editingSupplier.address}
+                    onChange={(e) => setEditingSupplier({ ...editingSupplier, address: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
+                    placeholder="المنطقة الصناعية الثالثة، الجيزة"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-500 block mb-1">ملاحظات وشروط إضافية</label>
+                <textarea 
+                  value={editingSupplier.notes}
+                  onChange={(e) => setEditingSupplier({ ...editingSupplier, notes: e.target.value })}
+                  className="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 h-20"
+                  placeholder="أدخل أي ملاحظات حول الدفع أو السداد..."
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                <button 
+                  type="button"
+                  onClick={() => setEditingSupplier(null)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                >
+                  إلغاء وعودة
+                </button>
+                <button 
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>حفظ التعديلات</span>
                 </button>
               </div>
 
