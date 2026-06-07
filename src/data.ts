@@ -3,16 +3,7 @@ import { Supplier, Invoice, Payment, BackupRecord, UserRole } from "./types";
 // Preseeded list of Egyptian/Arab custom suppliers
 export const INITIAL_SUPPLIERS: Supplier[] = [
   {
-    id: "sup-1",
-    name: "م. أحمد الشافعي",
-    company: "الوطنية للحديد والصلب",
-    phone: "01023456789",
-    email: "shafey@nationalsteel.com.eg",
-    bankAccount: "EG93000201201928374859102",
-    category: "مواد خام",
-    address: "المنطقة الصناعية، السادس من أكتوبر، الجيزة",
-    notes: "المورد الرئيسي لحديد التسليح والقطاعات المعدنية الهيكلية.",
-    createdAt: "2026-01-15T08:30:00Z"
+    
   },
   {
     id: "sup-2",
