@@ -8,7 +8,7 @@ import {
   Users, Receipt, CreditCard, Bell, FileText, Database, MessageSquare, 
   ShieldAlert, Plus, Trash2, Download, CheckCircle2, XCircle, AlertTriangle, 
   RefreshCw, TrendingUp, Building, Check, Key, Upload, Activity, 
-  UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save
+  UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save, Edit
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -99,6 +99,9 @@ export default function MawridDashboard() {
     supplierId: "", invoiceNumber: "", dueDate: "", notes: "",
     items: [{ name: "", quantity: 1, price: 0 }]
   });
+
+  // Edit Invoice form state
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
 
   // AI Support chatbot state
   const [supportMessages, setSupportMessages] = useState<SupportMessage[]>(() => {
@@ -328,6 +331,63 @@ export default function MawridDashboard() {
       items: [{ name: "", quantity: 1, price: 0 }]
     });
     showToast(`تم تسجيل فاتورة جديدة ${createdInvoice.invoiceNumber} بقيمة ${calculatedTotal.toLocaleString()} ج.م.`);
+  };
+
+  // Edit Invoice Handlers
+  const handleAddEditItemRow = () => {
+    if (!editingInvoice) return;
+    setEditingInvoice({
+      ...editingInvoice,
+      items: [...editingInvoice.items, { name: "", quantity: 1, price: 0 }]
+    });
+  };
+
+  const handleRemoveEditItemRow = (index: number) => {
+    if (!editingInvoice) return;
+    if (editingInvoice.items.length === 1) return;
+    const filtered = editingInvoice.items.filter((_, i) => i !== index);
+    setEditingInvoice({ ...editingInvoice, items: filtered });
+  };
+
+  const handleUpdateEditItemRow = (index: number, field: string, value: any) => {
+    if (!editingInvoice) return;
+    const updatedItems = editingInvoice.items.map((item, i) => {
+      if (i === index) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    });
+    setEditingInvoice({ ...editingInvoice, items: updatedItems });
+  };
+
+  const handleUpdateInvoice = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!checkPermission("write")) return;
+
+    if (!editingInvoice) return;
+
+    if (!editingInvoice.supplierId || !editingInvoice.invoiceNumber) {
+      showToast("يرجى اختيار المورد وتحديد رقم الفاتورة.", "error");
+      return;
+    }
+
+    // Verify duplicate invoice number (excluding self)
+    const isDuplicate = invoices.some(i => i.id !== editingInvoice.id && i.invoiceNumber === editingInvoice.invoiceNumber);
+    if (isDuplicate) {
+      showToast(`الفاتورة رقم ${editingInvoice.invoiceNumber} مسجلة مسبقاً بالنظام.`, "error");
+      return;
+    }
+
+    const calculatedTotal = editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+
+    const updatedInvoice: Invoice = {
+      ...editingInvoice,
+      totalAmount: calculatedTotal
+    };
+
+    setInvoices(invoices.map(i => i.id === editingInvoice.id ? updatedInvoice : i));
+    setEditingInvoice(null);
+    showToast(`تم تعديل الفاتورة رقم ${updatedInvoice.invoiceNumber} بنجاح.`);
   };
 
   // Instant local bank settlement triggers (Real-time Simulation)
@@ -1115,6 +1175,18 @@ export default function MawridDashboard() {
                           </div>
 
                           <div className="flex items-center gap-2 self-end md:self-auto">
+                            <button 
+                              onClick={() => {
+                                if (!checkPermission("write")) return;
+                                setEditingInvoice(inv);
+                              }}
+                              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-350 hover:text-white text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                              title="تعديل بيانات الفاتورة"
+                            >
+                              <Edit className="w-3.5 h-3.5 text-emerald-450 text-emerald-400" />
+                              <span>تعديل</span>
+                            </button>
+
                             {inv.status === "unpaid" ? (
                               <button 
                                 onClick={() => executeSettlementSimulate(inv)}
@@ -1986,6 +2058,163 @@ export default function MawridDashboard() {
                   className="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer"
                 >
                   تسجيل وحفظ الفاتورة
+                </button>
+              </div>
+
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT INVOICE */}
+      {editingInvoice && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-950">تعديل بيانات فاتورة المشتريات</h3>
+              <button onClick={() => setEditingInvoice(null)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateInvoice} className="space-y-4 text-xs">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">اختر المورد المرتبط *</label>
+                  <select 
+                    required
+                    value={editingInvoice.supplierId}
+                    onChange={(e) => setEditingInvoice({ ...editingInvoice, supplierId: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold text-slate-900 focus:outline-none"
+                  >
+                    <option value="">-- اضغط للاختيار --</option>
+                    {suppliers.map(s => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.company})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">رقم الفاتورة الصادر *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="FT-2026-X"
+                    value={editingInvoice.invoiceNumber}
+                    onChange={(e) => setEditingInvoice({ ...editingInvoice, invoiceNumber: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">تاريخ الاستحقاق المتوقع *</label>
+                  <input 
+                    type="date" 
+                    required
+                    value={editingInvoice.dueDate}
+                    onChange={(e) => setEditingInvoice({ ...editingInvoice, dueDate: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">حالة سداد الفاتورة *</label>
+                  <select 
+                    required
+                    value={editingInvoice.status}
+                    onChange={(e) => setEditingInvoice({ ...editingInvoice, status: e.target.value as 'paid' | 'unpaid' })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-bold text-slate-900"
+                  >
+                    <option value="unpaid">لم يتم السداد</option>
+                    <option value="paid">تم السداد بالكامل</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">البيانات / مذكرات عامة</label>
+                  <input 
+                    type="text" 
+                    value={editingInvoice.notes || ""}
+                    onChange={(e) => setEditingInvoice({ ...editingInvoice, notes: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
+                    placeholder="شحنة التجهيز المقررة لمخازن العاشر"
+                  />
+                </div>
+              </div>
+
+              {/* Items row editor section */}
+              <div className="space-y-2 border-t border-slate-100 pt-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-800">بنود الفاتورة وقائمة التوريد:</span>
+                  <button 
+                    type="button" 
+                    onClick={handleAddEditItemRow}
+                    className="text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    اضافة سطر توريد
+                  </button>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  {editingInvoice.items.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-150">
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="اسم الصنف / الخدمة"
+                        value={item.name}
+                        onChange={(e) => handleUpdateEditItemRow(index, "name", e.target.value)}
+                        className="flex-1 border border-slate-200 rounded p-1.5 bg-white text-slate-900"
+                      />
+                      <input 
+                        type="number" 
+                        required
+                        min="1"
+                        placeholder="الكمية"
+                        value={item.quantity}
+                        onChange={(e) => handleUpdateEditItemRow(index, "quantity", parseInt(e.target.value) || 1)}
+                        className="w-16 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-center"
+                      />
+                      <input 
+                        type="number" 
+                        required
+                        min="0"
+                        placeholder="سعر الوحدة"
+                        value={item.price}
+                        onChange={(e) => handleUpdateEditItemRow(index, "price", parseFloat(e.target.value) || 0)}
+                        className="w-24 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-left"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveEditItemRow(index)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 rounded"
+                      >
+                        <XCircle className="w-4.5 h-4.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                <button 
+                  type="button"
+                  onClick={() => setEditingInvoice(null)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                >
+                  إلغاء وعودة
+                </button>
+                <button 
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>حفظ التعديلات الحالية</span>
                 </button>
               </div>
 
