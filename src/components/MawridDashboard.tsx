@@ -8,7 +8,7 @@ import {
   Users, Receipt, CreditCard, Bell, FileText, Database, MessageSquare, 
   ShieldAlert, Plus, Trash2, Download, CheckCircle2, XCircle, AlertTriangle, 
   RefreshCw, TrendingUp, Building, Check, Key, Upload, Activity, 
-  UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save, Edit
+  UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save, Edit, Search
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -59,6 +59,7 @@ export default function MawridDashboard() {
   const [supplierCategoryFilter, setSupplierCategoryFilter] = useState("all");
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState("all");
+  const [invoiceTypeFilter, setInvoiceTypeFilter] = useState<"all" | "invoices" | "credit_notes">("all");
 
   // Selected Report Parameters
   const [reportMonth, setReportMonth] = useState("05");
@@ -825,6 +826,18 @@ export default function MawridDashboard() {
     return matchesSearch && matchesStatus;
   });
 
+  const filteredCreditNotes = creditNotes.filter(cn => {
+    const supplier = suppliers.find(s => s.id === cn.supplierId);
+    const matchesSearch = cn.creditNoteNumber.toLowerCase().includes(invoiceSearch.toLowerCase()) ||
+                          (supplier && supplier.name.toLowerCase().includes(invoiceSearch.toLowerCase())) ||
+                          (supplier && supplier.company.toLowerCase().includes(invoiceSearch.toLowerCase())) ||
+                          (cn.notes && cn.notes.toLowerCase().includes(invoiceSearch.toLowerCase()));
+    const matchesStatus = invoiceStatusFilter === "all" ||
+                          (invoiceStatusFilter === "unpaid" && cn.status === "active") ||
+                          (invoiceStatusFilter === "paid" && cn.status === "applied");
+    return matchesSearch && matchesStatus;
+  });
+
   // Analytics distribution data for Recharts
   const getPortfolioDistributionData = () => {
     // Group invoices total value by category or by supplier group
@@ -1353,177 +1366,314 @@ export default function MawridDashboard() {
           )}
 
           {/* VIEW: INVOICES */}
-          {activeTab === "invoices" && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
-            >
-              
-              {/* Search and filter toolbar */}
-              <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-700 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-                  
-                  {/* Invoice search */}
-                  <div className="relative w-full md:w-64">
-                    <input 
-                      type="text" 
-                      placeholder="ابحث برقم الفاتورة أو المورد..."
-                      value={invoiceSearch}
-                      onChange={(e) => setInvoiceSearch(e.target.value)}
-                      className="w-full text-xs border border-slate-700 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-[#0f172a] text-white"
-                    />
-                    <Receipt className="w-4 h-4 text-slate-500 absolute right-3 top-3.5" />
+          {activeTab === "invoices" && (() => {
+            const displayedItems = [
+              ...(invoiceTypeFilter === "all" || invoiceTypeFilter === "invoices"
+                ? filteredInvoices.map((inv) => ({ ...inv, itemType: "invoice" as const }))
+                : []),
+              ...(invoiceTypeFilter === "all" || invoiceTypeFilter === "credit_notes"
+                ? filteredCreditNotes.map((cn) => ({ ...cn, itemType: "credit_note" as const }))
+                : [])
+            ].sort((a, b) => b.issueDate.localeCompare(a.issueDate));
+
+            return (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                
+                {/* Search and filter toolbar */}
+                <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-700 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                    
+                    {/* Invoice search */}
+                    <div className="relative w-full md:w-64">
+                      <input 
+                        type="text" 
+                        placeholder="ابحث برقم الفاتورة، الإشعار أو المورد..."
+                        value={invoiceSearch}
+                        onChange={(e) => setInvoiceSearch(e.target.value)}
+                        className="w-full text-xs border border-slate-700 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-[#0f172a] text-white"
+                      />
+                      <Search className="w-4 h-4 text-slate-500 absolute right-3 top-3.5" />
+                    </div>
+
+                    {/* Status filter */}
+                    <div className="w-full md:w-auto">
+                      <select
+                        value={invoiceStatusFilter}
+                        onChange={(e) => setInvoiceStatusFilter(e.target.value)}
+                        className="w-full text-xs border border-slate-700 px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer bg-[#0f172a] text-white font-bold"
+                      >
+                        <option value="all">كل حالات السداد / التطبيق</option>
+                        <option value="unpaid">غير مسدد / كإشعار نشط</option>
+                        <option value="paid">تم السداد / كإشعار مُطبّق</option>
+                      </select>
+                    </div>
+
                   </div>
 
-                  {/* Status filter */}
-                  <div className="w-full md:w-auto">
-                    <select
-                      value={invoiceStatusFilter}
-                      onChange={(e) => setInvoiceStatusFilter(e.target.value)}
-                      className="w-full text-xs border border-slate-700 px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer bg-[#0f172a] text-white font-bold"
-                    >
-                      <option value="all">كل حالات السداد</option>
-                      <option value="unpaid">لم يتم السداد</option>
-                      <option value="paid">تم السداد</option>
-                    </select>
-                  </div>
-
+                  <button 
+                    onClick={() => setShowAddInvoiceModal(true)}
+                    className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>تسجيل فاتورة كرتونية جديدة</span>
+                  </button>
                 </div>
 
-                <button 
-                  onClick={() => setShowAddInvoiceModal(true)}
-                  className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>تسجيل فاتورة كرتونية جديدة</span>
-                </button>
-              </div>
+                {/* Sub-tabs selector for Invoices & Credit Notes */}
+                <div className="flex border-b border-slate-700/50">
+                  <button 
+                    onClick={() => setInvoiceTypeFilter("all")}
+                    className={`px-5 py-3 text-xs font-bold transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
+                      invoiceTypeFilter === "all" ? "border-emerald-500 text-emerald-400 font-extrabold" : "border-transparent text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <Receipt className="w-3.5 h-3.5" />
+                    <span>الكل ({filteredInvoices.length + filteredCreditNotes.length})</span>
+                  </button>
+                  <button 
+                    onClick={() => setInvoiceTypeFilter("invoices")}
+                    className={`px-5 py-3 text-xs font-bold transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
+                      invoiceTypeFilter === "invoices" ? "border-emerald-500 text-emerald-400 font-extrabold" : "border-transparent text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>فواتير المشتريات ({filteredInvoices.length})</span>
+                  </button>
+                  <button 
+                    onClick={() => setInvoiceTypeFilter("credit_notes")}
+                    className={`px-5 py-3 text-xs font-bold transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
+                      invoiceTypeFilter === "credit_notes" ? "border-emerald-500 text-emerald-400 font-extrabold" : "border-transparent text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>الإشعارات الدائنة ({filteredCreditNotes.length})</span>
+                  </button>
+                </div>
 
-              {/* Invoices List Display */}
-              <div className="space-y-4">
-                {filteredInvoices.length === 0 ? (
-                  <div className="bg-[#1e293b] rounded-2xl border border-slate-700 p-12 text-center text-slate-400 text-sm">
-                    لا توجد فواتير مشتريات مطابقة للبحث حالياً.
-                  </div>
-                ) : (
-                  filteredInvoices.map((inv) => {
-                    const sup = suppliers.find(s => s.id === inv.supplierId);
-                    const isDueSoon = inv.status === "unpaid" && new Date(inv.dueDate).getTime() <= new Date("2026-06-12").getTime();
+                {/* Combined list display */}
+                <div className="space-y-4">
+                  {displayedItems.length === 0 ? (
+                    <div className="bg-[#1e293b] rounded-2xl border border-slate-700 p-12 text-center text-slate-400 text-sm">
+                      لا توجد فواتير أو إشعارات دائنة مطابقة للبحث والفرز حالياً.
+                    </div>
+                  ) : (
+                    displayedItems.map((item) => {
+                      const sup = suppliers.find(s => s.id === item.supplierId);
+                      
+                      if (item.itemType === "invoice") {
+                        const inv = item as typeof invoices[number];
+                        const isDueSoon = inv.status === "unpaid" && new Date(inv.dueDate).getTime() <= new Date("2026-06-12").getTime();
 
-                    return (
-                      <div 
-                        key={inv.id}
-                        className={`bg-[#1e293b] rounded-2xl border ${isDueSoon ? "border-rose-500 ring-1 ring-rose-500/10" : "border-slate-705 border-slate-700"} p-5 shadow-sm transition-all`}
-                      >
-                        
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          
-                          <div className="flex items-start gap-3">
-                            <div className={`p-3 rounded-xl ${inv.status === "paid" ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"} shrink-0`}>
-                              <Receipt className="w-6 h-6" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-white font-mono text-sm">{inv.invoiceNumber}</span>
-                                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                                  inv.status === "paid" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-300"
-                                }`}>
-                                  {inv.status === "paid" ? "تم السداد" : "لم يتم السداد"}
-                                </span>
-                                {isDueSoon && (
-                                  <span className="text-[10px] font-semibold bg-rose-650 bg-rose-600 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
-                                    <AlertTriangle className="w-3 h-3 text-white" />
-                                    مستحق قريباً!
+                        return (
+                          <div 
+                            key={inv.id}
+                            className={`bg-[#1e293b] rounded-2xl border ${isDueSoon ? "border-rose-500 ring-1 ring-rose-500/10" : "border-slate-700"} p-5 shadow-sm transition-all`}
+                          >
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                              
+                              <div className="flex items-start gap-3">
+                                <div className={`p-3 rounded-xl ${inv.status === "paid" ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"} shrink-0`}>
+                                  <Receipt className="w-6 h-6" />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-white font-mono text-sm">{inv.invoiceNumber}</span>
+                                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                                      inv.status === "paid" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-300"
+                                    }`}>
+                                      {inv.status === "paid" ? "تم السداد" : "لم يتم السداد"}
+                                    </span>
+                                    {isDueSoon && (
+                                      <span className="text-[10px] font-semibold bg-rose-600 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <AlertTriangle className="w-3 h-3 text-white" />
+                                        مستحق قريباً!
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-slate-350 font-semibold mt-1">المورد: {sup ? `${sup.name} (${sup.company})` : "غير معروف"}</p>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                                <div>
+                                  <span className="text-slate-400 block mb-0.5">تاريخ الإصدار:</span>
+                                  <span className="font-semibold text-white font-mono">{inv.issueDate}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-400 block mb-0.5">تاريخ الاستحقاق:</span>
+                                  <span className={`font-semibold font-mono ${inv.status === "unpaid" ? "text-rose-400" : "text-white"}`}>{inv.dueDate}</span>
+                                </div>
+                                <div className="col-span-2 md:col-span-1">
+                                  <span className="text-slate-400 block mb-0.5">القيمة الإجمالية:</span>
+                                  <span className="text-sm font-black text-white">{inv.totalAmount.toLocaleString()} ج.م</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 self-end md:self-auto">
+                                <button 
+                                  onClick={() => {
+                                    if (!checkPermission("write")) return;
+                                    setEditingInvoice(inv);
+                                  }}
+                                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-350 hover:text-white text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                  title="تعديل بيانات الفاتورة"
+                                >
+                                  <Edit className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>تعديل</span>
+                                </button>
+
+                                <button 
+                                  onClick={() => handleDeleteInvoice(inv.id, inv.invoiceNumber)}
+                                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-rose-950 hover:text-rose-400 hover:border-rose-900/50 active:bg-rose-900 border border-slate-700 text-slate-350 hover:text-white text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                  title="حذف الفاتورة نهائياً"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                  <span>حذف</span>
+                                </button>
+
+                                {inv.status === "unpaid" ? (
+                                  <button 
+                                    onClick={() => executeSettlementSimulate(inv)}
+                                    className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-colors"
+                                  >
+                                    <CreditCard className="w-4 h-4" />
+                                    <span>سداد وتسوية بنكية</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl flex items-center gap-1">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    تم السداد بالكامل
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-slate-450 text-slate-350 font-semibold mt-1">المورد: {sup ? `${sup.name} (${sup.company})` : "غير معروف"}</p>
+
                             </div>
-                          </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
-                            <div>
-                              <span className="text-slate-400 block mb-0.5">تاريخ الإصدار:</span>
-                              <span className="font-semibold text-white font-mono">{inv.issueDate}</span>
-                            </div>
-                            <div>
-                              <span className="text-slate-400 block mb-0.5">تاريخ الاستحقاق:</span>
-                              <span className={`font-semibold font-mono ${inv.status === "unpaid" ? "text-rose-400" : "text-white"}`}>{inv.dueDate}</span>
-                            </div>
-                            <div className="col-span-2 md:col-span-1">
-                              <span className="text-slate-400 block mb-0.5">القيمة الإجمالية:</span>
-                              <span className="text-sm font-black text-white">{inv.totalAmount.toLocaleString()} ج.م</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 self-end md:self-auto">
-                            <button 
-                              onClick={() => {
-                                if (!checkPermission("write")) return;
-                                setEditingInvoice(inv);
-                              }}
-                              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-350 hover:text-white text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
-                              title="تعديل بيانات الفاتورة"
-                            >
-                              <Edit className="w-3.5 h-3.5 text-emerald-400" />
-                              <span>تعديل</span>
-                            </button>
-
-                            <button 
-                              onClick={() => handleDeleteInvoice(inv.id, inv.invoiceNumber)}
-                              className="flex items-center gap-1.5 bg-slate-800 hover:bg-rose-950 hover:text-rose-400 hover:border-rose-900/50 active:bg-rose-900 border border-slate-700 text-slate-350 hover:text-white text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
-                              title="حذف الفاتورة نهائياً"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                              <span>حذف</span>
-                            </button>
-
-                            {inv.status === "unpaid" ? (
-                              <button 
-                                onClick={() => executeSettlementSimulate(inv)}
-                                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-colors"
-                              >
-                                <CreditCard className="w-4 h-4" />
-                                <span>سداد وتسوية بنكية</span>
-                              </button>
-                            ) : (
-                              <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl flex items-center gap-1">
-                                <CheckCircle2 className="w-4 h-4" />
-                                تم السداد بالكامل
-                              </span>
-                            )}
-                          </div>
-
-                        </div>
-
-                        {/* Invoice Items details line items dropdown style */}
-                        <div className="mt-4 pt-4 border-t border-slate-800">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">البنود والمنتجات المسجلة:</p>
-                          <div className="bg-[#0f172a] rounded-xl p-3 space-y-2 border border-slate-800">
-                            {inv.items.map((item, idx) => (
-                              <div key={idx} className="flex items-center justify-between text-xs text-slate-300 font-medium">
-                                <span>{item.name || "بند افتراضى"}</span>
-                                <span className="text-slate-400 font-mono">
-                                  {item.quantity} × {item.price.toLocaleString()} ج.م = <strong className="text-white">{(item.quantity * item.price).toLocaleString()} ج.م</strong>
-                                </span>
+                            {/* Invoice Items details line items dropdown style */}
+                            <div className="mt-4 pt-4 border-t border-slate-800">
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">البنود والمنتجات المسجلة:</p>
+                              <div className="bg-[#0f172a] rounded-xl p-3 space-y-2 border border-slate-800">
+                                {inv.items.map((itemRow, idx) => (
+                                  <div key={idx} className="flex items-center justify-between text-xs text-slate-300 font-medium">
+                                    <span>{itemRow.name || "بند افتراضى"}</span>
+                                    <span className="text-slate-400 font-mono">
+                                      {itemRow.quantity} × {itemRow.price.toLocaleString()} ج.م = <strong className="text-white">{(itemRow.quantity * itemRow.price).toLocaleString()} ج.م</strong>
+                                    </span>
+                                  </div>
+                                ))}
+                                {inv.notes && (
+                                  <p className="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2 font-medium">
+                                    <strong className="text-slate-300">ملاحظات:</strong> {inv.notes}
+                                  </p>
+                                )}
                               </div>
-                            ))}
-                            {inv.notes && (
-                              <p className="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2 font-medium">
-                                <strong className="text-slate-300">ملاحظات:</strong> {inv.notes}
-                              </p>
-                            )}
-                          </div>
-                        </div>
+                            </div>
 
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </motion.div>
-          )}
+                          </div>
+                        );
+                      } else {
+                        // Render Credit Note as part of the list
+                        const cn = item as typeof creditNotes[number];
+
+                        return (
+                          <div 
+                            key={cn.id}
+                            className="bg-[#1e293b] rounded-2xl border border-emerald-500/30 p-5 shadow-sm transition-all"
+                          >
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                              
+                              <div className="flex items-start gap-3">
+                                <div className="p-3 rounded-xl bg-emerald-500/15 text-emerald-450 shrink-0">
+                                  <FileText className="w-6 h-6 text-emerald-400" />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-white font-mono text-sm">{cn.creditNoteNumber}</span>
+                                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-550 border-emerald-500/30">
+                                      إشعار دائن ({cn.status === "active" ? "نشط" : "مُطبّق"})
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-slate-350 font-semibold mt-1">المورد: {sup ? `${sup.name} (${sup.company})` : "غير معروف"}</p>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                                <div>
+                                  <span className="text-slate-400 block mb-0.5">تاريخ الإصدار:</span>
+                                  <span className="font-semibold text-white font-mono">{cn.issueDate}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-400 block mb-0.5">تاريخ الاستحقاق المتوقع:</span>
+                                  <span className="font-semibold font-mono text-white">{cn.dueDate || "-"}</span>
+                                </div>
+                                <div className="col-span-2 md:col-span-1">
+                                  <span className="text-slate-400 block mb-0.5">قيمة الإشعار (خصم):</span>
+                                  <span className="text-sm font-black text-emerald-400 font-mono">-{cn.amount.toLocaleString()} ج.م</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 self-end md:self-auto font-bold text-xs">
+                                <button 
+                                  type="button"
+                                  onClick={() => handleToggleCreditNoteStatus(cn.id)}
+                                  className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                                    cn.status === "active"
+                                      ? "bg-amber-500/15 border-amber-500/20 text-amber-400 hover:bg-amber-550 hover:bg-amber-500/25"
+                                      : "bg-[#0f172a] border-slate-700 text-slate-400 hover:bg-slate-800"
+                                  }`}
+                                >
+                                  {cn.status === "active" ? "تحديد كمُطبّق" : "إعادة تنشيط الإشعار"}
+                                </button>
+
+                                <button 
+                                  onClick={() => handleDeleteCreditNote(cn.id, cn.creditNoteNumber)}
+                                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-rose-950 hover:text-rose-400 hover:border-rose-900/50 active:bg-rose-900 border border-slate-700 text-slate-350 hover:text-white text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                  title="حذف الإشعار نهائياً"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                  <span>حذف</span>
+                                </button>
+                              </div>
+
+                            </div>
+
+                            {/* Credit Note items details */}
+                            <div className="mt-4 pt-4 border-t border-slate-800">
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">تفاصيل بنود الإشعار الدائن المسجلة:</p>
+                              <div className="bg-[#0f172a] rounded-xl p-3 space-y-2 border border-slate-800">
+                                {cn.items && cn.items.length > 0 ? (
+                                  cn.items.map((itemRow, idx) => (
+                                    <div key={idx} className="flex items-center justify-between text-xs text-emerald-300 font-medium">
+                                      <span>{itemRow.name || "بند الإشعار"}</span>
+                                      <span className="text-slate-450 font-mono">
+                                        {itemRow.quantity} × {itemRow.price.toLocaleString()} ج.م = <strong className="text-emerald-400">{(itemRow.quantity * itemRow.price).toLocaleString()} ج.م</strong>
+                                      </span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-xs text-slate-450 italic">لا توجد بنود تفصيلية لهذا الإشعار (يُحتسب كخصم مباشر).</div>
+                                )}
+                                {cn.notes && (
+                                  <p className="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2 font-medium">
+                                    <strong className="text-slate-300">البيان/الملاحظات العامة:</strong> {cn.notes}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                          </div>
+                        );
+                      }
+                    })
+                  )}
+                </div>
+              </motion.div>
+            );
+          })()}
 
           {/* VIEW: PAYMENTS */}
           {activeTab === "payments" && (
