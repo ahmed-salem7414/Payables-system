@@ -57,6 +57,23 @@ export default function MawridDashboard() {
 
   // Search and Filter States
   const [supplierSearch, setSupplierSearch] = useState("");
+  const [supplierCategories, setSupplierCategories] = useState<string[]>(() => {
+    const saved = localStorage.getItem("mawrid_supplier_categories");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        // fallback
+      }
+    }
+    return ["مواد خام", "شحن ولوجستيات", "خدمات مكتبية وتكنولوجيا", "تعبئة وتغليف"];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("mawrid_supplier_categories", JSON.stringify(supplierCategories));
+  }, [supplierCategories]);
+
   const [supplierCategoryFilter, setSupplierCategoryFilter] = useState("all");
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState("all");
@@ -1537,11 +1554,10 @@ export default function MawridDashboard() {
                       onChange={(e) => setSupplierCategoryFilter(e.target.value)}
                       className="w-full text-xs border border-slate-700 px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer bg-[#0f172a] text-white font-medium"
                     >
-                      <option value="all">كل التصنيفات والخدمات</option>
-                      <option value="مواد خام">مواد خام</option>
-                      <option value="شحن ولوجستيات">شحن ولوجستيات</option>
-                      <option value="خدمات مكتبية وتكنولوجيا">خدمات مكتبية وتكنولوجيا</option>
-                      <option value="تعبئة وتغليف">تعبئة وتغليف</option>
+                      <option value="all">كل التصنيفات والخدمات ({supplierCategories.length})</option>
+                      {supplierCategories.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -3038,16 +3054,38 @@ export default function MawridDashboard() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-slate-500 block mb-1">فئة النشاط المورّد</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-500 block">فئة النشاط المورّد</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newCat = prompt("أدخل اسم فئة النشاط الجديدة:");
+                        if (newCat && newCat.trim()) {
+                          const trimmed = newCat.trim();
+                          if (!supplierCategories.includes(trimmed)) {
+                            const updatedCategories = [...supplierCategories, trimmed];
+                            setSupplierCategories(updatedCategories);
+                            setNewSupplier(prev => ({ ...prev, category: trimmed }));
+                            showToast(`تمت إضافة الفئة "${trimmed}" بنجاح وتحديدها.`);
+                          } else {
+                            setNewSupplier(prev => ({ ...prev, category: trimmed }));
+                            showToast("هذه الفئة موجودة بالفعل وتم تحديدها.", "info");
+                          }
+                        }
+                      }}
+                      className="text-[10px] text-emerald-605 font-bold hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                    >
+                      + فئة جديدة
+                    </button>
+                  </div>
                   <select
                     value={newSupplier.category}
                     onChange={(e) => setNewSupplier({ ...newSupplier, category: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 font-semibold cursor-pointer"
                   >
-                    <option value="مواد خام">مواد خام</option>
-                    <option value="شحن ولوجستيات">شحن ولوجستيات</option>
-                    <option value="خدمات مكتبية وتكنولوجيا">خدمات مكتبية وتكنولوجيا</option>
-                    <option value="تعبئة وتغليف">تعبئة وتغليف</option>
+                    {supplierCategories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -3732,16 +3770,38 @@ export default function MawridDashboard() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-slate-500 block mb-1">فئة النشاط المورّد</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-500 block">فئة النشاط المورّد</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newCat = prompt("أدخل اسم فئة النشاط الجديدة:");
+                        if (newCat && newCat.trim()) {
+                          const trimmed = newCat.trim();
+                          if (!supplierCategories.includes(trimmed)) {
+                            const updatedCategories = [...supplierCategories, trimmed];
+                            setSupplierCategories(updatedCategories);
+                            setEditingSupplier(prev => prev ? ({ ...prev, category: trimmed }) : null);
+                            showToast(`تمت إضافة الفئة "${trimmed}" بنجاح وتحديدها.`);
+                          } else {
+                            setEditingSupplier(prev => prev ? ({ ...prev, category: trimmed }) : null);
+                            showToast("هذه الفئة موجودة بالفعل في الخيارات.", "info");
+                          }
+                        }
+                      }}
+                      className="text-[10px] text-emerald-605 font-bold hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                    >
+                      + فئة جديدة
+                    </button>
+                  </div>
                   <select
                     value={editingSupplier.category}
-                    onChange={(e) => setEditingSupplier({ ...editingSupplier, category: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 font-semibold"
+                    onChange={(e) => setEditingSupplier(prev => prev ? ({ ...prev, category: e.target.value }) : null)}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 font-semibold cursor-pointer"
                   >
-                    <option value="مواد خام">مواد خام</option>
-                    <option value="شحن ولوجستيات">شحن ولوجستيات</option>
-                    <option value="خدمات مكتبية وتكنولوجيا">خدمات مكتبية وتكنولوجيا</option>
-                    <option value="تعبئة وتغليف">تعبئة وتغليف</option>
+                    {supplierCategories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
