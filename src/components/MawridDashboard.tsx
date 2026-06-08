@@ -8,7 +8,7 @@ import {
   Users, Receipt, CreditCard, Bell, FileText, Database, MessageSquare, 
   ShieldAlert, Plus, Trash2, Download, CheckCircle2, XCircle, AlertTriangle, 
   RefreshCw, TrendingUp, Building, Check, Key, Upload, Activity, 
-  UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save, Edit, Search, Wallet
+  UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save, Edit, Search, Wallet, Warehouse
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -1451,6 +1451,16 @@ export default function MawridDashboard() {
             </button>
 
             <button 
+              onClick={() => setActiveTab("warehouses")}
+              className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-xl transition-all ${
+                activeTab === "warehouses" ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700" : "text-slate-400 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <Warehouse className="w-5 h-5 shrink-0" />
+              <span>إدارة المخازن ({warehouses.length})</span>
+            </button>
+
+            <button 
               onClick={() => setActiveTab("backups")}
               className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-xl transition-all ${
                 activeTab === "backups" ? "bg-[#1e293b] text-[#c084fc] shadow-md border border-slate-700" : "text-slate-400 hover:bg-slate-800 hover:text-white"
@@ -2703,6 +2713,170 @@ export default function MawridDashboard() {
                 ))}
               </div>
 
+            </motion.div>
+          )}
+
+          {/* VIEW: WAREHOUSES MANAGEMENT */}
+          {activeTab === "warehouses" && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6 animate-fade-in"
+            >
+              {/* Header Box */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <Warehouse className="w-5 h-5 text-emerald-600" />
+                    منظومة إدارة مستودعات ومخازن الشحنات
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">عرض جميع المخازن المعتمَدة لاستقبال الفواتير وإدارتها بإضافة أو حذف فروع ومستودعات التوجيه</p>
+                </div>
+                
+                {/* Form to add a new warehouse directly */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <input
+                    type="text"
+                    id="new-warehouse-input"
+                    placeholder="اسم المخزن الجديد (مثال: مخزن طنطا الفرعي)"
+                    className="border border-slate-200 rounded-xl px-4 py-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none text-slate-800 font-bold bg-slate-50 min-w-[240px]"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const val = (e.currentTarget as HTMLInputElement).value.trim();
+                        if (val) {
+                          if (warehouses.includes(val)) {
+                            showToast("هذا المخزن متواجد بالفعل بقائمة المخازن.", "info");
+                          } else {
+                            setWarehouses([...warehouses, val]);
+                            e.currentTarget.value = "";
+                            showToast(`تمت إضافة المستودع "${val}" بنجاح للنظام.`);
+                          }
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      const inputEl = document.getElementById("new-warehouse-input") as HTMLInputElement;
+                      const val = inputEl ? inputEl.value.trim() : "";
+                      if (val) {
+                        if (warehouses.includes(val)) {
+                          showToast("هذا المخزن متواجد بالفعل بقائمة المخازن.", "info");
+                        } else {
+                          setWarehouses([...warehouses, val]);
+                          if (inputEl) inputEl.value = "";
+                          showToast(`تمت إضافة المستودع "${val}" بنجاح للنظام.`);
+                        }
+                      } else {
+                        showToast("يرجى إدخال اسم المستودع أولاً للتمكن من الإضافة.", "error");
+                      }
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    إضافة مخزن جديد
+                  </button>
+                </div>
+              </div>
+
+              {/* Grid of Warehouses */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {warehouses.map((wh) => {
+                  const whInvoices = invoices.filter(i => i.warehouse === wh);
+                  const totalShipmentsValue = whInvoices.reduce((sum, curr) => sum + curr.totalAmount, 0);
+                  const unpaidInvoicesCount = whInvoices.filter(i => i.status === "unpaid").length;
+                  const paidInvoicesCount = whInvoices.filter(i => i.status === "paid").length;
+                  const lastShipment = whInvoices.length > 0 
+                    ? [...whInvoices].sort((a,b) => (b.issueDate || "").localeCompare(a.issueDate || ""))[0]
+                    : null;
+
+                  return (
+                    <div 
+                      key={wh}
+                      className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-350 transition-all duration-200 group relative overflow-hidden"
+                    >
+                      {/* Ambient background decoration */}
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-6 -mt-6 -z-0 opacity-45 group-hover:bg-slate-100 transition-colors pointer-events-none"></div>
+                      
+                      <div className="relative z-10">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-150 flex items-center justify-center text-slate-700">
+                              <Warehouse className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-800 text-sm leading-snug">{wh}</h4>
+                              <p className="text-[11px] text-slate-400 font-medium">سجل شحنات الاستقبال بالموقع</p>
+                            </div>
+                          </div>
+
+                          <div className="bg-slate-50 text-slate-500 text-xs px-2.5 py-1 rounded-full border border-slate-150 font-bold">
+                            {whInvoices.length} {whInvoices.length === 1 ? "شحنة" : "شحنات مسجلة"}
+                          </div>
+                        </div>
+
+                        {/* Financial Statistics details section */}
+                        <div className="mt-5 grid grid-cols-2 gap-3 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                          <div>
+                            <span className="text-[10px] text-slate-400 font-bold block mb-0.5">القيمة المالية الكلية</span>
+                            <span className="text-xs font-black text-slate-800 font-mono">
+                              {totalShipmentsValue.toLocaleString()} ج.م
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 font-bold block mb-0.5">تحليل الشحنات</span>
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold">
+                              <span className="text-emerald-605 text-emerald-600">✓ {paidInvoicesCount} مسدد</span>
+                              <span className="text-slate-300">|</span>
+                              <span className="text-amber-605 text-amber-600">🕞 {unpaidInvoicesCount} مستحق</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Last Shipment tracker */}
+                        {lastShipment ? (
+                          <div className="mt-4 text-[11px] text-slate-500 flex items-center gap-1.5 border-t border-slate-100 pt-3">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>آخر شحنة واردة:</span>
+                            <span className="font-mono font-bold text-slate-800">#{lastShipment.invoiceNumber}</span>
+                            <span className="text-slate-400">بتاريخ</span>
+                            <span className="font-bold">{lastShipment.issueDate || "2026-06-01"}</span>
+                          </div>
+                        ) : (
+                          <div className="mt-4 text-[11px] text-slate-400 italic border-t border-slate-100 pt-3">
+                            لا يوجد فواتير واردة مسجلة لهذا المخزن حتى الآن.
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action buttons section */}
+                      <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end relative z-10">
+                        <button
+                          onClick={() => {
+                            if (whInvoices.length > 0) {
+                              if (!window.confirm(`تنبيه: هذا المخزن مرتبط بالفعل بـ (${whInvoices.length}) فواتير مسجلة في شحنات المشتريات. حذفه الآن سيؤثر على تصفية وعرض هذي الفواتير. هل تود حذفه نهائياً من خيارات الإرسال على أي حال؟`)) {
+                                return;
+                              }
+                            } else {
+                              if (!window.confirm(`هل أنت متأكد من حذف المخزن "${wh}" من السجلات وقائمة الخيارات المتاحة؟`)) {
+                                return;
+                              }
+                            }
+                            const updated = warehouses.filter(w => w !== wh);
+                            setWarehouses(updated);
+                            showToast(`تم حذف المخزن "${wh}" بنجاح من النظام.`, "info");
+                          }}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1 cursor-pointer"
+                          title="حذف المخزن من قائمة الخيارات"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span>إلغاء واعتماد الإزالة</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </motion.div>
           )}
 
