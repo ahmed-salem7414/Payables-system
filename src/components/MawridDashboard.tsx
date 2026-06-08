@@ -74,6 +74,23 @@ export default function MawridDashboard() {
     localStorage.setItem("mawrid_supplier_categories", JSON.stringify(supplierCategories));
   }, [supplierCategories]);
 
+  const [warehouses, setWarehouses] = useState<string[]>(() => {
+    const saved = localStorage.getItem("mawrid_warehouses");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        // fallback
+      }
+    }
+    return ["مخازن أكتوبر الرئيسية", "مستودع العبور لتجهيز الخامات", "مخزن الإسكندرية المينائي", "مخازن العاشر من رمضان"];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("mawrid_warehouses", JSON.stringify(warehouses));
+  }, [warehouses]);
+
   const [supplierCategoryFilter, setSupplierCategoryFilter] = useState("all");
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState("all");
@@ -83,6 +100,7 @@ export default function MawridDashboard() {
   const [reportStartDate, setReportStartDate] = useState<string>("2026-04-01");
   const [reportEndDate, setReportEndDate] = useState<string>("2026-06-30");
   const [selectedReportSupplierId, setSelectedReportSupplierId] = useState<string>("all");
+  const [reportWarehouseFilter, setReportWarehouseFilter] = useState<string>("all");
   const [aiReportSummary, setAiReportSummary] = useState<string>("");
   const [isGeneratingAiSummary, setIsGeneratingAiSummary] = useState(false);
 
@@ -145,7 +163,8 @@ export default function MawridDashboard() {
   const [newInvoice, setNewInvoice] = useState({
     supplierId: "", invoiceNumber: "", dueDate: "", notes: "",
     items: [{ name: "", quantity: 1, price: 0 }],
-    vatRate: 14
+    vatRate: 14,
+    warehouse: ""
   });
 
   // Edit Invoice form state
@@ -354,10 +373,12 @@ export default function MawridDashboard() {
       return date >= reportStartDate && date <= reportEndDate;
     });
 
-    // Filter by supplier
-    const targetInvoices = selectedReportSupplierId === "all"
-      ? dateFilteredInvoices
-      : dateFilteredInvoices.filter(i => i.supplierId === selectedReportSupplierId);
+    // Filter by supplier and warehouse
+    const targetInvoices = dateFilteredInvoices.filter(i => {
+      const matchesSupplier = selectedReportSupplierId === "all" || i.supplierId === selectedReportSupplierId;
+      const matchesWarehouse = reportWarehouseFilter === "all" || i.warehouse === reportWarehouseFilter;
+      return matchesSupplier && matchesWarehouse;
+    });
 
     const targetTotal = targetInvoices.reduce((sum, curr) => sum + (curr.totalAmount - (curr.creditNoteAmount || 0)), 0);
     const targetPending = targetInvoices.filter(i => i.status === "unpaid").reduce((sum, curr) => sum + (curr.totalAmount - (curr.creditNoteAmount || 0)), 0);
@@ -615,6 +636,7 @@ export default function MawridDashboard() {
       totalAmount: calculatedTotal,
       status: "unpaid",
       notes: newInvoice.notes,
+      warehouse: newInvoice.warehouse || warehouses[0],
       vatRate: vatRate,
       vatAmount: vatAmount
     };
@@ -624,7 +646,8 @@ export default function MawridDashboard() {
     setNewInvoice({
       supplierId: "", invoiceNumber: "", dueDate: "", notes: "",
       items: [{ name: "", quantity: 1, price: 0 }],
-      vatRate: 14
+      vatRate: 14,
+      warehouse: ""
     });
     showToast(`تم تسجيل فاتورة جديدة ${createdInvoice.invoiceNumber} بقيمة ${calculatedTotal.toLocaleString()} ج.م (تتضمن ضريبة ق.م: ${vatAmount.toLocaleString()} ج.م).`);
   };
@@ -1162,9 +1185,11 @@ export default function MawridDashboard() {
       return date >= reportStartDate && date <= reportEndDate;
     });
 
-    const targetInvoices = selectedReportSupplierId === "all"
-      ? dateFilteredInvoices
-      : dateFilteredInvoices.filter(i => i.supplierId === selectedReportSupplierId);
+    const targetInvoices = dateFilteredInvoices.filter(i => {
+      const matchesSupplier = selectedReportSupplierId === "all" || i.supplierId === selectedReportSupplierId;
+      const matchesWarehouse = reportWarehouseFilter === "all" || i.warehouse === reportWarehouseFilter;
+      return matchesSupplier && matchesWarehouse;
+    });
 
     targetInvoices.forEach(inv => {
       const supplier = suppliers.find(s => s.id === inv.supplierId);
@@ -1220,7 +1245,8 @@ export default function MawridDashboard() {
         const matchesMonth = date.startsWith(m.key);
         const matchesRange = date >= reportStartDate && date <= reportEndDate;
         const matchesSupplier = selectedReportSupplierId === "all" || i.supplierId === selectedReportSupplierId;
-        return matchesMonth && matchesRange && matchesSupplier;
+        const matchesWarehouse = reportWarehouseFilter === "all" || i.warehouse === reportWarehouseFilter;
+        return matchesMonth && matchesRange && matchesSupplier && matchesWarehouse;
       });
       
       const purchaseSum = inMonthInvoices.reduce((sum, curr) => sum + (curr.totalAmount - (curr.creditNoteAmount || 0)), 0);
@@ -1231,7 +1257,14 @@ export default function MawridDashboard() {
         const matchesMonth = date.startsWith(m.key);
         const matchesRange = date >= reportStartDate && date <= reportEndDate;
         const matchesSupplier = selectedReportSupplierId === "all" || p.supplierId === selectedReportSupplierId;
-        return matchesMonth && matchesRange && matchesSupplier;
+        
+        let matchesWarehouse = true;
+        if (reportWarehouseFilter !== "all") {
+          const inv = invoices.find(i => i.id === p.invoiceId);
+          matchesWarehouse = inv ? inv.warehouse === reportWarehouseFilter : false;
+        }
+        
+        return matchesMonth && matchesRange && matchesSupplier && matchesWarehouse;
       });
       
       const paidSum = inMonthPayments.reduce((sum, curr) => sum + curr.amount, 0);
@@ -1890,7 +1923,14 @@ export default function MawridDashboard() {
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-xs text-slate-350 font-semibold mt-1">المورد: {sup ? `${sup.name} (${sup.company})` : "غير معروف"}</p>
+                                  <p className="text-xs text-slate-350 font-semibold mt-1">
+                                    المورد: {sup ? `${sup.name} (${sup.company})` : "غير معروف"}
+                                    {inv.warehouse && (
+                                      <span className="inline-flex items-center gap-1 bg-[#334155]/60 text-amber-350 border border-amber-500/30 px-2 py-0.5 rounded-md text-[10px] mx-2 font-bold font-sans">
+                                        📦 المخزن: {inv.warehouse}
+                                      </span>
+                                    )}
+                                  </p>
                                 </div>
                               </div>
 
@@ -2318,6 +2358,17 @@ export default function MawridDashboard() {
                     ))}
                   </select>
 
+                  <select 
+                    value={reportWarehouseFilter} 
+                    onChange={(e) => setReportWarehouseFilter(e.target.value)}
+                    className="bg-[#0f172a] text-amber-400 border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer"
+                  >
+                    <option value="all">📦 جميع المخازن (كل المستودعات)</option>
+                    {warehouses.map(wh => (
+                      <option key={wh} value={wh}>📦 مخزن: {wh}</option>
+                    ))}
+                  </select>
+
                   {/* Calendar Range Filter */}
                   <div className="flex items-center gap-1.5 bg-[#0f172a] border border-slate-700 px-3 py-1.5 rounded-xl text-xs text-white">
                     <span className="text-slate-400 font-bold shrink-0 text-[11px]">من:</span>
@@ -2453,6 +2504,7 @@ export default function MawridDashboard() {
                      <strong className="text-xs text-slate-800 font-bold block mt-1 leading-snug">
                        التقرير: من {reportStartDate} إلى {reportEndDate}
                        {selectedReportSupplierId !== "all" ? ` | مورد: ${suppliers.find(s => s.id === selectedReportSupplierId)?.name}` : " | كشف مجمع للموردين"}
+                       {reportWarehouseFilter !== "all" ? ` | مخزن: ${reportWarehouseFilter}` : " | كافة المخازن"}
                      </strong>
                    </div>
                    <div className="text-center border-x border-slate-200">
@@ -2514,7 +2566,8 @@ export default function MawridDashboard() {
                                  const matchesSupplier = i.supplierId === sup.id;
                                  const date = i.issueDate || "2026-06-01";
                                  const matchesRange = date >= reportStartDate && date <= reportEndDate;
-                                 return matchesSupplier && matchesRange;
+                                 const matchesWarehouse = reportWarehouseFilter === "all" || i.warehouse === reportWarehouseFilter;
+                                 return matchesSupplier && matchesRange && matchesWarehouse;
                                });
                                if (supInvoices.length > 0) {
                                  anyInvoicesFound = true;
@@ -3199,6 +3252,46 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-500 block">المخزن المتلقي للشحنة *</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newWh = prompt("أدخل اسم المخزن الجديد:");
+                        if (newWh && newWh.trim()) {
+                          const trimmed = newWh.trim();
+                          if (!warehouses.includes(trimmed)) {
+                            const updated = [...warehouses, trimmed];
+                            setWarehouses(updated);
+                            setNewInvoice(prev => ({ ...prev, warehouse: trimmed }));
+                            showToast(`تمت إضافة المخزن "${trimmed}" بنجاح وتحديده.`);
+                          } else {
+                            setNewInvoice(prev => ({ ...prev, warehouse: trimmed }));
+                            showToast("هذا المخزن موجود بالفعل وتم تحديده.", "info");
+                          }
+                        }
+                      }}
+                      className="text-[10px] text-emerald-600 font-bold hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                    >
+                      + مخزن جديد
+                    </button>
+                  </div>
+                  <select
+                    required
+                    value={newInvoice.warehouse || (warehouses.length > 0 ? warehouses[0] : "")}
+                    onChange={(e) => setNewInvoice({ ...newInvoice, warehouse: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value="">-- اختر المخزن --</option>
+                    {warehouses.map((wh) => (
+                      <option key={wh} value={wh}>{wh}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               {/* Items row editor section */}
               <div className="space-y-2 border-t border-slate-100 pt-3">
                 <div className="flex items-center justify-between">
@@ -3416,6 +3509,46 @@ export default function MawridDashboard() {
                     className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
                     placeholder="شحنة التجهيز المقررة لمخازن العاشر"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-500 block">المخزن المتلقي للشحنة *</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newWh = prompt("أدخل اسم المخزن الجديد:");
+                        if (newWh && newWh.trim()) {
+                          const trimmed = newWh.trim();
+                          if (!warehouses.includes(trimmed)) {
+                            const updated = [...warehouses, trimmed];
+                            setWarehouses(updated);
+                            setEditingInvoice(prev => prev ? ({ ...prev, warehouse: trimmed }) : null);
+                            showToast(`تمت إضافة المخزن "${trimmed}" بنجاح وتحديده.`);
+                          } else {
+                            setEditingInvoice(prev => prev ? ({ ...prev, warehouse: trimmed }) : null);
+                            showToast("هذا المخزن موجود بالفعل وتم تحديده.", "info");
+                          }
+                        }
+                      }}
+                      className="text-[10px] text-emerald-600 font-bold hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                    >
+                      + مخزن جديد
+                    </button>
+                  </div>
+                  <select
+                    required
+                    value={editingInvoice.warehouse || (warehouses.length > 0 ? warehouses[0] : "")}
+                    onChange={(e) => setEditingInvoice({ ...editingInvoice, warehouse: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value="">-- اختر المخزن --</option>
+                    {warehouses.map((wh) => (
+                      <option key={wh} value={wh}>{wh}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

@@ -32,6 +32,7 @@ export interface Invoice {
   totalAmount: number;   // المبلغ الإجمالي
   status: 'paid' | 'unpaid'; // حالة السداد (تم السداد / لم يتم السداد)
   notes?: string;
+  warehouse?: string;    // اسم المخزن المتلقي للشحنة
   creditNoteAmount?: number; // إجمالي قيمة الإشعارات الدائنة للخصم
   creditNotes?: CreditNote[]; // الإشعارات الدائنة المرتبطة بالفاتورة
   vatRate?: number;     // نسبة ضريبة القيمة المضافة بالـ %
