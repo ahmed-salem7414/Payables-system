@@ -1700,19 +1700,7 @@ export default function MawridDashboard() {
                     <Users className="w-4 h-4 text-slate-500 absolute right-3 top-3.5" />
                   </div>
 
-                  {/* Category Filter */}
-                  <div className="w-full md:w-auto">
-                    <select
-                      value={supplierCategoryFilter}
-                      onChange={(e) => setSupplierCategoryFilter(e.target.value)}
-                      className="w-full text-xs border border-slate-700 px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer bg-[#0f172a] text-white font-medium"
-                    >
-                      <option value="all">كل التصنيفات والخدمات ({supplierCategories.length})</option>
-                      {supplierCategories.map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
+
 
                 </div>
 
