@@ -193,6 +193,7 @@ export default function MawridDashboard() {
   const [showAddCreditNoteModal, setShowAddCreditNoteModal] = useState(false);
   const [newCreditNote, setNewCreditNote] = useState({
     supplierId: "",
+    invoiceId: "",
     creditNoteNumber: "",
     amount: 0,
     issueDate: "2026-06-07",
@@ -419,9 +420,26 @@ export default function MawridDashboard() {
       return;
     }
 
+    if (!newCreditNote.invoiceId) {
+      showToast("يرجى تحديد الفاتورة المربُوطة بالإشعار الدائن بشكل إجباري للخصم منها.", "error");
+      return;
+    }
+
+    const selectedInvoice = invoices.find(inv => inv.id === newCreditNote.invoiceId);
+    if (!selectedInvoice) {
+      showToast("الفاتورة المحددة غير صالحة أو غير موجودة.", "error");
+      return;
+    }
+
     const calculatedCNTotal = newCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
     if (calculatedCNTotal <= 0) {
       showToast("يرجى إضافة بند واحد على الأقل بقيمة أكبر من الصفر.", "error");
+      return;
+    }
+
+    const remainingPayable = selectedInvoice.totalAmount - (selectedInvoice.creditNoteAmount || 0);
+    if (calculatedCNTotal > remainingPayable) {
+      showToast(`قيمة الإشعار الدائن (${calculatedCNTotal.toLocaleString()} ج.م) لا يمكن أن تتجاوز الرصيد المستحق المتبقي بالفاتورة وهو (${remainingPayable.toLocaleString()} ج.م).`, "error");
       return;
     }
 
@@ -440,13 +458,32 @@ export default function MawridDashboard() {
       dueDate: newCreditNote.dueDate || new Date(Date.now() + 15 * 24 * 3600 * 1000).toISOString().split("T")[0],
       status: "active",
       items: newCreditNote.items,
-      notes: newCreditNote.notes
+      notes: `${newCreditNote.notes || ""} [مرتبط بالفاتورة: ${selectedInvoice.invoiceNumber}]`
     };
 
     setCreditNotes([...creditNotes, createdCN]);
+
+    // Update the matched invoice directly
+    const updatedInvoices = invoices.map(inv => {
+      if (inv.id === selectedInvoice.id) {
+        const cnRefText = `[تم إصدار إشعار دائن مرتبط برقم: ${createdCN.creditNoteNumber} بقيمة: ${createdCN.amount.toLocaleString()} ج.م]`;
+        const existingNotes = inv.notes ? `${inv.notes} ` : "";
+        const currentCNList = inv.creditNotes || [];
+        return {
+          ...inv,
+          notes: existingNotes + cnRefText,
+          creditNoteAmount: (inv.creditNoteAmount || 0) + calculatedCNTotal,
+          creditNotes: [...currentCNList, createdCN]
+        };
+      }
+      return inv;
+    });
+    setInvoices(updatedInvoices);
+
     setShowAddCreditNoteModal(false);
     setNewCreditNote({
       supplierId: "",
+      invoiceId: "",
       creditNoteNumber: "",
       amount: 0,
       issueDate: "2026-06-07",
@@ -454,7 +491,7 @@ export default function MawridDashboard() {
       notes: "",
       items: [{ name: "", quantity: 1, price: 0 }]
     });
-    showToast(`تم تسجيل الإشعار الدائن رقم ${createdCN.creditNoteNumber} للمورد بنجاح.`);
+    showToast(`تم تسجيل الإشعار الدائن رقم ${createdCN.creditNoteNumber} وخصمه من الفاتورة رقم ${selectedInvoice.invoiceNumber} بنجاح.`);
   };
 
   // Credit Note Form Item handlers
@@ -1599,6 +1636,7 @@ export default function MawridDashboard() {
                                       if (!checkPermission("write")) return;
                                       setNewCreditNote({
                                         supplierId: sup.id,
+                                        invoiceId: "",
                                         creditNoteNumber: `CN-2026-${Math.floor(100 + Math.random() * 900)}`,
                                         amount: 0,
                                         issueDate: "2026-06-07",
@@ -3811,6 +3849,64 @@ export default function MawridDashboard() {
                     placeholder="خصم ترويجي للمواد الخام الربع السنوي"
                   />
                 </div>
+              </div>
+
+              {/* Target Invoice Selection (Compulsory/Required) */}
+              <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 space-y-2">
+                <label className="text-slate-700 block font-bold text-xs">ربط وتحديد الفاتورة للخصم منها (إجباري) *</label>
+                <select 
+                  required
+                  value={newCreditNote.invoiceId}
+                  onChange={(e) => setNewCreditNote({ ...newCreditNote, invoiceId: e.target.value })}
+                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer text-xs"
+                >
+                  <option value="">-- اختر الفاتورة غير المسددة للربط والخصم منها --</option>
+                  {invoices
+                    .filter(i => i.supplierId === newCreditNote.supplierId && i.status === "unpaid")
+                    .map(i => {
+                      const remaining = i.totalAmount - (i.creditNoteAmount || 0);
+                      return (
+                        <option key={i.id} value={i.id}>
+                          فاتورة رقم {i.invoiceNumber} (قيمة الفاتورة: {i.totalAmount.toLocaleString()} ج.م | المتبقي للاستحقاق: {remaining.toLocaleString()} ج.م)
+                        </option>
+                      );
+                    })
+                  }
+                </select>
+                {/* Visual feedback of the selected invoice */}
+                {(() => {
+                  const selectedInvoice = invoices.find(inv => inv.id === newCreditNote.invoiceId);
+                  if (selectedInvoice) {
+                    const remaining = selectedInvoice.totalAmount - (selectedInvoice.creditNoteAmount || 0);
+                    return (
+                      <div className="bg-white p-3 rounded-xl border border-slate-200 mt-2 space-y-1 font-sans">
+                        <div className="flex justify-between text-slate-500 text-[11px]">
+                          <span>قيمة الفاتورة المحددة الأصلية:</span>
+                          <span className="font-bold text-slate-700">{selectedInvoice.totalAmount.toLocaleString()} ج.م</span>
+                        </div>
+                        <div className="flex justify-between text-slate-500 text-[11px]">
+                          <span>الخصم المطبق مسبقاً بالإشعارات الدائنة:</span>
+                          <span className="font-bold text-amber-600">{selectedInvoice.creditNoteAmount ? `${selectedInvoice.creditNoteAmount.toLocaleString()} ج.م` : "0 ج.م"}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-800 text-[11px] font-bold border-t border-slate-100 pt-1 mt-1">
+                          <span>الحد الأقصى المسموح به لقيمة الإشعار الدائن:</span>
+                          <span className="text-emerald-700 font-black">{remaining.toLocaleString()} ج.م</span>
+                        </div>
+                      </div>
+                    );
+                  } else if (invoices.filter(i => i.supplierId === newCreditNote.supplierId && i.status === "unpaid").length === 0) {
+                    return (
+                      <div className="bg-rose-50 border border-rose-100 text-rose-700 p-3 rounded-xl text-center font-bold text-[11px]">
+                        ⚠️ لا توجد فواتير غير مسددة مسجلة لهذا المورد حالياً للخصم منها. يرجى تسجيل فاتورة جديدة له أولاً.
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="text-slate-400 text-[11px] italic">
+                      يرجى تحديد الفاتورة لتأكيد المبلغ الإجمالي والخصم المطلوب.
+                    </div>
+                  );
+                })()}
               </div>
 
               <div>

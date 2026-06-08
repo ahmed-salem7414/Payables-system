@@ -1,5 +1,5 @@
 {
-  "name": "مؤسسة مرسال - Mersal Foundation",
+  "name": "نظام مورد الذكي",
   "description": "نظام متكامل باللغة العربية لإدارة الموردين وفواتير المشتريات والمدفوعات، مع تقارير PDF وتحليلات ذكية وتكامل بنكي وصلاحيات.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
