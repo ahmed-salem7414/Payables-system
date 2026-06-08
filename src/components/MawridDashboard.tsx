@@ -162,7 +162,7 @@ export default function MawridDashboard() {
   // New Invoice form state
   const [newInvoice, setNewInvoice] = useState({
     supplierId: "", invoiceNumber: "", dueDate: "", notes: "",
-    items: [{ name: "", quantity: 1, price: 0 }],
+    items: [{ name: "بند شحنة", quantity: 1, price: 0 }],
     vatRate: 14,
     warehouse: ""
   });
@@ -177,7 +177,7 @@ export default function MawridDashboard() {
     issueDate: "2026-06-07",
     dueDate: "",
     notes: "",
-    items: [{ name: "", quantity: 1, price: 0 }]
+    items: [{ name: "بند إشعار", quantity: 1, price: 0 }]
   });
 
   useEffect(() => {
@@ -600,7 +600,7 @@ export default function MawridDashboard() {
       issueDate: "2026-06-07",
       dueDate: "",
       notes: "",
-      items: [{ name: "", quantity: 1, price: 0 }]
+      items: [{ name: "بند إشعار", quantity: 1, price: 0 }]
     });
     showToast(`تم تسجيل الإشعار الدائن رقم ${createdCN.creditNoteNumber} وخصمه من الفاتورة رقم ${selectedInvoice.invoiceNumber} بنجاح.`);
   };
@@ -609,7 +609,7 @@ export default function MawridDashboard() {
   const handleCNAddItemRow = () => {
     setNewCreditNote({
       ...newCreditNote,
-      items: [...newCreditNote.items, { name: "", quantity: 1, price: 0 }]
+      items: [...newCreditNote.items, { name: "بند إشعار", quantity: 1, price: 0 }]
     });
   };
 
@@ -656,7 +656,7 @@ export default function MawridDashboard() {
   const handleAddItemRow = () => {
     setNewInvoice({
       ...newInvoice,
-      items: [...newInvoice.items, { name: "", quantity: 1, price: 0 }]
+      items: [...newInvoice.items, { name: "بند شحنة", quantity: 1, price: 0 }]
     });
   };
 
@@ -717,7 +717,7 @@ export default function MawridDashboard() {
     setShowAddInvoiceModal(false);
     setNewInvoice({
       supplierId: "", invoiceNumber: "", dueDate: "", notes: "",
-      items: [{ name: "", quantity: 1, price: 0 }],
+      items: [{ name: "بند شحنة", quantity: 1, price: 0 }],
       vatRate: 14,
       warehouse: ""
     });
@@ -729,7 +729,7 @@ export default function MawridDashboard() {
     if (!editingInvoice) return;
     setEditingInvoice({
       ...editingInvoice,
-      items: [...editingInvoice.items, { name: "", quantity: 1, price: 0 }]
+      items: [...editingInvoice.items, { name: "بند شحنة", quantity: 1, price: 0 }]
     });
   };
 
@@ -806,7 +806,7 @@ export default function MawridDashboard() {
   const handleAddEditInvoiceCNItemRow = () => {
     setEditInvoiceCNData(prev => ({
       ...prev,
-      items: [...prev.items, { name: "", quantity: 1, price: 0 }]
+      items: [...prev.items, { name: "بند إشعار", quantity: 1, price: 0 }]
     }));
   };
 
@@ -3682,45 +3682,31 @@ export default function MawridDashboard() {
 
                     <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
                       {/* Item Column Headers */}
-                      <div className="flex items-center gap-2 px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
-                        <div className="flex-1 text-right">الوصف (اسم البند أو الخدمة) *</div>
-                        <div className="w-16 text-center">الكمية *</div>
-                        <div className="w-24 text-left">سعر الوحدة *</div>
-                        <div className="w-24 text-left">قيمة الإجمالي</div>
-                        <div className="w-6"></div>
+                      <div className="flex items-center justify-between px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
+                        <div>التسلسل</div>
+                        <div className="w-48 text-left pl-6">القيمة الإجمالية للبند (ج.م) *</div>
                       </div>
 
                       {newInvoice.items.map((item, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-150">
-                          <input 
-                            type="text" 
-                            required
-                            placeholder="الوصف (مواد خام، شحن، إلخ...)"
-                            value={item.name}
-                            onChange={(e) => handleUpdateItemRow(index, "name", e.target.value)}
-                            className="flex-1 border border-slate-200 rounded p-1 bg-white text-slate-900 text-[11px]"
-                          />
-                          <input 
-                            type="number" 
-                            required
-                            min="1"
-                            placeholder="الكمية"
-                            value={item.quantity}
-                            onChange={(e) => handleUpdateItemRow(index, "quantity", parseInt(e.target.value) || 1)}
-                            className="w-16 border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-center text-[11px]"
-                          />
-                          <input 
-                            type="number" 
-                            required
-                            min="0"
-                            step="any"
-                            placeholder="سعر الوحدة"
-                            value={item.price}
-                            onChange={(e) => handleUpdateItemRow(index, "price", parseFloat(e.target.value) || 0)}
-                            className="w-24 border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-left text-[11px]"
-                          />
-                          <div className="w-24 font-mono font-bold text-slate-800 text-left bg-slate-100 border border-slate-200 rounded p-1 select-none overflow-hidden text-ellipsis whitespace-nowrap text-[11px]">
-                            {(item.quantity * item.price).toLocaleString()} ج.م
+                        <div key={index} className="flex items-center justify-between gap-3 bg-slate-50 p-2 rounded-lg border border-slate-150">
+                          <span className="text-slate-600 text-xs font-bold font-mono">البند #{index + 1}</span>
+                          <div className="flex items-center gap-2 flex-1 max-w-xs">
+                            <input 
+                              type="number" 
+                              required
+                              min="0"
+                              step="any"
+                              placeholder="أدخل القيمة الإجمالية"
+                              value={item.price || ""}
+                              onChange={(e) => {
+                                handleUpdateItemRow(index, "price", parseFloat(e.target.value) || 0);
+                                if (!item.name) {
+                                  handleUpdateItemRow(index, "name", "بند شحنة");
+                                }
+                              }}
+                              className="w-full border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-left text-xs focus:ring-1 focus:ring-sky-500"
+                            />
+                            <span className="text-slate-400 text-[10px] font-bold">ج.م</span>
                           </div>
                           <button
                             type="button"
@@ -3956,45 +3942,31 @@ export default function MawridDashboard() {
 
                     <div className="max-h-44 overflow-y-auto space-y-2 pr-1">
                       {/* Item Column Headers */}
-                      <div className="flex items-center gap-2 px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
-                        <div className="flex-1 text-right">الوصف (اسم البند أو الخدمة) *</div>
-                        <div className="w-16 text-center">الكمية *</div>
-                        <div className="w-24 text-left">سعر الوحدة *</div>
-                        <div className="w-24 text-left">قيمة الإجمالي</div>
-                        <div className="w-6"></div>
+                      <div className="flex items-center justify-between px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
+                        <div>التسلسل</div>
+                        <div className="w-48 text-left pl-6">القيمة الإجمالية للبند (ج.م) *</div>
                       </div>
 
                       {editingInvoice.items.map((item, index) => (
-                        <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-150">
-                          <input 
-                            type="text" 
-                            required
-                            placeholder="الوصف (مواد خام، شحن، إلخ...)"
-                            value={item.name}
-                            onChange={(e) => handleUpdateEditItemRow(index, "name", e.target.value)}
-                            className="flex-1 border border-slate-200 rounded p-1 bg-white text-slate-900 text-[11px]"
-                          />
-                          <input 
-                            type="number" 
-                            required
-                            min="1"
-                            placeholder="الكمية"
-                            value={item.quantity}
-                            onChange={(e) => handleUpdateEditItemRow(index, "quantity", parseInt(e.target.value) || 1)}
-                            className="w-16 border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-center text-[11px]"
-                          />
-                          <input 
-                            type="number" 
-                            required
-                            min="0"
-                            step="any"
-                            placeholder="سعر الوحدة"
-                            value={item.price}
-                            onChange={(e) => handleUpdateEditItemRow(index, "price", parseFloat(e.target.value) || 0)}
-                            className="w-24 border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-left text-[11px]"
-                          />
-                          <div className="w-24 font-mono font-bold text-slate-800 text-left bg-slate-100 border border-slate-200 rounded p-1 select-none overflow-hidden text-ellipsis whitespace-nowrap text-[11px]">
-                            {(item.quantity * item.price).toLocaleString()} ج.م
+                        <div key={index} className="flex items-center justify-between gap-3 bg-slate-50 p-2 rounded-lg border border-slate-150">
+                          <span className="text-slate-600 text-xs font-bold font-mono">البند #{index + 1}</span>
+                          <div className="flex items-center gap-2 flex-1 max-w-xs">
+                            <input 
+                              type="number" 
+                              required
+                              min="0"
+                              step="any"
+                              placeholder="أدخل القيمة الإجمالية"
+                              value={item.price || ""}
+                              onChange={(e) => {
+                                handleUpdateEditItemRow(index, "price", parseFloat(e.target.value) || 0);
+                                if (!item.name) {
+                                  handleUpdateEditItemRow(index, "name", "بند شحنة");
+                                }
+                              }}
+                              className="w-full border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-left text-xs focus:ring-1 focus:ring-sky-500"
+                            />
+                            <span className="text-slate-400 text-[10px] font-bold">ج.م</span>
                           </div>
                           <button
                             type="button"
@@ -4453,53 +4425,39 @@ export default function MawridDashboard() {
 
                 <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
                   {/* Item Column Headers */}
-                  <div className="flex items-center gap-2 px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
-                    <div className="flex-1 text-right">الوصف (اسم البند أو الخدمة) *</div>
-                    <div className="w-20 text-center">الكمية *</div>
-                    <div className="w-28 text-left">سعر الوحدة *</div>
-                    <div className="w-28 text-left">قيمة الإجمالي</div>
-                    <div className="w-8"></div>
+                  <div className="flex items-center justify-between px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
+                    <div>التسلسل</div>
+                    <div className="w-48 text-left pl-6">القيمة الإجمالية للبند (ج.م) *</div>
                   </div>
 
                   {newCreditNote.items.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-150">
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="مثل: خصم توريد مواد خام، إلخ..."
-                        value={item.name}
-                        onChange={(e) => handleCNUpdateItemRow(index, "name", e.target.value)}
-                        className="flex-1 border border-slate-200 rounded p-1.5 bg-white text-slate-900"
-                      />
-                      <input 
-                        type="number" 
-                        required
-                        min="1"
-                        placeholder="الكمية"
-                        value={item.quantity}
-                        onChange={(e) => handleCNUpdateItemRow(index, "quantity", parseInt(e.target.value) || 1)}
-                        className="w-20 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-center"
-                      />
-                      <input 
-                        type="number" 
-                        required
-                        min="0"
-                        step="any"
-                        placeholder="سعر الوحدة"
-                        value={item.price}
-                        onChange={(e) => handleCNUpdateItemRow(index, "price", parseFloat(e.target.value) || 0)}
-                        className="w-28 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-left"
-                      />
-                      <div className="w-28 font-mono font-bold text-slate-900 text-left bg-slate-100 border border-slate-200 rounded p-1.5 select-none overflow-hidden text-ellipsis whitespace-nowrap">
-                        {(item.quantity * item.price).toLocaleString()} ج.م
+                    <div key={index} className="flex items-center justify-between gap-3 bg-slate-50 p-2 rounded-lg border border-slate-150">
+                      <span className="text-slate-600 text-xs font-bold font-mono">البند #{index + 1}</span>
+                      <div className="flex items-center gap-2 flex-1 max-w-xs">
+                        <input 
+                          type="number" 
+                          required
+                          min="0"
+                          step="any"
+                          placeholder="أدخل القيمة الإجمالية"
+                          value={item.price || ""}
+                          onChange={(e) => {
+                            handleCNUpdateItemRow(index, "price", parseFloat(e.target.value) || 0);
+                            if (!item.name) {
+                              handleCNUpdateItemRow(index, "name", "بند إشعار");
+                            }
+                          }}
+                          className="w-full border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-left text-xs focus:ring-1 focus:ring-emerald-500"
+                        />
+                        <span className="text-slate-400 text-[10px] font-bold">ج.م</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleCNRemoveItemRow(index)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 rounded cursor-pointer"
+                        className="p-1 text-slate-400 hover:text-red-500 rounded cursor-pointer"
                         title="حذف هذا البند"
                       >
-                        <XCircle className="w-4.5 h-4.5" />
+                        <XCircle className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
