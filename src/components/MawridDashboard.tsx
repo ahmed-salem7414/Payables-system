@@ -18,6 +18,7 @@ import {
 
 import { Supplier, Invoice, Payment, BackupRecord, UserRole, BankConfig, SupportMessage, CreditNote } from "../types";
 import { INITIAL_SUPPLIERS, INITIAL_INVOICES, INITIAL_PAYMENTS, INITIAL_BACKUPS, LOCAL_BANKS_SELECTION } from "../data";
+import { MersalLogo } from "./MersalLogo";
 
 export default function MawridDashboard() {
   // Application State
@@ -1254,13 +1255,13 @@ export default function MawridDashboard() {
       <header className="no-print bg-[#1e293b] border-b border-slate-700 sticky top-0 z-40 px-6 py-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-emerald-950">
-              <Building className="w-6 h-6" />
+          <div className="flex items-center gap-4">
+            <div className="bg-slate-900/30 px-3 py-1.5 rounded-2xl border border-slate-700/50 flex items-center justify-center">
+              <MersalLogo width={110} height={110} isDarkBackground={true} className="h-14 w-auto -my-3" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-white flex items-center gap-2">
-                نظام مُوَرِّد الذكي
+                مؤسسة مرسال - Mersal Foundation
                 <span className="text-xs bg-emerald-500/15 text-emerald-400 font-medium px-2 py-0.5 rounded-full border border-emerald-500/20">للإصدار المالي</span>
               </h1>
               <p className="text-xs text-slate-400">منظومة الحسابات والمشتريات وتتبع سداد الموردين التفاعلية</p>
@@ -2417,13 +2418,15 @@ export default function MawridDashboard() {
                 {/* Printed Header Banner */}
                 <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
                   <div>
-                    <h2 className="text-lg font-black text-slate-950">مؤسسة المدفوعات العربية المتكاملة</h2>
+                    <h2 className="text-lg font-black text-slate-950">مؤسسة مرسال - Mersal Foundation</h2>
                     <p className="text-xs text-slate-500 font-medium">التقرير المالي المعزز لحسابات الموردين وفواتير الشراء</p>
                     <p className="text-xs text-slate-500 font-mono mt-1">تاريخ استخراج التقرير: 2026-06-07</p>
                   </div>
-                  <div className="text-left">
-                    <div className="w-10 h-10 bg-slate-950 rounded-xl flex items-center justify-center text-white font-extrabold mx-auto text-sm">م</div>
-                    <span className="text-xs font-bold text-slate-950 block mt-1">مُورِّد الذكي</span>
+                  <div className="text-left flex flex-col items-end">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-center">
+                      <MersalLogo width={100} height={100} isDarkBackground={false} className="h-12 w-auto" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-950 block mt-1">مؤسسة مرسال - Mersal Foundation</span>
                   </div>
                 </div>
 
@@ -2711,7 +2714,7 @@ export default function MawridDashboard() {
 
       {/* FOOTER */}
       <footer className="no-print text-center text-[11px] text-slate-400 border-t border-slate-200 mt-12 pt-6 max-w-7xl mx-auto w-full">
-        <p>نظام مورد الذكي المتكامل للمدفوعات والمشتريات © 2026. كافة الحقوق محفوظة لحساب وسلامة البيانات الاستثمارية.</p>
+        <p>مؤسسة مرسال - Mersal Foundation المتكاملة لإدارة المدفوعات والمشتريات © 2026. كافة الحقوق محفوظة بسلامة وأمان.</p>
       </footer>
 
       {/* MODAL: CHOOSE SETTLEMENT METHOD */}
