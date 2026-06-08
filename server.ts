@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
@@ -11,6 +12,35 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+const STORE_FILE = path.join(process.cwd(), "data_store.json");
+
+// API endpoint to retrieve stored data
+app.get("/api/get-store", (req, res) => {
+  try {
+    if (fs.existsSync(STORE_FILE)) {
+      const dataStr = fs.readFileSync(STORE_FILE, "utf-8");
+      const data = JSON.parse(dataStr);
+      return res.json(data);
+    }
+    return res.status(404).json({ message: "No stored data exists yet." });
+  } catch (error: any) {
+    console.error("Error reading data store file:", error);
+    return res.status(500).json({ error: "Failed to read storage." });
+  }
+});
+
+// API endpoint to write stored data
+app.post("/api/save-store", (req, res) => {
+  try {
+    const data = req.body;
+    fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2), "utf-8");
+    return res.json({ success: true, message: "Data saved successfully on server." });
+  } catch (error: any) {
+    console.error("Error writing data store file:", error);
+    return res.status(500).json({ error: "Failed to persist storage in backend file system." });
+  }
+});
 
 // Initialize Gemini Client Lazily/Safely
 let aiClient: GoogleGenAI | null = null;

@@ -285,6 +285,78 @@ export default function MawridDashboard() {
     setTimeout(() => setToast(null), 4000);
   };
 
+  // Flag to know if server configuration has finished loading, preventing early overwrite of DB with empty state
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+  // Load initial store from server on mount
+  useEffect(() => {
+    const fetchFromServer = async () => {
+      try {
+        const res = await fetch("/api/get-store");
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            if (Array.isArray(data.suppliers)) setSuppliers(data.suppliers);
+            if (Array.isArray(data.invoices)) setInvoices(data.invoices);
+            if (Array.isArray(data.payments)) setPayments(data.payments);
+            if (Array.isArray(data.backups)) setBackups(data.backups);
+            if (Array.isArray(data.supplierCategories)) setSupplierCategories(data.supplierCategories);
+            if (Array.isArray(data.warehouses)) setWarehouses(data.warehouses);
+            if (Array.isArray(data.linkedBanks)) setLinkedBanks(data.linkedBanks);
+            if (typeof data.safeBalance === "number") setSafeBalance(data.safeBalance);
+            if (Array.isArray(data.creditNotes)) setCreditNotes(data.creditNotes);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load server data store:", err);
+      } finally {
+        setIsDataLoaded(true);
+      }
+    };
+    fetchFromServer();
+  }, []);
+
+  // Synchronize entire system state to server filesystem storage whenever any interactive changes occur
+  useEffect(() => {
+    if (!isDataLoaded) return;
+
+    const syncToBackend = async () => {
+      try {
+        await fetch("/api/save-store", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            suppliers,
+            invoices,
+            payments,
+            backups,
+            supplierCategories,
+            warehouses,
+            linkedBanks,
+            safeBalance,
+            creditNotes
+          })
+        });
+      } catch (err) {
+        console.error("Failed to save state update to server:", err);
+      }
+    };
+
+    const timer = setTimeout(syncToBackend, 800);
+    return () => clearTimeout(timer);
+  }, [
+    isDataLoaded,
+    suppliers,
+    invoices,
+    payments,
+    backups,
+    supplierCategories,
+    warehouses,
+    linkedBanks,
+    safeBalance,
+    creditNotes
+  ]);
+
   // Sync state to LocalStorage
   useEffect(() => {
     localStorage.setItem("mawrid_suppliers", JSON.stringify(suppliers));
@@ -3389,7 +3461,7 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4"
+            className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-950">إضافة مورد جديد للمنظومة</h3>
@@ -3425,26 +3497,27 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
-              <div>
-                <label className="text-slate-500 block mb-1">رقم الهاتف التواصل *</label>
-                <input 
-                  type="tel" 
-                  value={newSupplier.phone}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
-                  placeholder="01012345678"
-                />
-              </div>
-
-              <div>
-                <label className="text-slate-500 block mb-1">رقم الحساب البنكي / International IBAN *</label>
-                <input 
-                  type="text" 
-                  value={newSupplier.bankAccount}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, bankAccount: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-[11px]"
-                  placeholder="EG000000000000000000000000000"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">رقم الهاتف التواصل *</label>
+                  <input 
+                    type="tel" 
+                    value={newSupplier.phone}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
+                    placeholder="01012345678"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">رقم الحساب البنكي / International IBAN *</label>
+                  <input 
+                    type="text" 
+                    value={newSupplier.bankAccount}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, bankAccount: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-[11px]"
+                    placeholder="EG000000000000000000000000000"
+                  />
+                </div>
               </div>
 
               <div>
@@ -3484,243 +3557,254 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4"
+            className="bg-white rounded-3xl max-w-5xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[95vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-950">تسجيل فاتورة شحنات مشتريات جديدة</h3>
+              <h3 className="text-base font-bold text-slate-950 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-sky-600" />
+                تسجيل فاتورة شحنات مشتريات جديدة
+              </h3>
               <button onClick={() => setShowAddInvoiceModal(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddInvoice} className="space-y-4 text-xs">
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-slate-500 block mb-1">اختر المورد المرتبط *</label>
-                  <select 
-                    required
-                    value={newInvoice.supplierId}
-                    onChange={(e) => setNewInvoice({ ...newInvoice, supplierId: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold text-slate-900 focus:outline-none"
-                  >
-                    <option value="">-- اضغط للاختيار --</option>
-                    {suppliers.map(s => (
-                      <option key={s.id} value={s.id}>{s.name} ({s.company})</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-slate-500 block mb-1">رقم الفاتورة الصادر *</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="FT-2026-X"
-                    value={newInvoice.invoiceNumber}
-                    onChange={(e) => setNewInvoice({ ...newInvoice, invoiceNumber: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono font-bold"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-slate-500 block mb-1">تاريخ الاستحقاق المتوقع *</label>
-                  <input 
-                    type="date" 
-                    required
-                    value={newInvoice.dueDate}
-                    onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-500 block mb-1">البيانات / مذكرات عامة</label>
-                  <input 
-                    type="text" 
-                    value={newInvoice.notes}
-                    onChange={(e) => setNewInvoice({ ...newInvoice, notes: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
-                    placeholder="شحنة التجهيز المقررة لمخازن العاشر"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-slate-500 block">المخزن المتلقي للشحنة *</label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newWh = prompt("أدخل اسم المخزن الجديد:");
-                        if (newWh && newWh.trim()) {
-                          const trimmed = newWh.trim();
-                          if (!warehouses.includes(trimmed)) {
-                            const updated = [...warehouses, trimmed];
-                            setWarehouses(updated);
-                            setNewInvoice(prev => ({ ...prev, warehouse: trimmed }));
-                            showToast(`تمت إضافة المخزن "${trimmed}" بنجاح وتحديده.`);
-                          } else {
-                            setNewInvoice(prev => ({ ...prev, warehouse: trimmed }));
-                            showToast("هذا المخزن موجود بالفعل وتم تحديده.", "info");
-                          }
-                        }
-                      }}
-                      className="text-[10px] text-emerald-600 font-bold hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
+            <form onSubmit={handleAddInvoice} className="text-xs space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* Right Side Panel: Core Invoice Details */}
+                <div className="lg:col-span-5 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-4">
+                  <h4 className="font-bold text-slate-800 border-b border-slate-200 pb-2 mb-1">بيانات الشحنة والمورد</h4>
+                  
+                  <div>
+                    <label className="text-slate-500 block mb-1">اختر المورد المرتبط *</label>
+                    <select 
+                      required
+                      value={newInvoice.supplierId}
+                      onChange={(e) => setNewInvoice({ ...newInvoice, supplierId: e.target.value })}
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-semibold text-slate-900 focus:outline-none"
                     >
-                      + مخزن جديد
-                    </button>
-                  </div>
-                  <select
-                    required
-                    value={newInvoice.warehouse || (warehouses.length > 0 ? warehouses[0] : "")}
-                    onChange={(e) => setNewInvoice({ ...newInvoice, warehouse: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  >
-                    <option value="">-- اختر المخزن --</option>
-                    {warehouses.map((wh) => (
-                      <option key={wh} value={wh}>{wh}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Items row editor section */}
-              <div className="space-y-2 border-t border-slate-100 pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-800">بنود الفاتورة وقائمة التوريد:</span>
-                  <button 
-                    type="button" 
-                    onClick={handleAddItemRow}
-                    className="text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    اضافة سطر توريد
-                  </button>
-                </div>
-
-                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
-                  {/* Item Column Headers */}
-                  <div className="flex items-center gap-2 px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
-                    <div className="flex-1 text-right">الوصف (اسم البند أو الخدمة) *</div>
-                    <div className="w-20 text-center">الكمية *</div>
-                    <div className="w-28 text-left">سعر الوحدة *</div>
-                    <div className="w-28 text-left">قيمة الإجمالي</div>
-                    <div className="w-8"></div>
+                      <option value="">-- اضغط للاختيار --</option>
+                      {suppliers.map(s => (
+                        <option key={s.id} value={s.id}>{s.name} ({s.company})</option>
+                      ))}
+                    </select>
                   </div>
 
-                  {newInvoice.items.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-150">
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="مثال: توريد مواد خام، شحن، إلخ..."
-                        value={item.name}
-                        onChange={(e) => handleUpdateItemRow(index, "name", e.target.value)}
-                        className="flex-1 border border-slate-200 rounded p-1.5 bg-white text-slate-900"
-                      />
-                      <input 
-                        type="number" 
-                        required
-                        min="1"
-                        placeholder="الكمية"
-                        value={item.quantity}
-                        onChange={(e) => handleUpdateItemRow(index, "quantity", parseInt(e.target.value) || 1)}
-                        className="w-20 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-center"
-                      />
-                      <input 
-                        type="number" 
-                        required
-                        min="0"
-                        step="any"
-                        placeholder="سعر الوحدة"
-                        value={item.price}
-                        onChange={(e) => handleUpdateItemRow(index, "price", parseFloat(e.target.value) || 0)}
-                        className="w-28 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-left"
-                      />
-                      <div className="w-28 font-mono font-bold text-slate-900 text-left bg-slate-100 border border-slate-200 rounded p-1.5 select-none overflow-hidden text-ellipsis whitespace-nowrap">
-                        {(item.quantity * item.price).toLocaleString()} ج.م
-                      </div>
+                  <div>
+                    <label className="text-slate-500 block mb-1">رقم الفاتورة الصادر *</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="FT-2026-X"
+                      value={newInvoice.invoiceNumber}
+                      onChange={(e) => setNewInvoice({ ...newInvoice, invoiceNumber: e.target.value })}
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-850"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-500 block mb-1">تاريخ الاستحقاق المتوقع *</label>
+                    <input 
+                      type="date" 
+                      required
+                      value={newInvoice.dueDate}
+                      onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-850"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-slate-500 block">المخزن المتلقي للشحنة *</label>
                       <button
                         type="button"
-                        onClick={() => handleRemoveItemRow(index)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 rounded cursor-pointer"
-                        title="حذف هذا البند"
+                        onClick={() => {
+                          const newWh = prompt("أدخل اسم المخزن الجديد:");
+                          if (newWh && newWh.trim()) {
+                            const trimmed = newWh.trim();
+                            if (!warehouses.includes(trimmed)) {
+                              const updated = [...warehouses, trimmed];
+                              setWarehouses(updated);
+                              setNewInvoice(prev => ({ ...prev, warehouse: trimmed }));
+                              showToast(`تمت إضافة المخزن "${trimmed}" بنجاح وتحديده.`);
+                            } else {
+                              setNewInvoice(prev => ({ ...prev, warehouse: trimmed }));
+                              showToast("هذا المخزن موجود بالفعل وتم تحديده.", "info");
+                            }
+                          }
+                        }}
+                        className="text-[10px] text-sky-600 font-bold hover:text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-100 hover:bg-sky-100 transition-colors"
                       >
-                        <XCircle className="w-4.5 h-4.5" />
+                        + مخزن جديد
                       </button>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* VAT and Totals Calculator */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
-                    <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2.5 py-1 shadow-xs">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={newInvoice.vatRate}
-                        onChange={(e) => setNewInvoice({ ...newInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
-                        className="w-12 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
-                      />
-                      <span className="text-slate-500 text-xs font-bold">%</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setNewInvoice({ ...newInvoice, vatRate: newInvoice.vatRate === 14 ? 0 : 14 })}
-                      className="text-[10px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1.5 rounded-lg border border-sky-100 cursor-pointer transition-colors"
+                    <select
+                      required
+                      value={newInvoice.warehouse || (warehouses.length > 0 ? warehouses[0] : "")}
+                      onChange={(e) => setNewInvoice({ ...newInvoice, warehouse: e.target.value })}
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
                     >
-                      {newInvoice.vatRate === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
+                      <option value="">-- اختر المخزن --</option>
+                      {warehouses.map((wh) => (
+                        <option key={wh} value={wh}>{wh}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-500 block mb-1">البيانات / مذكرات عامة</label>
+                    <input 
+                      type="text" 
+                      value={newInvoice.notes}
+                      onChange={(e) => setNewInvoice({ ...newInvoice, notes: e.target.value })}
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white"
+                      placeholder="شحنة التجهيز المقررة لمخازن العاشر"
+                    />
+                  </div>
+                </div>
+
+                {/* Left Side Panel: Items Row Editor & VAT/Calculations */}
+                <div className="lg:col-span-7 space-y-4">
+                  {/* Items header */}
+                  <div className="border border-slate-200 p-4 rounded-2xl bg-white space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-850 text-xs">بنود الفاتورة وقائمة التوريد:</span>
+                      <button 
+                        type="button" 
+                        onClick={handleAddItemRow}
+                        className="text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        اضافة سطر توريد
+                      </button>
+                    </div>
+
+                    <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                      {/* Item Column Headers */}
+                      <div className="flex items-center gap-2 px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
+                        <div className="flex-1 text-right">الوصف (اسم البند أو الخدمة) *</div>
+                        <div className="w-16 text-center">الكمية *</div>
+                        <div className="w-24 text-left">سعر الوحدة *</div>
+                        <div className="w-24 text-left">قيمة الإجمالي</div>
+                        <div className="w-6"></div>
+                      </div>
+
+                      {newInvoice.items.map((item, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-150">
+                          <input 
+                            type="text" 
+                            required
+                            placeholder="الوصف (مواد خام، شحن، إلخ...)"
+                            value={item.name}
+                            onChange={(e) => handleUpdateItemRow(index, "name", e.target.value)}
+                            className="flex-1 border border-slate-200 rounded p-1 bg-white text-slate-900 text-[11px]"
+                          />
+                          <input 
+                            type="number" 
+                            required
+                            min="1"
+                            placeholder="الكمية"
+                            value={item.quantity}
+                            onChange={(e) => handleUpdateItemRow(index, "quantity", parseInt(e.target.value) || 1)}
+                            className="w-16 border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-center text-[11px]"
+                          />
+                          <input 
+                            type="number" 
+                            required
+                            min="0"
+                            step="any"
+                            placeholder="سعر الوحدة"
+                            value={item.price}
+                            onChange={(e) => handleUpdateItemRow(index, "price", parseFloat(e.target.value) || 0)}
+                            className="w-24 border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-left text-[11px]"
+                          />
+                          <div className="w-24 font-mono font-bold text-slate-800 text-left bg-slate-100 border border-slate-200 rounded p-1 select-none overflow-hidden text-ellipsis whitespace-nowrap text-[11px]">
+                            {(item.quantity * item.price).toLocaleString()} ج.م
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveItemRow(index)}
+                            className="p-1 text-slate-400 hover:text-red-500 rounded cursor-pointer"
+                            title="حذف هذا البند"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* VAT and Totals Calculator */}
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
+                        <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={newInvoice.vatRate}
+                            onChange={(e) => setNewInvoice({ ...newInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
+                            className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                          />
+                          <span className="text-slate-500 text-xs font-bold">%</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setNewInvoice({ ...newInvoice, vatRate: newInvoice.vatRate === 14 ? 0 : 14 })}
+                          className="text-[9px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1 rounded-lg border border-sky-100 cursor-pointer transition-colors"
+                        >
+                          {newInvoice.vatRate === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
+                        </button>
+                      </div>
+                      
+                      <div className="space-y-1 w-full sm:w-auto text-left font-mono">
+                        <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                          <span>الإجمالي قبل الضريبة:</span>
+                          <span className="font-bold">
+                            {newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
+                          </span>
+                        </div>
+                        <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                          <span>قيمة الضريبة ({newInvoice.vatRate}%):</span>
+                          <span className="font-bold">
+                            {(newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (newInvoice.vatRate / 100)).toLocaleString()} ج.م
+                          </span>
+                        </div>
+                        <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-xs border-t border-slate-200 pt-1 mt-1 text-right">
+                          <span>الصافي المطلوب للتوريد:</span>
+                          <span className="text-sky-600 font-black text-sm">
+                            {(
+                              newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (1 + newInvoice.vatRate / 100)
+                            ).toLocaleString()} ج.م
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Submission and Action Panel */}
+                  <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                    <button 
+                      type="button"
+                      onClick={() => setShowAddInvoiceModal(false)}
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                    >
+                      إلغاء وعودة
+                    </button>
+                    <button 
+                      type="submit"
+                      className="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>تسجيل وحفظ الفاتورة</span>
                     </button>
                   </div>
-                  
-                  <div className="space-y-1.5 w-full sm:w-auto text-left font-mono">
-                    <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-xs text-right">
-                      <span>الإجمالي قبل الضريبة:</span>
-                      <span className="font-bold">
-                        {newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
-                      </span>
-                    </div>
-                    <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-xs text-right">
-                      <span>قيمة ضريبة القيمة المضافة ({newInvoice.vatRate}%):</span>
-                      <span className="font-bold">
-                        {(newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (newInvoice.vatRate / 100)).toLocaleString()} ج.م
-                      </span>
-                    </div>
-                    <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-sm border-t border-slate-200 pt-1.5 mt-1 text-right">
-                      <span>الصافي الإجمالي المطلوب:</span>
-                      <span className="text-sky-600 font-black">
-                        {(
-                          newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (1 + newInvoice.vatRate / 100)
-                        ).toLocaleString()} ج.م
-                      </span>
-                    </div>
-                  </div>
+
                 </div>
-              </div>
 
-              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-                <button 
-                  type="button"
-                  onClick={() => setShowAddInvoiceModal(false)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
-                >
-                  إلغاء وعودة
-                </button>
-                <button 
-                  type="submit"
-                  className="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer"
-                >
-                  تسجيل وحفظ الفاتورة
-                </button>
               </div>
-
             </form>
           </motion.div>
         </div>
@@ -3732,386 +3816,400 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+            className="bg-white rounded-3xl max-w-5xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800 max-h-[95vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-950">تعديل بيانات فاتورة المشتريات</h3>
+              <h3 className="text-base font-bold text-slate-950 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-emerald-600" />
+                تعديل بيانات فاتورة المشتريات
+              </h3>
               <button onClick={() => setEditingInvoice(null)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateInvoice} className="space-y-4 text-xs">
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-slate-500 block mb-1">اختر المورد المرتبط *</label>
-                  <select 
-                    required
-                    value={editingInvoice.supplierId}
-                    onChange={(e) => setEditingInvoice({ ...editingInvoice, supplierId: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold text-slate-900 focus:outline-none"
-                  >
-                    <option value="">-- اضغط للاختيار --</option>
-                    {suppliers.map(s => (
-                      <option key={s.id} value={s.id}>{s.name} ({s.company})</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-slate-500 block mb-1">رقم الفاتورة الصادر *</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="FT-2026-X"
-                    value={editingInvoice.invoiceNumber}
-                    onChange={(e) => setEditingInvoice({ ...editingInvoice, invoiceNumber: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono font-bold"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-slate-500 block mb-1">تاريخ الاستحقاق المتوقع *</label>
-                  <input 
-                    type="date" 
-                    required
-                    value={editingInvoice.dueDate}
-                    onChange={(e) => setEditingInvoice({ ...editingInvoice, dueDate: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-500 block mb-1">حالة سداد الفاتورة *</label>
-                  <select 
-                    required
-                    value={editingInvoice.status}
-                    onChange={(e) => setEditingInvoice({ ...editingInvoice, status: e.target.value as 'paid' | 'unpaid' })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-bold text-slate-900"
-                  >
-                    <option value="unpaid">لم يتم السداد</option>
-                    <option value="paid">تم السداد بالكامل</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-slate-500 block mb-1">البيانات / مذكرات عامة</label>
-                  <input 
-                    type="text" 
-                    value={editingInvoice.notes || ""}
-                    onChange={(e) => setEditingInvoice({ ...editingInvoice, notes: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
-                    placeholder="شحنة التجهيز المقررة لمخازن العاشر"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-3">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-slate-500 block">المخزن المتلقي للشحنة *</label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newWh = prompt("أدخل اسم المخزن الجديد:");
-                        if (newWh && newWh.trim()) {
-                          const trimmed = newWh.trim();
-                          if (!warehouses.includes(trimmed)) {
-                            const updated = [...warehouses, trimmed];
-                            setWarehouses(updated);
-                            setEditingInvoice(prev => prev ? ({ ...prev, warehouse: trimmed }) : null);
-                            showToast(`تمت إضافة المخزن "${trimmed}" بنجاح وتحديده.`);
-                          } else {
-                            setEditingInvoice(prev => prev ? ({ ...prev, warehouse: trimmed }) : null);
-                            showToast("هذا المخزن موجود بالفعل وتم تحديده.", "info");
-                          }
-                        }
-                      }}
-                      className="text-[10px] text-emerald-600 font-bold hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
+            <form onSubmit={handleUpdateInvoice} className="text-xs space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* Right Side Panel: Core Invoice Details */}
+                <div className="lg:col-span-5 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-4">
+                  <h4 className="font-bold text-slate-800 border-b border-slate-200 pb-2 mb-1">بيانات تاريخ وحالة الفاتورة</h4>
+                  
+                  <div>
+                    <label className="text-slate-500 block mb-1">اختر المورد المرتبط *</label>
+                    <select 
+                      required
+                      value={editingInvoice.supplierId}
+                      onChange={(e) => setEditingInvoice({ ...editingInvoice, supplierId: e.target.value })}
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-semibold text-slate-900 focus:outline-none"
                     >
-                      + مخزن جديد
-                    </button>
-                  </div>
-                  <select
-                    required
-                    value={editingInvoice.warehouse || (warehouses.length > 0 ? warehouses[0] : "")}
-                    onChange={(e) => setEditingInvoice({ ...editingInvoice, warehouse: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  >
-                    <option value="">-- اختر المخزن --</option>
-                    {warehouses.map((wh) => (
-                      <option key={wh} value={wh}>{wh}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Items row editor section */}
-              <div className="space-y-2 border-t border-slate-100 pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-800">بنود الفاتورة وقائمة التوريد:</span>
-                  <button 
-                    type="button" 
-                    onClick={handleAddEditItemRow}
-                    className="text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    اضافة سطر توريد
-                  </button>
-                </div>
-
-                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
-                  {/* Item Column Headers */}
-                  <div className="flex items-center gap-2 px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
-                    <div className="flex-1 text-right">الوصف (اسم البند أو الخدمة) *</div>
-                    <div className="w-20 text-center">الكمية *</div>
-                    <div className="w-28 text-left">سعر الوحدة *</div>
-                    <div className="w-28 text-left">قيمة الإجمالي</div>
-                    <div className="w-8"></div>
+                      <option value="">-- اضغط للاختيار --</option>
+                      {suppliers.map(s => (
+                        <option key={s.id} value={s.id}>{s.name} ({s.company})</option>
+                      ))}
+                    </select>
                   </div>
 
-                  {editingInvoice.items.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-150">
+                  <div>
+                    <label className="text-slate-500 block mb-1">رقم الفاتورة الصادر *</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="FT-2026-X"
+                      value={editingInvoice.invoiceNumber}
+                      onChange={(e) => setEditingInvoice({ ...editingInvoice, invoiceNumber: e.target.value })}
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-850"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-slate-500 block mb-1">تاريخ الاستحقاق المتوقع *</label>
                       <input 
-                        type="text" 
+                        type="date" 
                         required
-                        placeholder="مثل: توريد مواد خام، شحن، إلخ..."
-                        value={item.name}
-                        onChange={(e) => handleUpdateEditItemRow(index, "name", e.target.value)}
-                        className="flex-1 border border-slate-200 rounded p-1.5 bg-white text-slate-900"
+                        value={editingInvoice.dueDate}
+                        onChange={(e) => setEditingInvoice({ ...editingInvoice, dueDate: e.target.value })}
+                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-850"
                       />
-                      <input 
-                        type="number" 
+                    </div>
+                    <div>
+                      <label className="text-slate-500 block mb-1">حالة سداد الفاتورة *</label>
+                      <select 
                         required
-                        min="1"
-                        placeholder="الكمية"
-                        value={item.quantity}
-                        onChange={(e) => handleUpdateEditItemRow(index, "quantity", parseInt(e.target.value) || 1)}
-                        className="w-20 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-center"
-                      />
-                      <input 
-                        type="number" 
-                        required
-                        min="0"
-                        step="any"
-                        placeholder="سعر الوحدة"
-                        value={item.price}
-                        onChange={(e) => handleUpdateEditItemRow(index, "price", parseFloat(e.target.value) || 0)}
-                        className="w-28 border border-slate-200 rounded p-1.5 bg-white text-slate-900 font-mono text-left"
-                      />
-                      <div className="w-28 font-mono font-bold text-slate-900 text-left bg-slate-100 border border-slate-200 rounded p-1.5 select-none overflow-hidden text-ellipsis whitespace-nowrap">
-                        {(item.quantity * item.price).toLocaleString()} ج.م
-                      </div>
+                        value={editingInvoice.status}
+                        onChange={(e) => setEditingInvoice({ ...editingInvoice, status: e.target.value as 'paid' | 'unpaid' })}
+                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-bold text-slate-900 cursor-pointer focus:outline-none"
+                      >
+                        <option value="unpaid">لم يتم السداد</option>
+                        <option value="paid">تم السداد بالكامل</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-slate-500 block">المخزن المتلقي للشحنة *</label>
                       <button
                         type="button"
-                        onClick={() => handleRemoveEditItemRow(index)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 rounded cursor-pointer"
-                        title="حذف هذا البند"
+                        onClick={() => {
+                          const newWh = prompt("أدخل اسم المخزن الجديد:");
+                          if (newWh && newWh.trim()) {
+                            const trimmed = newWh.trim();
+                            if (!warehouses.includes(trimmed)) {
+                              const updated = [...warehouses, trimmed];
+                              setWarehouses(updated);
+                              setEditingInvoice(prev => prev ? ({ ...prev, warehouse: trimmed }) : null);
+                              showToast(`تمت إضافة المخزن "${trimmed}" بنجاح وتحديده.`);
+                            } else {
+                              setEditingInvoice(prev => prev ? ({ ...prev, warehouse: trimmed }) : null);
+                              showToast("هذا المخزن موجود بالفعل وتم تحديده.", "info");
+                            }
+                          }
+                        }}
+                        className="text-[10px] text-emerald-600 font-bold hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
                       >
-                        <XCircle className="w-4.5 h-4.5" />
+                        + مخزن جديد
                       </button>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* VAT and Totals Calculator for Edit */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 text-right">
-                    <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
-                    <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2.5 py-1 shadow-xs">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14}
-                        onChange={(e) => setEditingInvoice({ ...editingInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
-                        className="w-12 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
-                      />
-                      <span className="text-slate-500 text-xs font-bold">%</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setEditingInvoice({ ...editingInvoice, vatRate: (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? 0 : 14 })}
-                      className="text-[10px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1.5 rounded-lg border border-sky-100 cursor-pointer transition-colors text-right"
+                    <select
+                      required
+                      value={editingInvoice.warehouse || (warehouses.length > 0 ? warehouses[0] : "")}
+                      onChange={(e) => setEditingInvoice({ ...editingInvoice, warehouse: e.target.value })}
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     >
-                      {(editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
-                    </button>
+                      <option value="">-- اختر المخزن --</option>
+                      {warehouses.map((wh) => (
+                        <option key={wh} value={wh}>{wh}</option>
+                      ))}
+                    </select>
                   </div>
+
+                  <div>
+                    <label className="text-slate-500 block mb-1">البيانات / مذكرات عامة</label>
+                    <input 
+                      type="text" 
+                      value={editingInvoice.notes || ""}
+                      onChange={(e) => setEditingInvoice({ ...editingInvoice, notes: e.target.value })}
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white"
+                      placeholder="شحنة التجهيز المقررة لمخازن العاشر"
+                    />
+                  </div>
+                </div>
+
+                {/* Left Side Panel: Items Row Editor & VAT/Calculations & Credit Note */}
+                <div className="lg:col-span-7 space-y-4">
                   
-                  <div className="space-y-1.5 w-full sm:w-auto text-left font-mono">
-                    <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-xs text-right">
-                      <span>الإجمالي قبل الضريبة:</span>
-                      <span className="font-bold">
-                        {editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
-                      </span>
+                  {/* Items header */}
+                  <div className="border border-slate-200 p-4 rounded-2xl bg-white space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-850 text-xs">بنود الفاتورة وقائمة التوريد:</span>
+                      <button 
+                        type="button" 
+                        onClick={handleAddEditItemRow}
+                        className="text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        اضافة سطر توريد
+                      </button>
                     </div>
-                    <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-xs text-right">
-                      <span>قيمة ضريبة القيمة المضافة ({editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14}%):</span>
-                      <span className="font-bold">
-                        {(editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * ((editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100)).toLocaleString()} ج.م
-                      </span>
-                    </div>
-                    <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-sm border-t border-slate-200 pt-1.5 mt-1 text-right">
-                      <span>الصافي المطلوب بالحفظ:</span>
-                      <span className="text-sky-600 font-black">
-                        {(
-                          editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (1 + (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100)
-                        ).toLocaleString()} ج.م
-                      </span>
+
+                    <div className="max-h-44 overflow-y-auto space-y-2 pr-1">
+                      {/* Item Column Headers */}
+                      <div className="flex items-center gap-2 px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
+                        <div className="flex-1 text-right">الوصف (اسم البند أو الخدمة) *</div>
+                        <div className="w-16 text-center">الكمية *</div>
+                        <div className="w-24 text-left">سعر الوحدة *</div>
+                        <div className="w-24 text-left">قيمة الإجمالي</div>
+                        <div className="w-6"></div>
+                      </div>
+
+                      {editingInvoice.items.map((item, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-150">
+                          <input 
+                            type="text" 
+                            required
+                            placeholder="الوصف (مواد خام، شحن، إلخ...)"
+                            value={item.name}
+                            onChange={(e) => handleUpdateEditItemRow(index, "name", e.target.value)}
+                            className="flex-1 border border-slate-200 rounded p-1 bg-white text-slate-900 text-[11px]"
+                          />
+                          <input 
+                            type="number" 
+                            required
+                            min="1"
+                            placeholder="الكمية"
+                            value={item.quantity}
+                            onChange={(e) => handleUpdateEditItemRow(index, "quantity", parseInt(e.target.value) || 1)}
+                            className="w-16 border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-center text-[11px]"
+                          />
+                          <input 
+                            type="number" 
+                            required
+                            min="0"
+                            step="any"
+                            placeholder="سعر الوحدة"
+                            value={item.price}
+                            onChange={(e) => handleUpdateEditItemRow(index, "price", parseFloat(e.target.value) || 0)}
+                            className="w-24 border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-left text-[11px]"
+                          />
+                          <div className="w-24 font-mono font-bold text-slate-800 text-left bg-slate-100 border border-slate-200 rounded p-1 select-none overflow-hidden text-ellipsis whitespace-nowrap text-[11px]">
+                            {(item.quantity * item.price).toLocaleString()} ج.م
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveEditItemRow(index)}
+                            className="p-1 text-slate-400 hover:text-red-500 rounded cursor-pointer"
+                            title="حذف هذا البند"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Option to create a Credit Note associated with this Invoice */}
-              <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3">
-                <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setShowEditInvoiceCNSection(!showEditInvoiceCNSection)}
-                    className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-extrabold text-xs cursor-pointer select-none"
-                  >
-                    <FileText className="w-4.5 h-4.5" />
-                    <span>{showEditInvoiceCNSection ? "إغلاق نموذج الإشعار الدائن" : "عمل إشعار دائن (خصم/مرتجع) على هذه الفاتورة"}</span>
-                  </button>
-                  {!showEditInvoiceCNSection && (
-                    <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
-                      جديد ومطور
-                    </span>
-                  )}
-                </div>
-
-                {showEditInvoiceCNSection && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    className="space-y-4 pt-3 border-t border-slate-200 text-right"
-                    dir="rtl"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                      <div>
-                        <label className="text-slate-500 block mb-1 font-bold">رقم الإشعار الدائن *</label>
-                        <input
-                          type="text"
-                          required={showEditInvoiceCNSection}
-                          value={editInvoiceCNData.creditNoteNumber}
-                          onChange={(e) => setEditInvoiceCNData({ ...editInvoiceCNData, creditNoteNumber: e.target.value })}
-                          className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-800"
-                          placeholder="CN-2026-X"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-slate-500 block mb-1 font-bold">البيان/الملاحظات العامة</label>
-                        <input
-                          type="text"
-                          value={editInvoiceCNData.notes}
-                          onChange={(e) => setEditInvoiceCNData({ ...editInvoiceCNData, notes: e.target.value })}
-                          className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800"
-                          placeholder="مثال: خصم جودة أو كميات ممزقة"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-slate-700">قائمة البنود والكميات المخصومة:</span>
+                  {/* VAT and Totals Calculator */}
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
+                        <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14}
+                            onChange={(e) => setEditingInvoice({ ...editingInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
+                            className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                          />
+                          <span className="text-slate-500 text-xs font-bold">%</span>
+                        </div>
                         <button
                           type="button"
-                          onClick={handleAddEditInvoiceCNItemRow}
-                          className="text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1 cursor-pointer"
+                          onClick={() => setEditingInvoice({ ...editingInvoice, vatRate: (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? 0 : 14 })}
+                          className="text-[9px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1 rounded-lg border border-sky-100 cursor-pointer transition-colors"
                         >
-                          <Plus className="w-4 h-4" />
-                          <span>إضافة بند خصم</span>
+                          {(editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
                         </button>
                       </div>
+                      
+                      <div className="space-y-1 w-full sm:w-auto text-left font-mono">
+                        <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                          <span>الإجمالي قبل الضريبة:</span>
+                          <span className="font-bold">
+                            {editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
+                          </span>
+                        </div>
+                        <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                          <span>قيمة الضريبة ({editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14}%):</span>
+                          <span className="font-bold">
+                            {(editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * ((editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100)).toLocaleString()} ج.م
+                          </span>
+                        </div>
+                        <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-xs border-t border-slate-200 pt-1 mt-1 text-right">
+                          <span>الصافي الإجمالي بعد الحفظ:</span>
+                          <span className="text-emerald-600 font-black text-sm">
+                            {(
+                              editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (1 + (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100)
+                            ).toLocaleString()} ج.م
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-                      <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
-                        {editInvoiceCNData.items.map((item, index) => (
-                          <div key={index} className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-slate-200">
+                  {/* Option to create a Credit Note associated with this Invoice */}
+                  <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => setShowEditInvoiceCNSection(!showEditInvoiceCNSection)}
+                        className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-extrabold text-xs cursor-pointer select-none"
+                      >
+                        <FileText className="w-4.5 h-4.5" />
+                        <span>{showEditInvoiceCNSection ? "إغلاق نموذج الإشعار الدائن" : "عمل إشعار دائن (خصم/مرتجع) على هذه الفاتورة"}</span>
+                      </button>
+                      {!showEditInvoiceCNSection && (
+                        <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
+                          جديد ومطور
+                        </span>
+                      )}
+                    </div>
+
+                    {showEditInvoiceCNSection && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        className="space-y-4 pt-3 border-t border-slate-200 text-right"
+                        dir="rtl"
+                      >
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                          <div>
+                            <label className="text-slate-500 block mb-1 font-bold">رقم الإشعار الدائن *</label>
                             <input
                               type="text"
                               required={showEditInvoiceCNSection}
-                              value={item.name}
-                              onChange={(e) => handleUpdateEditInvoiceCNItemRow(index, "name", e.target.value)}
-                              className="flex-1 border border-slate-200 rounded p-1.5 text-slate-800 text-xs bg-slate-50"
-                              placeholder="الوصف (مثال: كرتونة عيوب صناعة...)"
+                              value={editInvoiceCNData.creditNoteNumber}
+                              onChange={(e) => setEditInvoiceCNData({ ...editInvoiceCNData, creditNoteNumber: e.target.value })}
+                              className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-800"
+                              placeholder="CN-2026-X"
                             />
+                          </div>
+                          <div>
+                            <label className="text-slate-500 block mb-1 font-bold">البيان/الملاحظات العامة</label>
                             <input
-                              type="number"
-                              required={showEditInvoiceCNSection}
-                              min="1"
-                              value={item.quantity}
-                              onChange={(e) => handleUpdateEditInvoiceCNItemRow(index, "quantity", parseInt(e.target.value) || 1)}
-                              className="w-16 border border-slate-200 rounded p-1.5 text-center font-mono text-slate-800 text-xs bg-slate-50"
+                              type="text"
+                              value={editInvoiceCNData.notes}
+                              onChange={(e) => setEditInvoiceCNData({ ...editInvoiceCNData, notes: e.target.value })}
+                              className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800"
+                              placeholder="مثال: خصم جودة أو كميات ممزقة"
                             />
-                            <input
-                              type="number"
-                              required={showEditInvoiceCNSection}
-                              min="0"
-                              step="any"
-                              value={item.price}
-                              onChange={(e) => handleUpdateEditInvoiceCNItemRow(index, "price", parseFloat(e.target.value) || 0)}
-                              className="w-24 border border-slate-200 rounded p-1.5 text-left font-mono text-slate-800 text-xs bg-slate-50"
-                            />
-                            <div className="w-24 font-mono font-bold text-slate-700 text-left bg-slate-100 border border-slate-150 rounded p-1.5 text-xs overflow-hidden">
-                              {(item.quantity * item.price).toLocaleString()} ج.م
-                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-slate-700">قائمة البنود والكميات المخصومة:</span>
                             <button
                               type="button"
-                              onClick={() => handleRemoveEditInvoiceCNItemRow(index)}
-                              className="p-1.5 text-slate-400 hover:text-red-500 rounded cursor-pointer"
-                              title="حذف هذا البند"
+                              onClick={handleAddEditInvoiceCNItemRow}
+                              className="text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1 cursor-pointer"
                             >
-                              <XCircle className="w-4.5 h-4.5" />
+                              <Plus className="w-4 h-4" />
+                              <span>إضافة بند خصم</span>
                             </button>
                           </div>
-                        ))}
-                      </div>
-                    </div>
 
-                    <div className="flex items-center justify-between bg-emerald-50 hover:bg-emerald-100/55 p-3 rounded-xl border border-emerald-100 select-none">
-                      <div className="text-emerald-800 font-bold text-xs flex items-center gap-1">
-                        <CheckCircle2 className="w-4.5 h-4.5" />
-                        <span>إجمالي رصيد الخصم الصادر:</span>
-                      </div>
-                      <span className="text-emerald-700 font-black text-sm font-mono">
-                        {editInvoiceCNData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
-                      </span>
-                    </div>
+                          <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                            {editInvoiceCNData.items.map((item, index) => (
+                              <div key={index} className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-slate-200">
+                                <input
+                                  type="text"
+                                  required={showEditInvoiceCNSection}
+                                  value={item.name}
+                                  onChange={(e) => handleUpdateEditInvoiceCNItemRow(index, "name", e.target.value)}
+                                  className="flex-1 border border-slate-200 rounded p-1.5 text-slate-800 text-xs bg-slate-50"
+                                  placeholder="الوصف (مثال: كرتونة عيوب صناعة...)"
+                                />
+                                <input
+                                  type="number"
+                                  required={showEditInvoiceCNSection}
+                                  min="1"
+                                  value={item.quantity}
+                                  onChange={(e) => handleUpdateEditInvoiceCNItemRow(index, "quantity", parseInt(e.target.value) || 1)}
+                                  className="w-16 border border-slate-200 rounded p-1.5 text-center font-mono text-slate-800 text-xs bg-slate-50"
+                                />
+                                <input
+                                  type="number"
+                                  required={showEditInvoiceCNSection}
+                                  min="0"
+                                  step="any"
+                                  value={item.price}
+                                  onChange={(e) => handleUpdateEditInvoiceCNItemRow(index, "price", parseFloat(e.target.value) || 0)}
+                                  className="w-24 border border-slate-200 rounded p-1.5 text-left font-mono text-slate-800 text-xs bg-slate-50"
+                                />
+                                <div className="w-24 font-mono font-bold text-slate-700 text-left bg-slate-100 border border-slate-150 rounded p-1.5 text-xs overflow-hidden">
+                                  {(item.quantity * item.price).toLocaleString()} ج.م
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveEditInvoiceCNItemRow(index)}
+                                  className="p-1.5 text-slate-400 hover:text-red-500 rounded cursor-pointer"
+                                  title="حذف هذا البند"
+                                >
+                                  <XCircle className="w-4.5 h-4.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
 
-                    <div className="flex justify-end gap-2 pt-2">
-                      <button
-                        type="button"
-                        onClick={handleSaveCNFromEditInvoice}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1 shadow-sm"
-                      >
-                        <Check className="w-4 h-4" />
-                        <span>تأكيد وتسجيل كإشعار دائن</span>
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
+                        <div className="flex items-center justify-between bg-emerald-50 hover:bg-emerald-100/55 p-3 rounded-xl border border-emerald-100 select-none">
+                          <div className="text-emerald-800 font-bold text-xs flex items-center gap-1">
+                            <CheckCircle2 className="w-4.5 h-4.5" />
+                            <span>إجمالي رصيد الخصم الصادر:</span>
+                          </div>
+                          <span className="text-emerald-700 font-black text-sm font-mono">
+                            {editInvoiceCNData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
+                          </span>
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-2">
+                          <button
+                            type="button"
+                            onClick={handleSaveCNFromEditInvoice}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1 shadow-sm"
+                          >
+                            <Check className="w-4 h-4" />
+                            <span>تأكيد وتسجيل كإشعار دائن</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* Submission Row */}
+                  <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                    <button 
+                      type="button"
+                      onClick={() => setEditingInvoice(null)}
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                    >
+                      إلغاء وعودة
+                    </button>
+                    <button 
+                      type="submit"
+                      className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>حفظ التعديلات الحالية</span>
+                    </button>
+                  </div>
+
+                </div>
+
               </div>
-
-              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-                <button 
-                  type="button"
-                  onClick={() => setEditingInvoice(null)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
-                >
-                  إلغاء وعودة
-                </button>
-                <button 
-                  type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>حفظ التعديلات الحالية</span>
-                </button>
-              </div>
-
             </form>
           </motion.div>
         </div>
@@ -4123,7 +4221,7 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+            className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-950">تعديل بيانات المورد</h3>
@@ -4159,28 +4257,29 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
-              <div>
-                <label className="text-slate-500 block mb-1">رقم الهاتف التواصل *</label>
-                <input 
-                  type="tel" 
-                  required
-                  value={editingSupplier.phone}
-                  onChange={(e) => setEditingSupplier({ ...editingSupplier, phone: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono"
-                  placeholder="01012345678"
-                />
-              </div>
-
-              <div>
-                <label className="text-slate-500 block mb-1">رقم الحساب البنكي / International IBAN *</label>
-                <input 
-                  type="text" 
-                  required
-                  value={editingSupplier.bankAccount}
-                  onChange={(e) => setEditingSupplier({ ...editingSupplier, bankAccount: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-[11px]"
-                  placeholder="EG000000000000000000000000000"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">رقم الهاتف التواصل *</label>
+                  <input 
+                    type="tel" 
+                    required
+                    value={editingSupplier.phone}
+                    onChange={(e) => setEditingSupplier({ ...editingSupplier, phone: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono"
+                    placeholder="01012345678"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">رقم الحساب البنكي / International IBAN *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={editingSupplier.bankAccount}
+                    onChange={(e) => setEditingSupplier({ ...editingSupplier, bankAccount: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-[11px]"
+                    placeholder="EG000000000000000000000000000"
+                  />
+                </div>
               </div>
 
               <div>
