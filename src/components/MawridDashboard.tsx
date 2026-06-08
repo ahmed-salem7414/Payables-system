@@ -1030,6 +1030,116 @@ export default function MawridDashboard() {
     }
   };
 
+  // Download backup to user's computer
+  const downloadBackupAsFile = (backup: BackupRecord) => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(backup.dataDump || "");
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `mawrid_backup_${new Date(backup.timestamp).toISOString().split('T')[0]}_${backup.id}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast("✓ تم تفريغ وتحميل ملف النسخة الاحتياطية بنجاح على جهازك.");
+    } catch (e) {
+      showToast("عذراً، حدث خطأ أثناء محاولة تصدير الملف.", "error");
+    }
+  };
+
+  // Export all application datasets inside a single file
+  const exportAllDataAsJSON = () => {
+    const fullBackup = {
+      suppliers,
+      invoices,
+      payments,
+      backups,
+      warehouses,
+      safeBalance,
+      linkedBanks,
+      creditNotes,
+      exportDate: new Date().toISOString()
+    };
+    try {
+      const jsonStr = JSON.stringify(fullBackup, null, 2);
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonStr);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `mawrid_complete_database_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast("✓ تم تصدير وتحميل قاعدة البيانات الشاملة بنجاح في ملف واحد.");
+    } catch (e) {
+      showToast("فشل تصدير قاعدة البيانات.", "error");
+    }
+  };
+
+  // Import entire datasets from a JSON file
+  const importAllDataFromJSON = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const restored = JSON.parse(content);
+        
+        if (restored.suppliers && Array.isArray(restored.suppliers)) setSuppliers(restored.suppliers);
+        if (restored.invoices && Array.isArray(restored.invoices)) setInvoices(restored.invoices);
+        if (restored.payments && Array.isArray(restored.payments)) setPayments(restored.payments);
+        if (restored.backups && Array.isArray(restored.backups)) setBackups(restored.backups);
+        if (restored.warehouses && Array.isArray(restored.warehouses)) setWarehouses(restored.warehouses);
+        if (restored.safeBalance !== undefined) setSafeBalance(Number(restored.safeBalance));
+        if (restored.linkedBanks && Array.isArray(restored.linkedBanks)) setLinkedBanks(restored.linkedBanks);
+        if (restored.creditNotes && Array.isArray(restored.creditNotes)) setCreditNotes(restored.creditNotes);
+
+        showToast("✓ تم استيراد وقراءة الملف الشامل ودمجه بنجاح مع النظام!");
+      } catch (err) {
+        showToast("تنبيه: الملف غير صالح أو ربما تالف. تأكد من تحديد ملف نسخة شاملة بامتداد JSON.", "error");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Wipe system states cleanly to build custom databases from scratch
+  const clearAllData = () => {
+    if (!window.confirm("تحذير أمني: سيتم حذف كافة السجلات الحالية من موردين، وفواتير، ومستودعات، وحسابات بنكية وخزنة. هل أنت متأكد من تصفير المنظومة للعمل الشخصي؟")) {
+      return;
+    }
+    setSuppliers([]);
+    setInvoices([]);
+    setPayments([]);
+    setWarehouses([]);
+    setSafeBalance(0);
+    setCreditNotes([]);
+    setBackups([]);
+    showToast("✓ تم تصفير قاعدة بيانات المنظومة بالكامل. يمكنك البدء بإضافة سجلاتك الخاصة.", "info");
+  };
+
+  // Quick Seed the standard Egyptian demo structure if needed
+  const loadDemoData = () => {
+    if (!window.confirm("هل ترغب في إعادة إدخال وتحميل البيانات التجريبية الافتراضية؟ سيتم استبدال البيانات الحالية.")) {
+      return;
+    }
+    setSuppliers(INITIAL_SUPPLIERS);
+    setInvoices(INITIAL_INVOICES);
+    setPayments(INITIAL_PAYMENTS);
+    setWarehouses(["مخازن أكتوبر الرئيسية", "مستودع العبور لتجهيز الخامات", "مخزن الإسكندرية المينائي", "مخازن العاشر من رمضان"]);
+    setSafeBalance(1500000);
+    setCreditNotes([
+      {
+        id: "cn-1",
+        creditNoteNumber: "CN-2026-001",
+        supplierId: "sup-1",
+        amount: 25000,
+        issueDate: "2026-05-15",
+        dueDate: "2026-06-15",
+        status: "active",
+        items: [{ name: "خصم ترويجي للمواد الخام الربع السنوي", quantity: 1, price: 25000 }],
+        notes: "خصم ترويجي للمواد الخام الربع السنوي"
+      }
+    ]);
+    showToast("✓ تم بث وتحميل البيانات التجريبية الافتراضية بنجاح.");
+  };
+
   // Automatic backup simulator
   useEffect(() => {
     const interval = setInterval(() => {
@@ -2651,66 +2761,148 @@ export default function MawridDashboard() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6"
             >
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">نظام النسخ الاحتياطي التلقائي والدوري للبيانات</h3>
-                  <p className="text-xs text-slate-500 mt-1">حماية تامة من فقدان الحسابات بقاعدة بيانات مدمجة دورية والقدرة على تحميل واسترجاع الأرشيف</p>
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <Database className="w-5 h-5 text-indigo-600" />
+                    منظومة النسخ الاحتياطي وحماية البيانات المتكاملة
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">حماية تامة من فقدان الحسابات بقاعدة بيانات دورية مشفرة، والقدرة الكاملة على تفريغ وتحميل السجلات.</p>
                 </div>
 
-                <button 
-                  onClick={triggerManualBackup}
-                  className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>إنشاء نسخة احتياطية الآن</span>
-                </button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button 
+                    onClick={triggerManualBackup}
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>إنشاء نقطة استعادة جديدة</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Database State Controllers & JSON Persistence File Actions */}
+              <div className="bg-[#f8fafc] border border-slate-200 p-5 rounded-2xl space-y-4 shadow-sm">
+                <div>
+                  <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                    <Shield className="w-4 h-4 text-emerald-600" />
+                    التحكم المتقدم بالذاكرة الدائمة والملفات الشخصية (JSON Hard Drive Backup)
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    احمِ أعمالك من إمكانية مسح ذاكرة المتصفح المؤقتة (LocalStorage) أو فقدان البيانات عند التحديث. قم بتنزيل ملف حساباتك كلياً على حاسوبك الشخصي واقرأه وقتما تشاء بشكل آمن تماماً وبسرية تامة.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* Export Full Dataset */}
+                  <button
+                    onClick={exportAllDataAsJSON}
+                    className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all text-center"
+                    title="تنزيل نسخة بنية الحسابات والعمليات كاملة"
+                  >
+                    <Download className="w-4 h-4" />
+                    تصدير قاعدة البيانات (JSON)
+                  </button>
+
+                  {/* Import Full Dataset */}
+                  <label className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all text-center">
+                    <Upload className="w-4 h-4" />
+                    <span>استيراد قاعدة بيانات (JSON)</span>
+                    <input
+                      type="file"
+                      accept=".json"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          importAllDataFromJSON(file);
+                        }
+                      }}
+                    />
+                  </label>
+
+                  {/* Clean system data */}
+                  <button
+                    onClick={clearAllData}
+                    className="flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer transition-all text-center"
+                    title="تهيئة النظام للعمل من الصفر والبدء بحزمة فارغة"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-600" />
+                    تصفير الحسابات (شغل شخصي فارغ)
+                  </button>
+
+                  {/* Load demo default database */}
+                  <button
+                    onClick={loadDemoData}
+                    className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-250 text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer transition-all text-center"
+                    title="إعادة جلب وضخ بيانات الموردين التجريبية الافتراضية"
+                  >
+                    <RefreshCw className="w-4 h-4 text-slate-600" />
+                    استرجع الداتا الافتراضية
+                  </button>
+                </div>
               </div>
 
               {/* Automatic Backup state indicator */}
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center gap-3 text-xs text-slate-600">
+              <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/60 flex items-center gap-3 text-xs text-slate-600">
                 <Shield className="w-5 h-5 text-emerald-600 shrink-0" />
                 <div>
-                  <span className="font-bold text-slate-900 block">جدولة النسخ التلقائي: فعالة وعاملة (Auto-backup Scheduled Daily)</span>
-                  <span className="text-[11px] text-slate-500">يقوم الخادم آلياً بحفظ نسخة متكاملة مشفرة في تمام الساعة 12:00 منتصف الليل يومياً.</span>
+                  <span className="font-bold text-slate-900 block">حالة الحفظ الذاتي: نشط وتلقائي (Auto-save Enabled)</span>
+                  <span className="text-[11px] text-slate-500">يقوم النظام تلقائياً بتحديث وحفظ أي تعديلات تجريها فورياً بذاكرة المتصفح المحلية لتكون جاهزة عند إعادة التحميل.</span>
                 </div>
               </div>
 
               {/* Backup list history */}
               <div className="space-y-3">
-                <span className="text-xs font-bold text-slate-400 block uppercase tracking-wider">سجل النسخ الاحتياطية المتوفرة:</span>
+                <span className="text-xs font-bold text-slate-400 block uppercase tracking-wider">سجل النسخ الاحتياطية المتوفرة ومستودع الأمان الفوري:</span>
                 
-                {backups.map((bc, idx) => (
-                  <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white border border-slate-150 rounded-xl hover:border-slate-300 transition-colors justify-between gap-4">
-                    <div className="flex items-start gap-2.5">
-                      <div className="p-2 rounded-lg bg-slate-100 text-slate-600 mt-0.5 shrink-0">
-                        <Database className="w-4.5 h-4.5" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <strong className="text-sm text-slate-900 font-bold">{bc.type === "auto" ? "نسخة احتياطية تلقائية" : "نسخة احتياطية يدوية"}</strong>
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${bc.type === "auto" ? "bg-indigo-50 text-indigo-700" : "bg-sky-50 text-sky-700"}`}>
-                            {bc.type === "auto" ? "تلقائي" : "يدوي مُصدَّق"}
-                          </span>
-                        </div>
-                        <span className="text-[11px] text-slate-400 block mt-0.5 font-mono">{new Date(bc.timestamp).toLocaleString("ar")}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                      <div className="text-xs text-slate-500 text-right">
-                        <span>الحجم: <strong>{bc.size}</strong></span>
-                        <span className="block text-[11px] text-slate-400 font-medium">{bc.recordsCount.suppliers} موردين / {bc.recordsCount.invoices} فواتير</span>
-                      </div>
-                      <button
-                        onClick={() => restoreBackupRecord(bc)}
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] px-3 py-1.5 rounded-lg shrink-0 cursor-pointer transition-colors"
-                      >
-                        استرجاع النسخة
-                      </button>
-                    </div>
-
+                {backups.length === 0 ? (
+                  <div className="text-center py-6 text-slate-400 text-xs italic bg-slate-50 border border-dashed border-slate-200 rounded-xl">
+                    لا يوجد نسخ احتياطية مسجلة في التايم لاين الحالي. قم بإنشاء واحدة الآن كحماية دورية فائقة السرعة.
                   </div>
-                ))}
+                ) : (
+                  backups.map((bc, idx) => (
+                    <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white border border-slate-150 rounded-xl hover:border-slate-300 transition-colors justify-between gap-4">
+                      <div className="flex items-start gap-2.5">
+                        <div className="p-2 rounded-lg bg-slate-100 text-slate-650 mt-0.5 shrink-0">
+                          <Database className="w-4.5 h-4.5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <strong className="text-sm text-slate-900 font-bold">{bc.type === "auto" ? "نسخة احتياطية تلقائية" : "نسخة احتياطية يدوية"}</strong>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${bc.type === "auto" ? "bg-indigo-50 text-indigo-700" : "bg-sky-50 text-sky-700"}`}>
+                              {bc.type === "auto" ? "تلقائي" : "يدوي مُصدَّق"}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-400 block mt-0.5 font-mono">{new Date(bc.timestamp).toLocaleString("ar")}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                        <div className="text-xs text-slate-500 text-right">
+                          <span>الحجم: <strong>{bc.size}</strong></span>
+                          <span className="block text-[11px] text-slate-400 font-bold mt-0.5">{bc.recordsCount.suppliers} موردين | {bc.recordsCount.invoices} فواتير</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-row-reverse">
+                          <button
+                            onClick={() => restoreBackupRecord(bc)}
+                            className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[11px] px-3.5 py-1.5 rounded-xl shrink-0 cursor-pointer transition-colors"
+                          >
+                            استرجاع النسخة
+                          </button>
+                          <button
+                            onClick={() => downloadBackupAsFile(bc)}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs p-2 rounded-xl shrink-0 cursor-pointer transition-colors"
+                            title="تحميل كملف JSON مستقل على الهارد ديسك"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  ))
+                )}
               </div>
 
             </motion.div>
