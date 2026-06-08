@@ -64,6 +64,7 @@ export default function MawridDashboard() {
   // Selected Report Parameters
   const [reportMonth, setReportMonth] = useState("05");
   const [reportYear, setReportYear] = useState("2026");
+  const [selectedReportSupplierId, setSelectedReportSupplierId] = useState<string>("all");
   const [aiReportSummary, setAiReportSummary] = useState<string>("");
   const [isGeneratingAiSummary, setIsGeneratingAiSummary] = useState(false);
 
@@ -125,11 +126,36 @@ export default function MawridDashboard() {
   // New Invoice form state
   const [newInvoice, setNewInvoice] = useState({
     supplierId: "", invoiceNumber: "", dueDate: "", notes: "",
-    items: [{ name: "", quantity: 1, price: 0 }]
+    items: [{ name: "", quantity: 1, price: 0 }],
+    vatRate: 14
   });
 
   // Edit Invoice form state
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+
+  // Credit Note inside Edit Invoice Modal State
+  const [showEditInvoiceCNSection, setShowEditInvoiceCNSection] = useState(false);
+  const [editInvoiceCNData, setEditInvoiceCNData] = useState({
+    creditNoteNumber: "",
+    issueDate: "2026-06-07",
+    dueDate: "",
+    notes: "",
+    items: [{ name: "", quantity: 1, price: 0 }]
+  });
+
+  useEffect(() => {
+    if (editingInvoice) {
+      setShowEditInvoiceCNSection(false);
+      const randomID = Math.floor(1000 + Math.random() * 9000);
+      setEditInvoiceCNData({
+        creditNoteNumber: `CN-${editingInvoice.invoiceNumber}-${randomID}`,
+        issueDate: new Date().toISOString().split("T")[0],
+        dueDate: editingInvoice.dueDate || "",
+        notes: `مرتجع / خصم مرتبط بالفاتورة رقم ${editingInvoice.invoiceNumber}`,
+        items: [{ name: "مرتجع بضائع بالفاتورة", quantity: 1, price: 0 }]
+      });
+    }
+  }, [editingInvoice]);
 
   // Edit Supplier form state
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
@@ -285,9 +311,9 @@ export default function MawridDashboard() {
 
   // Dynamic metrics helpers
   const getSupplierStats = () => {
-    const totalInvoicesAmount = invoices.reduce((acc, curr) => acc + curr.totalAmount, 0);
+    const totalInvoicesAmount = invoices.reduce((acc, curr) => acc + (curr.totalAmount - (curr.creditNoteAmount || 0)), 0);
     const paidAmount = payments.reduce((acc, curr) => acc + curr.amount, 0);
-    const pendingAmount = invoices.filter(i => i.status === "unpaid").reduce((acc, curr) => acc + curr.totalAmount, 0);
+    const pendingAmount = invoices.filter(i => i.status === "unpaid").reduce((acc, curr) => acc + (curr.totalAmount - (curr.creditNoteAmount || 0)), 0);
     const paidInvoicesCount = invoices.filter(i => i.status === "paid").length;
     const unpaidInvoicesCount = invoices.filter(i => i.status === "unpaid").length;
     
@@ -299,6 +325,20 @@ export default function MawridDashboard() {
       paidAmount,
       pendingAmount,
       paymentRatio: totalInvoicesAmount > 0 ? Math.round((paidAmount / totalInvoicesAmount) * 100) : 0
+    };
+  };
+
+  const getSelectedReportFinancials = () => {
+    const targetInvoices = selectedReportSupplierId === "all"
+      ? invoices
+      : invoices.filter(i => i.supplierId === selectedReportSupplierId);
+
+    const targetTotal = targetInvoices.reduce((sum, curr) => sum + (curr.totalAmount - (curr.creditNoteAmount || 0)), 0);
+    const targetPending = targetInvoices.filter(i => i.status === "unpaid").reduce((sum, curr) => sum + (curr.totalAmount - (curr.creditNoteAmount || 0)), 0);
+    
+    return {
+      total: targetTotal,
+      pending: targetPending
     };
   };
 
@@ -498,7 +538,10 @@ export default function MawridDashboard() {
       return;
     }
 
-    const calculatedTotal = newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    const subtotal = newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    const vatRate = newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14;
+    const vatAmount = subtotal * (vatRate / 100);
+    const calculatedTotal = subtotal + vatAmount;
 
     const createdInvoice: Invoice = {
       id: "inv-" + Date.now(),
@@ -509,16 +552,19 @@ export default function MawridDashboard() {
       items: newInvoice.items,
       totalAmount: calculatedTotal,
       status: "unpaid",
-      notes: newInvoice.notes
+      notes: newInvoice.notes,
+      vatRate: vatRate,
+      vatAmount: vatAmount
     };
 
     setInvoices([createdInvoice, ...invoices]);
     setShowAddInvoiceModal(false);
     setNewInvoice({
       supplierId: "", invoiceNumber: "", dueDate: "", notes: "",
-      items: [{ name: "", quantity: 1, price: 0 }]
+      items: [{ name: "", quantity: 1, price: 0 }],
+      vatRate: 14
     });
-    showToast(`تم تسجيل فاتورة جديدة ${createdInvoice.invoiceNumber} بقيمة ${calculatedTotal.toLocaleString()} ج.م.`);
+    showToast(`تم تسجيل فاتورة جديدة ${createdInvoice.invoiceNumber} بقيمة ${calculatedTotal.toLocaleString()} ج.م (تتضمن ضريبة ق.م: ${vatAmount.toLocaleString()} ج.م).`);
   };
 
   // Edit Invoice Handlers
@@ -566,16 +612,119 @@ export default function MawridDashboard() {
       return;
     }
 
-    const calculatedTotal = editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    const subtotal = editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    const vatRate = editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14;
+    const vatAmount = subtotal * (vatRate / 100);
+    const calculatedTotal = subtotal + vatAmount;
 
     const updatedInvoice: Invoice = {
       ...editingInvoice,
-      totalAmount: calculatedTotal
+      totalAmount: calculatedTotal,
+      vatRate: vatRate,
+      vatAmount: vatAmount
     };
+
+    // Check if the invoice payment was cancelled (changed from paid to unpaid)
+    const originalInvoice = invoices.find(i => i.id === editingInvoice.id);
+    if (originalInvoice && originalInvoice.status === "paid" && updatedInvoice.status === "unpaid") {
+      // Find any cash payments to refund of this invoice to the cash safe
+      const associatedPayments = payments.filter(p => p.invoiceId === editingInvoice.id);
+      const cashRefundSum = associatedPayments.filter(p => p.method === "cash").reduce((sum, p) => sum + p.amount, 0);
+      
+      if (cashRefundSum > 0) {
+        setSafeBalance(prev => prev + cashRefundSum);
+      }
+
+      // Filter out payments associated with this invoice ID
+      setPayments(prev => prev.filter(p => p.invoiceId !== editingInvoice.id));
+      showToast(`تم إلغاء سداد الفاتورة رقم ${updatedInvoice.invoiceNumber} بنجاح وإلغاء عملية الدفع من سجل المدفوعات والتحويلات.`, "info");
+    }
 
     setInvoices(invoices.map(i => i.id === editingInvoice.id ? updatedInvoice : i));
     setEditingInvoice(null);
     showToast(`تم تعديل الفاتورة رقم ${updatedInvoice.invoiceNumber} بنجاح.`);
+  };
+
+  // Helpers for Credit Note within Edit Invoice
+  const handleAddEditInvoiceCNItemRow = () => {
+    setEditInvoiceCNData(prev => ({
+      ...prev,
+      items: [...prev.items, { name: "", quantity: 1, price: 0 }]
+    }));
+  };
+
+  const handleRemoveEditInvoiceCNItemRow = (index: number) => {
+    if (editInvoiceCNData.items.length === 1) return;
+    setEditInvoiceCNData(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleUpdateEditInvoiceCNItemRow = (index: number, field: string, value: any) => {
+    const updatedItems = editInvoiceCNData.items.map((item, i) => {
+      if (i === index) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    });
+    setEditInvoiceCNData(prev => ({
+      ...prev,
+      items: updatedItems
+    }));
+  };
+
+  const handleSaveCNFromEditInvoice = () => {
+    if (!editingInvoice) return;
+    if (!editInvoiceCNData.creditNoteNumber) {
+      showToast("يرجى إدخال رقم الإشعار الدائن.", "error");
+      return;
+    }
+
+    const calculatedTotal = editInvoiceCNData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    if (calculatedTotal <= 0) {
+      showToast("يرجى إضافة بند واحد على الأقل بقيمة أكبر من الصفر للإشعار الدائن.", "error");
+      return;
+    }
+
+    const hasEmptyItem = editInvoiceCNData.items.some(item => !item.name.trim() || item.price <= 0);
+    if (hasEmptyItem) {
+      showToast("يرجى تعبئة كافة تفاصيل ووصف البنود وقيمها بشكل صحيح.", "error");
+      return;
+    }
+
+    // Create the New Credit Note
+    const createdCN: CreditNote = {
+      id: "cn-" + Date.now(),
+      creditNoteNumber: editInvoiceCNData.creditNoteNumber,
+      supplierId: editingInvoice.supplierId,
+      amount: calculatedTotal,
+      issueDate: editInvoiceCNData.issueDate,
+      dueDate: editInvoiceCNData.dueDate || new Date(Date.now() + 15 * 24 * 3600 * 1000).toISOString().split("T")[0],
+      status: "active",
+      items: editInvoiceCNData.items,
+      notes: `${editInvoiceCNData.notes || ""} [تم إنشاؤه من الفاتورة: ${editingInvoice.invoiceNumber}]`
+    };
+
+    setCreditNotes([...creditNotes, createdCN]);
+    setShowEditInvoiceCNSection(false);
+    
+    // Auto-append details to invoice notes so it acts as reference
+    const cnReferenceText = `[تم إصدار إشعار دائن مرتبط برقم: ${createdCN.creditNoteNumber} بقيمة: ${createdCN.amount.toLocaleString()} ج.م]`;
+    const existingNotes = editingInvoice.notes ? `${editingInvoice.notes} ` : "";
+    
+    // Set the credit note amount and list on editingInvoice directly so it saves together
+    const currentNotes = editingInvoice.creditNotes || [];
+    const newCreditNoteAmount = (editingInvoice.creditNoteAmount || 0) + calculatedTotal;
+
+    setEditingInvoice({
+      ...editingInvoice,
+      notes: existingNotes + cnReferenceText,
+      creditNoteAmount: newCreditNoteAmount,
+      creditNotes: [...currentNotes, createdCN]
+    });
+
+    showToast(`تم إصدار الإشعار الدائن رقم ${createdCN.creditNoteNumber} بنجاح وتعديل رصيد الفاتورة وفقاً لذلك!`);
   };
 
   // Delete Invoice handler
@@ -614,6 +763,8 @@ export default function MawridDashboard() {
       return;
     }
 
+    const payableAmount = invoice.totalAmount - (invoice.creditNoteAmount || 0);
+
     if (method === "bank_transfer") {
       const userBank = linkedBanks.find(b => b.bankName === bankName && b.isLinked) || linkedBanks.find(b => b.isLinked);
       if (!userBank) {
@@ -632,7 +783,7 @@ export default function MawridDashboard() {
         { text: `📡 جاري تهيئة الاتصال فوري عبر قنوات التسوية الفورية مع البنك المحلي المرتبط (${userBank.bankName})...`, progress: 10, wait: 400 },
         { text: `🔑 جاري تأكيد الرموز الأمنية المشفرة وتصريح الـ API لـ "مورد"...`, progress: 25, wait: 800 },
         { text: `🏦 التحقق من رصيد الحساب المصدق رقم: ${userBank.accountNumber}...`, progress: 40, wait: 1200 },
-        { text: `💸 إرسال طلب تحويل فوري للمبلغ (${invoice.totalAmount.toLocaleString()} ج.م) لحساب المورد المستلم بنجاح...`, progress: 60, wait: 1900 },
+        { text: `💸 إرسال طلب تحويل فوري للمبلغ (${payableAmount.toLocaleString()} ج.م) لحساب المورد المستلم بنجاح...`, progress: 60, wait: 1900 },
         { text: `📥 جاري إرسال المستحقات لحساب المورد: ${supplier.company} (حساب IBAN: ${supplier.bankAccount})...`, progress: 80, wait: 2400 },
         { text: `✅ استلام رد تأكيدي من البنك المركزي المصري (CBE RTGS). رمز المعاملة: TXN-BM-${Math.floor(100000 + Math.random() * 900000)}`, progress: 100, wait: 3000 }
       ];
@@ -657,7 +808,7 @@ export default function MawridDashboard() {
                 id: "pay-" + Date.now(),
                 supplierId: invoice.supplierId,
                 invoiceId: invoice.id,
-                amount: invoice.totalAmount,
+                amount: payableAmount,
                 paymentDate: new Date().toISOString().split("T")[0],
                 method: userBank.bankName.includes("فوري") ? "fawry" : "bank_transfer",
                 transRef: `RTGS-EG-${Math.floor(102931238 + Math.random() * 928374823)}`
@@ -673,7 +824,7 @@ export default function MawridDashboard() {
       });
     } else {
       // Cash Safe / Treasury Settlement
-      if (safeBalance < invoice.totalAmount) {
+      if (safeBalance < payableAmount) {
         showToast("خطأ: رصيد الخزينة الرئيسية غير كافٍ لسداد الفاتورة نقداً! يرجى تغذية الخزينة أولاً.", "error");
         return;
       }
@@ -688,7 +839,7 @@ export default function MawridDashboard() {
         { text: `📡 جاري فتح قفل الخزينة الرقمية الآمنة لشركة "مورد"...`, progress: 15, wait: 400 },
         { text: `🔑 مطابقة التواقيع الصلاحية وإذن الصرف النقدي المولد للفاتورة رقم: ${invoice.invoiceNumber}...`, progress: 35, wait: 800 },
         { text: `🧮 التحقق من كفاية السيولة النقدية (الرصيد الحالي: ${safeBalance.toLocaleString()} ج.م)...`, progress: 55, wait: 1200 },
-        { text: `💵 عد وفرز أوراق البنكنوت فئة (200 ج.م و 100 ج.م) بقيمة إجمالية ${invoice.totalAmount.toLocaleString()} ج.م...`, progress: 75, wait: 1900 },
+        { text: `💵 عد وفرز أوراق البنكنوت فئة (200 ج.م و 100 ج.م) بقيمة إجمالية ${payableAmount.toLocaleString()} ج.م...`, progress: 75, wait: 1900 },
         { text: `📝 إصدار وتوثيق سند صرف الخزينة العاجل رقم: CSH-VOUCH-${Math.floor(1000 + Math.random() * 9000)}...`, progress: 90, wait: 2400 },
         { text: `✅ تم تسليم المبلغ نقداً لمندوب المورد والتسوية للخزية بنجاح!`, progress: 100, wait: 3000 }
       ];
@@ -701,7 +852,7 @@ export default function MawridDashboard() {
           if (step.progress === 100) {
             setTimeout(() => {
               // Deduct from Balance
-              setSafeBalance(prev => prev - invoice.totalAmount);
+              setSafeBalance(prev => prev - payableAmount);
 
               // Update Invoice Status
               setInvoices(prev => prev.map(inv => {
@@ -716,7 +867,7 @@ export default function MawridDashboard() {
                 id: "pay-" + Date.now(),
                 supplierId: invoice.supplierId,
                 invoiceId: invoice.id,
-                amount: invoice.totalAmount,
+                amount: payableAmount,
                 paymentDate: new Date().toISOString().split("T")[0],
                 method: "cash",
                 transRef: `CSH-VOUCH-${Math.floor(100000 + Math.random() * 900000)}`
@@ -1625,9 +1776,23 @@ export default function MawridDashboard() {
                                   <span className="text-slate-400 block mb-0.5">تاريخ الاستحقاق:</span>
                                   <span className={`font-semibold font-mono ${inv.status === "unpaid" ? "text-rose-400" : "text-white"}`}>{inv.dueDate}</span>
                                 </div>
-                                <div className="col-span-2 md:col-span-1">
-                                  <span className="text-slate-400 block mb-0.5">القيمة الإجمالية:</span>
-                                  <span className="text-sm font-black text-white">{inv.totalAmount.toLocaleString()} ج.م</span>
+                                <div className="col-span-2 md:col-span-1 border-r border-slate-800/60 pr-3">
+                                  {inv.creditNoteAmount && inv.creditNoteAmount > 0 ? (
+                                    <>
+                                      <span className="text-slate-400 block mb-0.5">صافي القيمة بعد الخصم:</span>
+                                      <span className="text-sm font-black text-[#34d399] font-mono block">
+                                        {(inv.totalAmount - inv.creditNoteAmount).toLocaleString()} ج.م
+                                      </span>
+                                      <span className="text-[9px] text-slate-450 text-slate-500 block leading-tight mt-0.5">
+                                        (الأصل: {inv.totalAmount.toLocaleString()} - خصم: {inv.creditNoteAmount.toLocaleString()})
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="text-slate-400 block mb-0.5">القيمة الإجمالية:</span>
+                                      <span className="text-sm font-black text-white font-mono block">{inv.totalAmount.toLocaleString()} ج.م</span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
 
@@ -1970,7 +2135,16 @@ export default function MawridDashboard() {
                                   <span className="text-slate-300 text-[11px]">مستحق للمورد: {sup ? sup.name : "غير معروف"}</span>
                                 </div>
                                 <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                                  <span className="text-emerald-400 font-mono font-bold text-xs">{inv.totalAmount.toLocaleString()} ج.م</span>
+                                  <div className="text-left font-mono">
+                                    <span className="text-emerald-400 font-bold text-xs block">
+                                      {(inv.totalAmount - (inv.creditNoteAmount || 0)).toLocaleString()} ج.م
+                                    </span>
+                                    {inv.creditNoteAmount && inv.creditNoteAmount > 0 ? (
+                                      <span className="text-[9px] text-slate-500 block leading-none">
+                                        (خصم إشعار دائن)
+                                      </span>
+                                    ) : null}
+                                  </div>
                                   <button
                                     onClick={() => handleInitiateSettleInvoice(inv)}
                                     className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg whitespace-nowrap cursor-pointer transition-colors"
@@ -2005,7 +2179,18 @@ export default function MawridDashboard() {
                   <p className="text-xs text-slate-400 mt-1">توليد تقارير شاملة للعمليات التشغيلية، وحفظها أو تصديرها كملفات PDF للأرشيف</p>
                 </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                  <select 
+                    value={selectedReportSupplierId} 
+                    onChange={(e) => setSelectedReportSupplierId(e.target.value)}
+                    className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer"
+                  >
+                    <option value="all">📁 جميع الموردين (الحساب الإجمالي)</option>
+                    {suppliers.map(s => (
+                      <option key={s.id} value={s.id}>👤 كشف: {s.name} ({s.company})</option>
+                    ))}
+                  </select>
+
                   <select 
                     value={reportMonth} 
                     onChange={(e) => setReportMonth(e.target.value)}
@@ -2129,55 +2314,117 @@ export default function MawridDashboard() {
                   </div>
                 </div>
 
-                {/* Report specs indicators */}
-                <div className="grid grid-cols-3 gap-4 border border-slate-200 rounded-xl p-4 bg-slate-50">
-                  <div className="text-center">
-                    <span className="text-slate-500 text-xs font-medium block">الفترة المحاسبية</span>
-                    <strong className="text-sm text-slate-800 font-bold block mt-1">{reportMonth === "05" ? "مايو" : reportMonth === "04" ? "أبريل" : "يونيو"} {reportYear}</strong>
-                  </div>
-                  <div className="text-center border-x border-slate-200">
-                    <span className="text-slate-500 text-xs font-medium block">إجمالي التعاملات للفترة</span>
-                    <strong className="text-sm text-slate-950 font-black block mt-1">{dashboardStats.totalInvoicesAmount.toLocaleString()} ج.م</strong>
-                  </div>
-                  <div className="text-center">
-                    <span className="text-slate-500 text-xs font-medium block">المديونية غير المسواة</span>
-                    <strong className="text-sm text-red-650 font-black block mt-1">{dashboardStats.pendingAmount.toLocaleString()} ج.م</strong>
-                  </div>
-                </div>
-
-                {/* Ledger Listing inside the PDF */}
-                <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-widest border-r-2 border-emerald-600 pr-2">تفاصيل أرصدة الموردين والفواتير النشطة</h4>
-                  
-                  <table className="w-full text-[11px] text-right border border-slate-200">
-                    <thead>
-                      <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
-                        <th className="py-2.5 px-3">المورّد</th>
-                        <th className="py-2.5 px-3">الشركة</th>
-                        <th className="py-2.5 px-3">الفئة</th>
-                        <th className="py-2.5 px-3">إجمالي المطالبات</th>
-                        <th className="py-2.5 px-3 text-left">المديونية المستحقة والرهون</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {suppliers.map((sup) => {
-                        const supInvoices = invoices.filter(i => i.supplierId === sup.id);
-                        const supTotal = supInvoices.reduce((sum, i) => sum + i.totalAmount, 0);
-                        const supPending = supInvoices.filter(i => i.status === "unpaid").reduce((sum, i) => sum + i.totalAmount, 0);
-
-                        return (
-                          <tr key={sup.id} className="border-b border-slate-200">
-                            <td className="py-2 px-3 font-semibold text-slate-900">{sup.name}</td>
-                            <td className="py-2 px-3 text-slate-600">{sup.company}</td>
-                            <td className="py-2 px-3 text-slate-500">{sup.category}</td>
-                            <td className="py-2 px-3 font-mono font-semibold">{supTotal.toLocaleString()} ج.م</td>
-                            <td className="py-2 px-3 font-mono font-bold text-left text-slate-900">{supPending.toLocaleString()} ج.م</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                 {/* Report specs indicators */}
+                 <div className="grid grid-cols-3 gap-4 border border-slate-200 rounded-xl p-4 bg-slate-50">
+                   <div className="text-center font-bold">
+                     <span className="text-slate-500 text-xs font-medium block">الفترة المحاسبية والمورد</span>
+                     <strong className="text-xs text-slate-800 font-bold block mt-1 leading-snug">
+                       التقرير: {reportMonth === "05" ? "مايو" : reportMonth === "04" ? "أبريل" : "يونيو"} {reportYear}
+                       {selectedReportSupplierId !== "all" ? ` | مورد: ${suppliers.find(s => s.id === selectedReportSupplierId)?.name}` : " | كشف مجمع للموردين"}
+                     </strong>
+                   </div>
+                   <div className="text-center border-x border-slate-200">
+                     <span className="text-slate-500 text-xs font-medium block">إجمالي التعاملات الصافية بالفترة</span>
+                     <strong className="text-sm text-slate-950 font-black block mt-1">
+                       {getSelectedReportFinancials().total.toLocaleString()} ج.م
+                     </strong>
+                   </div>
+                   <div className="text-center">
+                     <span className="text-slate-500 text-xs font-medium block">المديونية غير المسواة المتبقية</span>
+                     <strong className="text-sm text-red-650 font-black block mt-1">
+                       {getSelectedReportFinancials().pending.toLocaleString()} ج.م
+                     </strong>
+                   </div>
+                 </div>
+ 
+                 {/* Ledger Listing inside the PDF */}
+                 <div className="space-y-4">
+                   <div className="flex items-center justify-between border-b border-slate-150 pb-2">
+                     <h4 className="text-xs font-bold text-slate-900 uppercase tracking-widest border-r-2 border-emerald-600 pr-2">
+                       {selectedReportSupplierId === "all" ? "تفاصيل أرصدة الموردين والفواتير النشطة" : `كشف حساب المورد التفصيلي: ${suppliers.find(s => s.id === selectedReportSupplierId)?.name}`}
+                     </h4>
+                     {selectedReportSupplierId !== "all" && (
+                       <button
+                         type="button"
+                         onClick={() => setSelectedReportSupplierId("all")}
+                         className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors no-print"
+                       >
+                         عرض كافة الموردين
+                       </button>
+                     )}
+                   </div>
+                   
+                   <table className="w-full text-[11px] text-right border border-slate-200">
+                     <thead>
+                       <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
+                         <th className="py-2.5 px-3 text-right">المورد والشركة</th>
+                         <th className="py-2.5 px-3 text-right">رقم الفاتورة</th>
+                         <th className="py-2.5 px-3 text-right font-semibold">تاريخ الإضافة</th>
+                         <th className="py-2.5 px-3 text-right font-semibold">تاريخ الاستحقاق</th>
+                         <th className="py-2.5 px-3 text-left font-semibold">قيمة الفاتورة الأصلية</th>
+                         <th className="py-2.5 px-3 text-left font-semibold">خصم الإشعار الدائن</th>
+                         <th className="py-2.5 px-3 text-left font-bold">صافي المطلوب سداده</th>
+                         <th className="py-2.5 px-3 text-center">حالة السداد والتحصيل</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       {(() => {
+                         const filteredSuppliers = selectedReportSupplierId === "all"
+                           ? suppliers
+                           : suppliers.filter(s => s.id === selectedReportSupplierId);
+ 
+                         let anyInvoicesFound = false;
+ 
+                         return (
+                           <>
+                             {filteredSuppliers.map((sup) => {
+                               const supInvoices = invoices.filter(i => i.supplierId === sup.id);
+                               if (supInvoices.length > 0) {
+                                 anyInvoicesFound = true;
+                               }
+ 
+                               return supInvoices.map((inv, idx) => {
+                                 const payableAmount = inv.totalAmount - (inv.creditNoteAmount || 0);
+                                 return (
+                                   <tr key={inv.id} className="border-b border-slate-200 hover:bg-slate-50/50">
+                                     {idx === 0 ? (
+                                       <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle" rowSpan={supInvoices.length}>
+                                         <div className="font-bold text-slate-900">{sup.name}</div>
+                                         <div className="text-[10px] text-slate-500 font-normal">{sup.company}</div>
+                                       </td>
+                                     ) : null}
+                                     <td className="py-2.5 px-3 font-mono font-bold text-sky-800">{inv.invoiceNumber}</td>
+                                     <td className="py-2.5 px-3 font-mono text-slate-600">{inv.issueDate || "2026-06-01"}</td>
+                                     <td className="py-2.5 px-3 font-mono text-slate-500">{inv.dueDate}</td>
+                                     <td className="py-2.5 px-3 font-mono text-left font-medium">{inv.totalAmount.toLocaleString()} ج.م</td>
+                                     <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-left">
+                                       {inv.creditNoteAmount && inv.creditNoteAmount > 0 ? `-${inv.creditNoteAmount.toLocaleString()} ج.م` : "0 ج.م"}
+                                     </td>
+                                     <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">{payableAmount.toLocaleString()} ج.م</td>
+                                     <td className="py-2.5 px-3 text-center">
+                                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                         inv.status === "paid" ? "bg-emerald-100 text-emerald-800 border border-emerald-200" : "bg-rose-100 text-rose-800 border border-rose-200"
+                                       }`}>
+                                         {inv.status === "paid" ? "تم السداد" : "مستحقة للدفع"}
+                                       </span>
+                                     </td>
+                                   </tr>
+                                 );
+                               });
+                             })}
+                             {!anyInvoicesFound && (
+                               <tr>
+                                 <td colSpan={8} className="py-6 text-center text-slate-400 italic">
+                                   لا توجد فواتير مسجلة للفترة المحددة أو المورد المختار.
+                                 </td>
+                               </tr>
+                             )}
+                           </>
+                         );
+                       })()}
+                     </tbody>
+                   </table>
+                 </div>
 
                 {/* Legal terms stamp bottom screen */}
                 <div className="flex items-end justify-between border-t border-slate-200 pt-6 mt-12 text-xs">
@@ -2383,10 +2630,22 @@ export default function MawridDashboard() {
                   <span>تاريخ الاستحقاق:</span>
                   <span className="font-mono text-white">{invoiceToSettle.dueDate}</span>
                 </div>
+                {invoiceToSettle.creditNoteAmount && invoiceToSettle.creditNoteAmount > 0 ? (
+                  <>
+                    <div className="flex justify-between items-center text-slate-400">
+                      <span>القيمة الأصلية للفاتورة:</span>
+                      <span className="font-mono">{invoiceToSettle.totalAmount.toLocaleString()} ج.م</span>
+                    </div>
+                    <div className="flex justify-between items-center text-rose-450 text-rose-400">
+                      <span>خصم الإشعار الدائن:</span>
+                      <span className="font-mono font-bold">- {invoiceToSettle.creditNoteAmount.toLocaleString()} ج.م</span>
+                    </div>
+                  </>
+                ) : null}
                 <div className="flex justify-between items-center border-t border-slate-800 pt-2">
-                  <span className="text-slate-200 font-bold">بند القيمة المطلوبة:</span>
-                  <span className="text-base font-black text-emerald-400 font-mono">
-                    {invoiceToSettle.totalAmount.toLocaleString()} ج.م
+                  <span className="text-slate-200 font-bold">صافي القيمة المطلوبة للسداد:</span>
+                  <span className="text-base font-black text-[#34d399] font-mono">
+                    {(invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0)).toLocaleString()} ج.م
                   </span>
                 </div>
               </div>
@@ -2457,24 +2716,24 @@ export default function MawridDashboard() {
                 <div className="space-y-3 bg-[#0f172a] p-3.5 rounded-xl border border-slate-800">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400">السيولة النقدية المتوفرة بالخزينة:</span>
-                    <span className={`font-mono font-black text-sm ${safeBalance >= invoiceToSettle.totalAmount ? "text-amber-400" : "text-rose-450 text-rose-400"}`}>
+                    <span className={`font-mono font-black text-sm ${safeBalance >= (invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0)) ? "text-amber-400" : "text-rose-450 text-rose-450 text-rose-400"}`}>
                       {safeBalance.toLocaleString()} ج.م
                     </span>
                   </div>
 
-                  {safeBalance < invoiceToSettle.totalAmount ? (
+                  {safeBalance < (invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0)) ? (
                     <div className="p-3 bg-rose-500/15 border border-rose-500/20 text-rose-300 rounded-lg space-y-2">
                        <p className="font-semibold text-center">⚠️ رصيد الخزينة الحالي غير كافٍ لتسديد هذه الفاتورة نقداً!</p>
                        <button
                          type="button"
                          onClick={() => {
                            setShowSettleInvoiceModal(false);
-                           setSafeDepositAmount(invoiceToSettle.totalAmount - safeBalance);
+                           setSafeDepositAmount((invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0)) - safeBalance);
                            setShowSafeDepositModal(true);
                          }}
                          className="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-2 rounded-lg text-[11px] cursor-pointer text-center"
                        >
-                         قم بتغذية الخزينة الآن بقيمة العجز ({ (invoiceToSettle.totalAmount - safeBalance).toLocaleString() } ج.م) +
+                         قم بتغذية الخزينة الآن بقيمة العجز ({ ((invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0)) - safeBalance).toLocaleString() } ج.م) +
                        </button>
                     </div>
                   ) : (
@@ -2494,9 +2753,9 @@ export default function MawridDashboard() {
                 <button
                   type="button"
                   onClick={() => executeFinalSettlement(invoiceToSettle, selectedPaymentMethod, selectedPaymentBank)}
-                  disabled={selectedPaymentMethod === "cash" && safeBalance < invoiceToSettle.totalAmount}
+                  disabled={selectedPaymentMethod === "cash" && safeBalance < (invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0))}
                   className={`flex-1 py-3 px-4 font-bold rounded-xl text-center cursor-pointer transition-all ${
-                    selectedPaymentMethod === "cash" && safeBalance < invoiceToSettle.totalAmount
+                    selectedPaymentMethod === "cash" && safeBalance < (invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0))
                       ? "bg-slate-800 text-slate-500 cursor-not-allowed"
                       : "bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-lg font-bold"
                   }`}
@@ -2850,6 +3109,56 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
+              {/* VAT and Totals Calculator */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
+                    <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2.5 py-1 shadow-xs">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newInvoice.vatRate}
+                        onChange={(e) => setNewInvoice({ ...newInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
+                        className="w-12 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                      />
+                      <span className="text-slate-500 text-xs font-bold">%</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewInvoice({ ...newInvoice, vatRate: newInvoice.vatRate === 14 ? 0 : 14 })}
+                      className="text-[10px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1.5 rounded-lg border border-sky-100 cursor-pointer transition-colors"
+                    >
+                      {newInvoice.vatRate === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-1.5 w-full sm:w-auto text-left font-mono">
+                    <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-xs text-right">
+                      <span>الإجمالي قبل الضريبة:</span>
+                      <span className="font-bold">
+                        {newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
+                      </span>
+                    </div>
+                    <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-xs text-right">
+                      <span>قيمة ضريبة القيمة المضافة ({newInvoice.vatRate}%):</span>
+                      <span className="font-bold">
+                        {(newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (newInvoice.vatRate / 100)).toLocaleString()} ج.م
+                      </span>
+                    </div>
+                    <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-sm border-t border-slate-200 pt-1.5 mt-1 text-right">
+                      <span>الصافي الإجمالي المطلوب:</span>
+                      <span className="text-sky-600 font-black">
+                        {(
+                          newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (1 + newInvoice.vatRate / 100)
+                        ).toLocaleString()} ج.م
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
                 <button 
                   type="button"
@@ -3018,6 +3327,186 @@ export default function MawridDashboard() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* VAT and Totals Calculator for Edit */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 text-right">
+                    <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
+                    <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2.5 py-1 shadow-xs">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14}
+                        onChange={(e) => setEditingInvoice({ ...editingInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
+                        className="w-12 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                      />
+                      <span className="text-slate-500 text-xs font-bold">%</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditingInvoice({ ...editingInvoice, vatRate: (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? 0 : 14 })}
+                      className="text-[10px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1.5 rounded-lg border border-sky-100 cursor-pointer transition-colors text-right"
+                    >
+                      {(editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-1.5 w-full sm:w-auto text-left font-mono">
+                    <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-xs text-right">
+                      <span>الإجمالي قبل الضريبة:</span>
+                      <span className="font-bold">
+                        {editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
+                      </span>
+                    </div>
+                    <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-xs text-right">
+                      <span>قيمة ضريبة القيمة المضافة ({editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14}%):</span>
+                      <span className="font-bold">
+                        {(editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * ((editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100)).toLocaleString()} ج.م
+                      </span>
+                    </div>
+                    <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-sm border-t border-slate-200 pt-1.5 mt-1 text-right">
+                      <span>الصافي المطلوب بالحفظ:</span>
+                      <span className="text-sky-600 font-black">
+                        {(
+                          editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (1 + (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100)
+                        ).toLocaleString()} ج.م
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Option to create a Credit Note associated with this Invoice */}
+              <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditInvoiceCNSection(!showEditInvoiceCNSection)}
+                    className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-extrabold text-xs cursor-pointer select-none"
+                  >
+                    <FileText className="w-4.5 h-4.5" />
+                    <span>{showEditInvoiceCNSection ? "إغلاق نموذج الإشعار الدائن" : "عمل إشعار دائن (خصم/مرتجع) على هذه الفاتورة"}</span>
+                  </button>
+                  {!showEditInvoiceCNSection && (
+                    <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
+                      جديد ومطور
+                    </span>
+                  )}
+                </div>
+
+                {showEditInvoiceCNSection && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    className="space-y-4 pt-3 border-t border-slate-200 text-right"
+                    dir="rtl"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <label className="text-slate-500 block mb-1 font-bold">رقم الإشعار الدائن *</label>
+                        <input
+                          type="text"
+                          required={showEditInvoiceCNSection}
+                          value={editInvoiceCNData.creditNoteNumber}
+                          onChange={(e) => setEditInvoiceCNData({ ...editInvoiceCNData, creditNoteNumber: e.target.value })}
+                          className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-800"
+                          placeholder="CN-2026-X"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-500 block mb-1 font-bold">البيان/الملاحظات العامة</label>
+                        <input
+                          type="text"
+                          value={editInvoiceCNData.notes}
+                          onChange={(e) => setEditInvoiceCNData({ ...editInvoiceCNData, notes: e.target.value })}
+                          className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800"
+                          placeholder="مثال: خصم جودة أو كميات ممزقة"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-slate-700">قائمة البنود والكميات المخصومة:</span>
+                        <button
+                          type="button"
+                          onClick={handleAddEditInvoiceCNItemRow}
+                          className="text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>إضافة بند خصم</span>
+                        </button>
+                      </div>
+
+                      <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                        {editInvoiceCNData.items.map((item, index) => (
+                          <div key={index} className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-slate-200">
+                            <input
+                              type="text"
+                              required={showEditInvoiceCNSection}
+                              value={item.name}
+                              onChange={(e) => handleUpdateEditInvoiceCNItemRow(index, "name", e.target.value)}
+                              className="flex-1 border border-slate-200 rounded p-1.5 text-slate-800 text-xs bg-slate-50"
+                              placeholder="الوصف (مثال: كرتونة عيوب صناعة...)"
+                            />
+                            <input
+                              type="number"
+                              required={showEditInvoiceCNSection}
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleUpdateEditInvoiceCNItemRow(index, "quantity", parseInt(e.target.value) || 1)}
+                              className="w-16 border border-slate-200 rounded p-1.5 text-center font-mono text-slate-800 text-xs bg-slate-50"
+                            />
+                            <input
+                              type="number"
+                              required={showEditInvoiceCNSection}
+                              min="0"
+                              step="any"
+                              value={item.price}
+                              onChange={(e) => handleUpdateEditInvoiceCNItemRow(index, "price", parseFloat(e.target.value) || 0)}
+                              className="w-24 border border-slate-200 rounded p-1.5 text-left font-mono text-slate-800 text-xs bg-slate-50"
+                            />
+                            <div className="w-24 font-mono font-bold text-slate-700 text-left bg-slate-100 border border-slate-150 rounded p-1.5 text-xs overflow-hidden">
+                              {(item.quantity * item.price).toLocaleString()} ج.م
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEditInvoiceCNItemRow(index)}
+                              className="p-1.5 text-slate-400 hover:text-red-500 rounded cursor-pointer"
+                              title="حذف هذا البند"
+                            >
+                              <XCircle className="w-4.5 h-4.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-emerald-50 hover:bg-emerald-100/55 p-3 rounded-xl border border-emerald-100 select-none">
+                      <div className="text-emerald-800 font-bold text-xs flex items-center gap-1">
+                        <CheckCircle2 className="w-4.5 h-4.5" />
+                        <span>إجمالي رصيد الخصم الصادر:</span>
+                      </div>
+                      <span className="text-emerald-700 font-black text-sm font-mono">
+                        {editInvoiceCNData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
+                      </span>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={handleSaveCNFromEditInvoice}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1 shadow-sm"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>تأكيد وتسجيل كإشعار دائن</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
