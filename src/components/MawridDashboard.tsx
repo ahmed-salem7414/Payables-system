@@ -3437,27 +3437,15 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-slate-500 block mb-1">رقم الهاتف التواصل *</label>
-                  <input 
-                    type="tel" 
-                    value={newSupplier.phone}
-                    onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
-                    placeholder="01012345678"
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-500 block mb-1">البريد الإلكتروني</label>
-                  <input 
-                    type="email" 
-                    value={newSupplier.email}
-                    onChange={(e) => setNewSupplier({ ...newSupplier, email: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
-                    placeholder="supplier@company.eg"
-                  />
-                </div>
+              <div>
+                <label className="text-slate-500 block mb-1">رقم الهاتف التواصل *</label>
+                <input 
+                  type="tel" 
+                  value={newSupplier.phone}
+                  onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
+                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
+                  placeholder="01012345678"
+                />
               </div>
 
               <div>
@@ -3469,54 +3457,6 @@ export default function MawridDashboard() {
                   className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-[11px]"
                   placeholder="EG000000000000000000000000000"
                 />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-slate-500 block">فئة النشاط المورّد</label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newCat = prompt("أدخل اسم فئة النشاط الجديدة:");
-                        if (newCat && newCat.trim()) {
-                          const trimmed = newCat.trim();
-                          if (!supplierCategories.includes(trimmed)) {
-                            const updatedCategories = [...supplierCategories, trimmed];
-                            setSupplierCategories(updatedCategories);
-                            setNewSupplier(prev => ({ ...prev, category: trimmed }));
-                            showToast(`تمت إضافة الفئة "${trimmed}" بنجاح وتحديدها.`);
-                          } else {
-                            setNewSupplier(prev => ({ ...prev, category: trimmed }));
-                            showToast("هذه الفئة موجودة بالفعل وتم تحديدها.", "info");
-                          }
-                        }
-                      }}
-                      className="text-[10px] text-emerald-605 font-bold hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
-                    >
-                      + فئة جديدة
-                    </button>
-                  </div>
-                  <select
-                    value={newSupplier.category}
-                    onChange={(e) => setNewSupplier({ ...newSupplier, category: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 font-semibold cursor-pointer"
-                  >
-                    {supplierCategories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-slate-500 block mb-1">العنوان والمقر</label>
-                  <input 
-                    type="text" 
-                    value={newSupplier.address}
-                    onChange={(e) => setNewSupplier({ ...newSupplier, address: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
-                    placeholder="المنطقة الصناعية الثالثة، الجيزة"
-                  />
-                </div>
               </div>
 
               <div>
@@ -4231,28 +4171,16 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-slate-500 block mb-1">رقم الهاتف التواصل *</label>
-                  <input 
-                    type="tel" 
-                    required
-                    value={editingSupplier.phone}
-                    onChange={(e) => setEditingSupplier({ ...editingSupplier, phone: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono"
-                    placeholder="01012345678"
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-500 block mb-1">البريد الإلكتروني</label>
-                  <input 
-                    type="email" 
-                    value={editingSupplier.email}
-                    onChange={(e) => setEditingSupplier({ ...editingSupplier, email: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
-                    placeholder="supplier@company.eg"
-                  />
-                </div>
+              <div>
+                <label className="text-slate-500 block mb-1">رقم الهاتف التواصل *</label>
+                <input 
+                  type="tel" 
+                  required
+                  value={editingSupplier.phone}
+                  onChange={(e) => setEditingSupplier({ ...editingSupplier, phone: e.target.value })}
+                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono"
+                  placeholder="01012345678"
+                />
               </div>
 
               <div>
@@ -4265,54 +4193,6 @@ export default function MawridDashboard() {
                   className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-[11px]"
                   placeholder="EG000000000000000000000000000"
                 />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-slate-500 block">فئة النشاط المورّد</label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newCat = prompt("أدخل اسم فئة النشاط الجديدة:");
-                        if (newCat && newCat.trim()) {
-                          const trimmed = newCat.trim();
-                          if (!supplierCategories.includes(trimmed)) {
-                            const updatedCategories = [...supplierCategories, trimmed];
-                            setSupplierCategories(updatedCategories);
-                            setEditingSupplier(prev => prev ? ({ ...prev, category: trimmed }) : null);
-                            showToast(`تمت إضافة الفئة "${trimmed}" بنجاح وتحديدها.`);
-                          } else {
-                            setEditingSupplier(prev => prev ? ({ ...prev, category: trimmed }) : null);
-                            showToast("هذه الفئة موجودة بالفعل في الخيارات.", "info");
-                          }
-                        }
-                      }}
-                      className="text-[10px] text-emerald-605 font-bold hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
-                    >
-                      + فئة جديدة
-                    </button>
-                  </div>
-                  <select
-                    value={editingSupplier.category}
-                    onChange={(e) => setEditingSupplier(prev => prev ? ({ ...prev, category: e.target.value }) : null)}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-800 font-semibold cursor-pointer"
-                  >
-                    {supplierCategories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-slate-500 block mb-1">العنوان والمقر</label>
-                  <input 
-                    type="text" 
-                    value={editingSupplier.address}
-                    onChange={(e) => setEditingSupplier({ ...editingSupplier, address: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
-                    placeholder="المنطقة الصناعية الثالثة، الجيزة"
-                  />
-                </div>
               </div>
 
               <div>
