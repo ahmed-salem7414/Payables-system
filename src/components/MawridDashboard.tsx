@@ -62,8 +62,8 @@ export default function MawridDashboard() {
   const [invoiceTypeFilter, setInvoiceTypeFilter] = useState<"all" | "invoices" | "credit_notes">("all");
 
   // Selected Report Parameters
-  const [reportMonth, setReportMonth] = useState("05");
-  const [reportYear, setReportYear] = useState("2026");
+  const [reportStartDate, setReportStartDate] = useState<string>("2026-04-01");
+  const [reportEndDate, setReportEndDate] = useState<string>("2026-06-30");
   const [selectedReportSupplierId, setSelectedReportSupplierId] = useState<string>("all");
   const [aiReportSummary, setAiReportSummary] = useState<string>("");
   const [isGeneratingAiSummary, setIsGeneratingAiSummary] = useState(false);
@@ -329,9 +329,16 @@ export default function MawridDashboard() {
   };
 
   const getSelectedReportFinancials = () => {
+    // Filter by date range first
+    const dateFilteredInvoices = invoices.filter(i => {
+      const date = i.issueDate || "2026-06-01";
+      return date >= reportStartDate && date <= reportEndDate;
+    });
+
+    // Filter by supplier
     const targetInvoices = selectedReportSupplierId === "all"
-      ? invoices
-      : invoices.filter(i => i.supplierId === selectedReportSupplierId);
+      ? dateFilteredInvoices
+      : dateFilteredInvoices.filter(i => i.supplierId === selectedReportSupplierId);
 
     const targetTotal = targetInvoices.reduce((sum, curr) => sum + (curr.totalAmount - (curr.creditNoteAmount || 0)), 0);
     const targetPending = targetInvoices.filter(i => i.status === "unpaid").reduce((sum, curr) => sum + (curr.totalAmount - (curr.creditNoteAmount || 0)), 0);
@@ -1095,10 +1102,19 @@ export default function MawridDashboard() {
   const getPortfolioDistributionData = () => {
     // Group invoices total value by category or by supplier group
     const dict: { [key: string]: number } = {};
-    invoices.forEach(inv => {
+    const dateFilteredInvoices = invoices.filter(i => {
+      const date = i.issueDate || "2026-06-01";
+      return date >= reportStartDate && date <= reportEndDate;
+    });
+
+    const targetInvoices = selectedReportSupplierId === "all"
+      ? dateFilteredInvoices
+      : dateFilteredInvoices.filter(i => i.supplierId === selectedReportSupplierId);
+
+    targetInvoices.forEach(inv => {
       const supplier = suppliers.find(s => s.id === inv.supplierId);
       const cat = supplier ? supplier.category : "أخرى";
-      dict[cat] = (dict[cat] || 0) + inv.totalAmount;
+      dict[cat] = (dict[cat] || 0) + (inv.totalAmount - (inv.creditNoteAmount || 0));
     });
 
     return Object.keys(dict).map((name, i) => ({
@@ -1109,12 +1125,68 @@ export default function MawridDashboard() {
   };
 
   const getMonthlyFinancialsData = () => {
-    // Generate simple mock tracking for early months (April, May, June 2026) to make beautiful charts
-    return [
-      { name: "أبريل 2026", "إجمالي المشتريات": 290000, "إجمالي المسدد": 290000 },
-      { name: "مايو 2026", "إجمالي المشتريات": 400000, "إجمالي المسدد": 110000 },
-      { name: "يونيو 2026", "إجمالي المشتريات": 272000, "إجمالي المسدد": 0 }
-    ];
+    const start = new Date(reportStartDate);
+    const end = new Date(reportEndDate);
+    
+    // We want to collect all months between start and end (inclusive)
+    const months: { year: number, month: number, label: string, key: string }[] = [];
+    const current = new Date(start.getFullYear(), start.getMonth(), 1);
+    const stop = new Date(end.getFullYear(), end.getMonth(), 1);
+    
+    const arabicMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+    
+    // Safety check to prevent infinite loop
+    let limit = 0;
+    while (current <= stop && limit < 120) {
+      const y = current.getFullYear();
+      const m = current.getMonth();
+      const label = `${arabicMonths[m]} ${y}`;
+      const key = `${y}-${String(m + 1).padStart(2, "0")}`;
+      
+      months.push({ year: y, month: m, label, key });
+      current.setMonth(current.getMonth() + 1);
+      limit++;
+    }
+    
+    // If date range is small/invalid, default to last 3 months
+    if (months.length === 0) {
+      return [
+        { name: "أبريل 2026", "إجمالي المشتريات": 290000, "إجمالي المسدد": 290000 },
+        { name: "مايو 2026", "إجمالي المشتريات": 400000, "إجمالي المسدد": 110000 },
+        { name: "يونيو 2026", "إجمالي المشتريات": 272000, "إجمالي المسدد": 0 }
+      ];
+    }
+    
+    return months.map(m => {
+      // Filter invoices in this month that are within the selected supplier and date range
+      const inMonthInvoices = invoices.filter(i => {
+        const date = i.issueDate || "2026-06-01";
+        // Check if date belongs to this year-month and is also within general range
+        const matchesMonth = date.startsWith(m.key);
+        const matchesRange = date >= reportStartDate && date <= reportEndDate;
+        const matchesSupplier = selectedReportSupplierId === "all" || i.supplierId === selectedReportSupplierId;
+        return matchesMonth && matchesRange && matchesSupplier;
+      });
+      
+      const purchaseSum = inMonthInvoices.reduce((sum, curr) => sum + (curr.totalAmount - (curr.creditNoteAmount || 0)), 0);
+      
+      // Filter payments in this month that are within the selected supplier and date range
+      const inMonthPayments = payments.filter(p => {
+        const date = p.paymentDate || "2026-06-01";
+        const matchesMonth = date.startsWith(m.key);
+        const matchesRange = date >= reportStartDate && date <= reportEndDate;
+        const matchesSupplier = selectedReportSupplierId === "all" || p.supplierId === selectedReportSupplierId;
+        return matchesMonth && matchesRange && matchesSupplier;
+      });
+      
+      const paidSum = inMonthPayments.reduce((sum, curr) => sum + curr.amount, 0);
+      
+      return {
+        name: m.label,
+        "إجمالي المشتريات": purchaseSum,
+        "إجمالي المسدد": paidSum
+      };
+    });
   };
 
   return (
@@ -2191,23 +2263,26 @@ export default function MawridDashboard() {
                     ))}
                   </select>
 
-                  <select 
-                    value={reportMonth} 
-                    onChange={(e) => setReportMonth(e.target.value)}
-                    className="bg-[#0f172a] text-white border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                  >
-                    <option value="04">أبريل</option>
-                    <option value="05">مايو</option>
-                    <option value="06">يونيو</option>
-                  </select>
+                  {/* Calendar Range Filter */}
+                  <div className="flex items-center gap-1.5 bg-[#0f172a] border border-slate-700 px-3 py-1.5 rounded-xl text-xs text-white">
+                    <span className="text-slate-400 font-bold shrink-0 text-[11px]">من:</span>
+                    <input 
+                      type="date"
+                      value={reportStartDate}
+                      onChange={(e) => setReportStartDate(e.target.value)}
+                      className="bg-transparent text-[#34d399] tracking-tight font-mono font-bold focus:outline-none cursor-pointer [color-scheme:dark]"
+                    />
+                  </div>
 
-                  <select 
-                    value={reportYear} 
-                    onChange={(e) => setReportYear(e.target.value)}
-                    className="bg-[#0f172a] text-white border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-                  >
-                    <option value="2026">2026</option>
-                  </select>
+                  <div className="flex items-center gap-1.5 bg-[#0f172a] border border-slate-700 px-3 py-1.5 rounded-xl text-xs text-white">
+                    <span className="text-slate-400 font-bold shrink-0 text-[11px]">إلى:</span>
+                    <input 
+                      type="date"
+                      value={reportEndDate}
+                      onChange={(e) => setReportEndDate(e.target.value)}
+                      className="bg-transparent text-[#34d399] tracking-tight font-mono font-bold focus:outline-none cursor-pointer [color-scheme:dark]"
+                    />
+                  </div>
 
                   <button 
                     onClick={handlePrintReport}
@@ -2319,7 +2394,7 @@ export default function MawridDashboard() {
                    <div className="text-center font-bold">
                      <span className="text-slate-500 text-xs font-medium block">الفترة المحاسبية والمورد</span>
                      <strong className="text-xs text-slate-800 font-bold block mt-1 leading-snug">
-                       التقرير: {reportMonth === "05" ? "مايو" : reportMonth === "04" ? "أبريل" : "يونيو"} {reportYear}
+                       التقرير: من {reportStartDate} إلى {reportEndDate}
                        {selectedReportSupplierId !== "all" ? ` | مورد: ${suppliers.find(s => s.id === selectedReportSupplierId)?.name}` : " | كشف مجمع للموردين"}
                      </strong>
                    </div>
@@ -2378,7 +2453,12 @@ export default function MawridDashboard() {
                          return (
                            <>
                              {filteredSuppliers.map((sup) => {
-                               const supInvoices = invoices.filter(i => i.supplierId === sup.id);
+                               const supInvoices = invoices.filter(i => {
+                                 const matchesSupplier = i.supplierId === sup.id;
+                                 const date = i.issueDate || "2026-06-01";
+                                 const matchesRange = date >= reportStartDate && date <= reportEndDate;
+                                 return matchesSupplier && matchesRange;
+                               });
                                if (supInvoices.length > 0) {
                                  anyInvoicesFound = true;
                                }
