@@ -1576,93 +1576,93 @@ export default function MawridDashboard() {
         
         {/* RIGHT SIDEBAR - Tab controller and dynamic Navigation */}
         <aside className="no-print w-full lg:w-64 shrink-0">
-          <div className="bg-[#111827] rounded-2xl border border-slate-700 p-4 space-y-1 sticky top-24 shadow-lg">
+          <div className="bg-[#111827] rounded-2xl border border-slate-700 p-2.5 lg:p-4 shadow-lg flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible sticky top-20 lg:top-24 z-30 w-full no-scrollbar">
             
-            <p className="text-[11px] font-bold text-slate-500 tracking-wider uppercase px-3 pb-2 border-b border-slate-800 mb-2">القائمة المالية</p>
-
+            <p className="hidden lg:block text-[11px] font-bold text-slate-500 tracking-wider uppercase px-3 pb-2 border-b border-slate-800 mb-2">القائمة المالية</p>
+            
             <button 
               onClick={() => setActiveTab("suppliers")}
-              className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-xl transition-all ${
+              className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "suppliers" ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700" : "text-slate-400 hover:bg-slate-800 hover:text-white"
               }`}
             >
-              <Users className="w-5 h-5 shrink-0" />
+              <Users className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
               <span>إدارة الموردين ({suppliers.length})</span>
             </button>
 
             <button 
               onClick={() => setActiveTab("invoices")}
-              className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-xl transition-all ${
+              className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "invoices" ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700" : "text-slate-400 hover:bg-slate-800 hover:text-white"
               }`}
             >
-              <Receipt className="w-5 h-5 shrink-0" />
+              <Receipt className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
               <span>فواتير المشتريات ({invoices.length})</span>
             </button>
 
             <button 
               onClick={() => setActiveTab("payments")}
-              className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-xl transition-all ${
+              className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "payments" ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700" : "text-slate-400 hover:bg-slate-800 hover:text-white"
               }`}
             >
-              <CreditCard className="w-5 h-5 shrink-0" />
+              <CreditCard className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
               <span>سجل المدفوعات</span>
             </button>
 
             <button 
               onClick={() => setActiveTab("banking")}
-              className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-xl transition-all ${
+              className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "banking" ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700" : "text-slate-400 hover:bg-slate-800 hover:text-white"
               }`}
             >
-              <Building className="w-5 h-5 shrink-0" />
+              <Building className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
               <span>التكامل البنكي والتسوية</span>
             </button>
 
-            <p className="text-[11px] font-bold text-slate-500 tracking-wider uppercase px-3 pt-4 pb-2 border-b border-slate-800 mb-2">التحليلات والمتابعة</p>
+            <p className="hidden lg:block text-[11px] font-bold text-slate-500 tracking-wider uppercase px-3 pt-4 pb-2 border-b border-slate-800 mb-2">التحليلات والمتابعة</p>
 
             <button 
               onClick={() => setActiveTab("reports")}
-              className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-xl transition-all ${
+              className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "reports" ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700" : "text-slate-400 hover:bg-slate-800 hover:text-white"
               }`}
             >
-              <FileText className="w-5 h-5 shrink-0" />
+              <FileText className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
               <span>التقارير التحليلية والتحميل</span>
             </button>
 
             <button 
               onClick={() => setActiveTab("warehouses")}
-              className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-xl transition-all ${
+              className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "warehouses" ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700" : "text-slate-400 hover:bg-slate-800 hover:text-white"
               }`}
             >
-              <Warehouse className="w-5 h-5 shrink-0" />
+              <Warehouse className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
               <span>إدارة المخازن ({warehouses.length})</span>
             </button>
 
             <button 
               onClick={() => setActiveTab("backups")}
-              className={`w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-xl transition-all ${
+              className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "backups" ? "bg-[#1e293b] text-[#c084fc] shadow-md border border-slate-700" : "text-slate-400 hover:bg-slate-800 hover:text-white"
               }`}
             >
-              <Database className="w-5 h-5 shrink-0" />
+              <Database className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
               <span>النسخ الاحتياطي التلقائي</span>
             </button>
 
             <button 
               onClick={() => setActiveTab("chat")}
-              className={`w-full flex items-center justify-between px-3 py-3 text-sm font-semibold rounded-xl transition-all ${
+              className={`shrink-0 lg:shrink flex items-center justify-between gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "chat" ? "bg-[#1e293b] text-[#10b981] shadow-md border border-slate-700 font-bold" : "text-slate-400 hover:bg-slate-800 hover:text-white"
               }`}
             >
-              <div className="flex items-center gap-3">
-                <MessageSquare className="w-5 h-5 shrink-0 text-[#10b981]" />
+              <div className="flex items-center gap-2 lg:gap-3">
+                <MessageSquare className="w-4 h-4 lg:w-5 lg:h-5 shrink-0 text-[#10b981]" />
                 <span>الدعم الفني والذكاء الاصطناعي</span>
               </div>
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
             </button>
 
           </div>
@@ -1672,7 +1672,7 @@ export default function MawridDashboard() {
         <div className="flex-1 min-w-0">
           
           {/* Dashboard Summary Statistics Bar (Always rendered at the top of content tabs in screen) */}
-          <div className="no-print grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+          <div className="no-print grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
             
             <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-md flex items-center justify-between">
               <div>
@@ -2610,54 +2610,7 @@ export default function MawridDashboard() {
                 )}
               </div>
 
-              {/* Recharts Graphs representation Panels */}
-              <div className="no-print grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* Monthly Volume comparison chart */}
-                <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-lg space-y-4">
-                  <h4 className="text-xs font-bold text-white">تتبع حجم المشتريات والمدفوعات الشهرية (ج.م)</h4>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={getMonthlyFinancialsData()}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
-                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={{ stroke: "#475569" }} />
-                        <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={{ stroke: "#475569" }} />
-                        <Tooltip contentStyle={{ fontSize: "11px", borderRadius: "8px", direction: "rtl", textAlign: "right", backgroundColor: "#0f172a", border: "1px solid #334155", color: "#fff" }} />
-                        <Legend wrapperStyle={{ fontSize: "11px" }} />
-                        <Bar dataKey="إجمالي المشتريات" fill="#059669" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="إجمالي المسدد" fill="#10b981" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
 
-                {/* Portfolio Supplier Category distribution */}
-                <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-lg space-y-4">
-                  <h4 className="text-xs font-bold text-white">توزيع المشتريات طبقاً لفئات الموردين</h4>
-                  <div className="h-64 flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={getPortfolioDistributionData()}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {getPortfolioDistributionData().map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value: any) => `${value.toLocaleString()} ج.م`} contentStyle={{ fontSize: "11px", borderRadius: "8px", backgroundColor: "#0f172a", border: "1px solid #334155", color: "#fff" }} />
-                        <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: "9px" }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-              </div>
 
               {/* PRINT-ONLY OFFICIAL DIRECT Arabic REPORT (Will print layout exceptionally) */}
               <div className="bg-white rounded-3xl border border-slate-300 p-8 shadow-sm space-y-6 printable-report-sheet max-w-4xl mx-auto text-slate-900">
