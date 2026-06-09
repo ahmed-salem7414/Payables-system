@@ -9,7 +9,7 @@ import {
   ShieldAlert, Plus, Trash2, Download, CheckCircle2, XCircle, AlertTriangle, 
   RefreshCw, TrendingUp, Building, Check, Key, Upload, Activity, 
   UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save, Edit, Search, Wallet, Warehouse,
-  FileSpreadsheet
+  FileSpreadsheet, Paperclip
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -108,6 +108,7 @@ export default function MawridDashboard() {
   // Attachment upload states
   const [invoiceAttachment, setInvoiceAttachment] = useState<{ name: string; type: string; dataUrl: string } | null>(null);
   const [cnAttachment, setCnAttachment] = useState<{ name: string; type: string; dataUrl: string } | null>(null);
+  const [previewAttachment, setPreviewAttachment] = useState<{ name: string; type: string; dataUrl: string } | null>(null);
 
   // New Invoice itemized discount state
   const [invoiceBaseAmount, setInvoiceBaseAmount] = useState<number>(0);
@@ -2264,6 +2265,12 @@ export default function MawridDashboard() {
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold text-white font-mono text-sm">{inv.invoiceNumber}</span>
+                                    {inv.attachment && (
+                                      <span className="bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 font-sans" title={inv.attachment.name}>
+                                        <Paperclip className="w-2.5 h-2.5" />
+                                        مرفق الفاتورة
+                                      </span>
+                                    )}
                                     <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
                                       inv.status === "paid" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-300"
                                     }`}>
@@ -2317,6 +2324,17 @@ export default function MawridDashboard() {
                               </div>
 
                               <div className="flex items-center gap-2 self-end md:self-auto">
+                                {inv.attachment && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewAttachment(inv.attachment!)}
+                                    className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 hover:text-sky-300 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                    title="عرض وتنزيل المرفق"
+                                  >
+                                    <Paperclip className="w-3.5 h-3.5" />
+                                    <span>المرفق</span>
+                                  </button>
+                                )}
                                 <button 
                                   onClick={() => {
                                     if (!checkPermission("write")) return;
@@ -2393,6 +2411,12 @@ export default function MawridDashboard() {
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold text-white font-mono text-sm">{cn.creditNoteNumber}</span>
+                                    {cn.attachment && (
+                                      <span className="bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 font-sans" title={cn.attachment.name}>
+                                        <Paperclip className="w-2.5 h-2.5" />
+                                        مرفق الإشعار
+                                      </span>
+                                    )}
                                     <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-550 border-emerald-500/30">
                                       إشعار دائن ({cn.status === "active" ? "نشط" : "مُطبّق"})
                                     </span>
@@ -2417,6 +2441,17 @@ export default function MawridDashboard() {
                               </div>
 
                               <div className="flex items-center gap-2 self-end md:self-auto font-bold text-xs">
+                                {cn.attachment && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewAttachment(cn.attachment!)}
+                                    className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 hover:text-sky-300 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                    title="عرض وتنزيل المرفق"
+                                  >
+                                    <Paperclip className="w-3.5 h-3.5" />
+                                    <span>المرفق</span>
+                                  </button>
+                                )}
                                 <button 
                                   type="button"
                                   onClick={() => handleToggleCreditNoteStatus(cn.id)}
@@ -3720,6 +3755,34 @@ export default function MawridDashboard() {
                       placeholder="شحنة التجهيز المقررة لمخازن العاشر"
                     />
                   </div>
+
+                  <div>
+                    <label className="text-slate-505 block mb-1 font-bold">مرفق الفاتورة (صورة أو ملف)</label>
+                    <div className="flex items-center gap-2">
+                      <label className="flex-1 flex items-center justify-between border border-dashed border-slate-300 hover:border-sky-500 rounded-lg p-2 bg-white cursor-pointer transition-colors">
+                        <span className="text-slate-500 text-[11px] truncate max-w-[170px]">
+                          {invoiceAttachment ? invoiceAttachment.name : "اختر ملفاً لإرفاقه..."}
+                        </span>
+                        <span className="bg-sky-50 text-sky-650 px-2 py-1 rounded text-[10px] font-bold">تصفح</span>
+                        <input 
+                          type="file" 
+                          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" 
+                          onChange={(e) => handleFileUpload(e, "invoice")} 
+                          className="hidden" 
+                        />
+                      </label>
+                      {invoiceAttachment && (
+                        <button
+                          type="button"
+                          onClick={() => setInvoiceAttachment(null)}
+                          className="p-1.5 text-red-500 hover:bg-rose-50 rounded-lg cursor-pointer"
+                          title="حذف المرفق"
+                        >
+                          <XCircle className="w-4.5 h-4.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Left Side Panel: Items Row Editor & VAT/Calculations */}
@@ -4021,6 +4084,53 @@ export default function MawridDashboard() {
                       className="w-full border border-slate-200 rounded-lg p-2.5 bg-white"
                       placeholder="شحنة التجهيز المقررة لمخازن العاشر"
                     />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-505 block mb-1 font-bold">مرفق الفاتورة (صورة أو ملف)</label>
+                    <div className="flex items-center gap-2">
+                      <label className="flex-1 flex items-center justify-between border border-dashed border-slate-300 hover:border-emerald-500 rounded-lg p-2 bg-white cursor-pointer transition-colors">
+                        <span className="text-slate-500 text-[11px] truncate max-w-[170px]">
+                          {editingInvoice.attachment ? editingInvoice.attachment.name : "اختر ملفاً لإرفاقه..."}
+                        </span>
+                        <span className="bg-emerald-50 text-emerald-650 px-2 py-1 rounded text-[10px] font-bold">تصفح</span>
+                        <input 
+                          type="file" 
+                          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" 
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                if (reader.result) {
+                                  setEditingInvoice({
+                                    ...editingInvoice,
+                                    attachment: {
+                                      name: file.name,
+                                      type: file.type,
+                                      dataUrl: reader.result as string
+                                    }
+                                  });
+                                  showToast(`تم إرسال الملف "${file.name}" وتجهيز تحديث المرفق بنجاح.`);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }} 
+                          className="hidden" 
+                        />
+                      </label>
+                      {editingInvoice.attachment && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingInvoice({ ...editingInvoice, attachment: undefined })}
+                          className="p-1.5 text-red-500 hover:bg-rose-50 rounded-lg cursor-pointer"
+                          title="حذف المرفق"
+                        >
+                          <XCircle className="w-4.5 h-4.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -4596,6 +4706,35 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
+              {/* Attachment upload */}
+              <div>
+                <label className="text-slate-500 block mb-1 font-bold">مرفق الإشعار الدائن (صورة أو ملف)</label>
+                <div className="flex items-center gap-2">
+                  <label className="flex-1 flex items-center justify-between border border-dashed border-slate-300 hover:border-emerald-500 rounded-lg p-2 bg-slate-50 cursor-pointer transition-colors">
+                    <span className="text-slate-500 text-[11px] truncate max-w-[270px]">
+                      {cnAttachment ? cnAttachment.name : "اختر ملفاً لإرفاقه بالخصم..."}
+                    </span>
+                    <span className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-[10px] font-bold">تصفح</span>
+                    <input 
+                      type="file" 
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" 
+                      onChange={(e) => handleFileUpload(e, "credit_note")} 
+                      className="hidden" 
+                    />
+                  </label>
+                  {cnAttachment && (
+                    <button
+                      type="button"
+                      onClick={() => setCnAttachment(null)}
+                      className="p-1.5 text-red-500 hover:bg-rose-50 rounded-lg cursor-pointer"
+                      title="حذف المرفق"
+                    >
+                      <XCircle className="w-4.5 h-4.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* Total Display */}
               <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex justify-between items-center select-none text-slate-800">
                 <span className="text-emerald-800 font-bold">إجمالي قيمة الإشعار الدائن:</span>
@@ -4621,6 +4760,73 @@ export default function MawridDashboard() {
               </div>
 
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: PREVIEW ATTACHMENT */}
+      {previewAttachment && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-950 flex items-center gap-2">
+                <Paperclip className="w-5 h-5 text-sky-600" />
+                <span>عرض مستند المرفق: {previewAttachment.name}</span>
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setPreviewAttachment(null)} 
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors cursor-pointer"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[300px]">
+              {previewAttachment.type.startsWith("image/") ? (
+                <img 
+                  src={previewAttachment.dataUrl} 
+                  alt={previewAttachment.name} 
+                  referrerPolicy="no-referrer"
+                  className="max-h-[60vh] max-w-full rounded-lg object-contain shadow-sm border border-slate-200"
+                />
+              ) : (
+                <div className="text-center space-y-3 py-8">
+                  <div className="mx-auto w-16 h-16 bg-sky-50 text-sky-600 rounded-full flex items-center justify-center border border-sky-100 shadow-xs">
+                    <FileText className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-sm">{previewAttachment.name}</h4>
+                    <p className="text-xs text-slate-450 mt-1">امتداد المرفق: {previewAttachment.type || "مستند خارجي"}</p>
+                  </div>
+                  <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                    هذا الملف هو مستند أو تقرير رسمي لا يمكن للمتصفح عرضه مباشرة كصورة. يمكنك تحميله لفتحه على جهازك.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <button 
+                type="button"
+                onClick={() => setPreviewAttachment(null)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer text-xs"
+              >
+                إغلاق
+              </button>
+              <a 
+                href={previewAttachment.dataUrl}
+                download={previewAttachment.name}
+                className="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5 text-xs text-center"
+              >
+                <Download className="w-4 h-4" />
+                <span>تحميل وتنزيل المستند</span>
+              </a>
+            </div>
           </motion.div>
         </div>
       )}
