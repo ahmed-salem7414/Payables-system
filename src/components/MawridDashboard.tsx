@@ -112,6 +112,8 @@ export default function MawridDashboard() {
   // New Invoice itemized discount state
   const [invoiceBaseAmount, setInvoiceBaseAmount] = useState<number>(0);
   const [discounts, setDiscounts] = useState<Array<{ name: string; price: number }>>([]);
+  const [editInvoiceBaseAmount, setEditInvoiceBaseAmount] = useState<number>(0);
+  const [editDiscounts, setEditDiscounts] = useState<Array<{ name: string; price: number }>>([]);
   const [aiReportSummary, setAiReportSummary] = useState<string>("");
   const [isGeneratingAiSummary, setIsGeneratingAiSummary] = useState(false);
 
@@ -702,6 +704,19 @@ export default function MawridDashboard() {
     setDiscounts(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Edit Invoice Discount management helpers
+  const handleAddEditDiscountRow = () => {
+    setEditDiscounts(prev => [...prev, { name: "", price: 0 }]);
+  };
+
+  const handleUpdateEditDiscountRow = (index: number, field: "name" | "price", value: any) => {
+    setEditDiscounts(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+  };
+
+  const handleRemoveEditDiscountRow = (index: number) => {
+    setEditDiscounts(prev => prev.filter((_, i) => i !== index));
+  };
+
   // Attachment file upload helper
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: "invoice" | "credit_note") => {
     const file = e.target.files?.[0];
@@ -756,7 +771,7 @@ export default function MawridDashboard() {
     discounts.forEach(d => {
       if (d.price > 0) {
         compiledItems.push({
-          name: d.name.trim() || "خصم مطبق",
+          name: d.name.trim() ? `خصم: ${d.name.trim()}` : "خصم مطبق",
           quantity: 1,
           price: -Math.round(d.price * 10) / 10
         });
@@ -845,13 +860,33 @@ export default function MawridDashboard() {
       return;
     }
 
-    const subtotal = editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    if (editInvoiceBaseAmount <= 0) {
+      showToast("يرجى إدخال قيمة الفاتورة الأساسية أكبر من الصفر.", "error");
+      return;
+    }
+
+    const compiledItems = [
+      { name: "القيمة الأساسية للفاتورة", quantity: 1, price: Math.round(editInvoiceBaseAmount * 10) / 10 }
+    ];
+
+    editDiscounts.forEach(d => {
+      if (d.price > 0) {
+        compiledItems.push({
+          name: d.name.trim() ? `خصم: ${d.name.trim()}` : "خصم مطبق",
+          quantity: 1,
+          price: -Math.round(d.price * 10) / 10
+        });
+      }
+    });
+
+    const subtotal = Math.round(compiledItems.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 10) / 10;
     const vatRate = editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14;
-    const vatAmount = subtotal * (vatRate / 100);
-    const calculatedTotal = subtotal + vatAmount;
+    const vatAmount = Math.round(subtotal * (vatRate / 100) * 10) / 10;
+    const calculatedTotal = Math.round((subtotal + vatAmount) * 10) / 10;
 
     const updatedInvoice: Invoice = {
       ...editingInvoice,
+      items: compiledItems,
       totalAmount: calculatedTotal,
       vatRate: vatRate,
       vatAmount: vatAmount
@@ -2286,6 +2321,14 @@ export default function MawridDashboard() {
                                   onClick={() => {
                                     if (!checkPermission("write")) return;
                                     setEditingInvoice(inv);
+                                    const base = inv.items.find(item => item.price >= 0) || inv.items[0];
+                                    const baseVal = base ? base.price : 0;
+                                    const discRows = inv.items.filter(item => item.price < 0).map(item => ({
+                                      name: item.name.replace(/^خصم:\s*/, ""),
+                                      price: Math.abs(item.price)
+                                    }));
+                                    setEditInvoiceBaseAmount(baseVal);
+                                    setEditDiscounts(discRows);
                                   }}
                                   className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-350 hover:text-white text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
                                   title="تعديل بيانات الفاتورة"
@@ -3444,7 +3487,7 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-slate-850 border-slate-800">
+              <div className="flex gap-3 pt-4 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => {
@@ -3452,14 +3495,14 @@ export default function MawridDashboard() {
                     showToast(`تم إيداع مبلغ ${safeDepositAmount.toLocaleString()} ج.م وتغذية خزينة المنشأة بنجاح.`);
                     setShowSafeDepositModal(false);
                   }}
-                  className="flex-1 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-900 font-extrabold py-3 px-4 rounded-xl text-center cursor-pointer shadow-md text-xs font-bold"
+                  className="flex-1 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-905 font-extrabold py-3 px-4 rounded-xl text-center cursor-pointer shadow-md text-xs font-bold"
                 >
                   إيداع وتغذية الخزينة
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowSafeDepositModal(false)}
-                  className="bg-slate-800 hover:bg-slate-750 active:bg-slate-900 border border-slate-755 border-slate-700 text-slate-300 font-bold px-4 py-3 rounded-xl cursor-pointer text-xs"
+                  className="bg-slate-800 hover:bg-slate-750 active:bg-slate-900 border border-slate-700 text-slate-300 font-bold px-4 py-3 rounded-xl cursor-pointer text-xs"
                 >
                   إلغاء
                 </button>
@@ -3479,7 +3522,7 @@ export default function MawridDashboard() {
             className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-950">إضافة مورد جديد للمنظومة</h3>
+              <h3 className="text-base font-bold text-slate-955">إضافة مورد جديد للمنظومة</h3>
               <button onClick={() => setShowAddSupplierModal(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
                 <XCircle className="w-5 h-5" />
               </button>
@@ -3549,7 +3592,7 @@ export default function MawridDashboard() {
                 <button 
                   type="button"
                   onClick={() => setShowAddSupplierModal(false)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-705 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
                 >
                   إلغاء الأمر
                 </button>
@@ -3607,31 +3650,31 @@ export default function MawridDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-slate-500 block mb-1">رقم الفاتورة الصادر *</label>
+                    <label className="text-slate-500 block mb-1 font-bold">رقم الفاتورة الصادر *</label>
                     <input 
                       type="text" 
                       required
                       placeholder="FT-2026-X"
                       value={newInvoice.invoiceNumber}
                       onChange={(e) => setNewInvoice({ ...newInvoice, invoiceNumber: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-850"
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-855"
                     />
                   </div>
 
                   <div>
-                    <label className="text-slate-500 block mb-1">تاريخ الاستحقاق المتوقع *</label>
+                    <label className="text-slate-500 block mb-1 font-bold">تاريخ الاستحقاق المتوقع *</label>
                     <input 
                       type="date" 
                       required
                       value={newInvoice.dueDate}
                       onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-850"
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-855"
                     />
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-slate-500 block">المخزن المتلقي للشحنة *</label>
+                      <label className="text-slate-505 block">المخزن المتلقي للشحنة *</label>
                       <button
                         type="button"
                         onClick={() => {
@@ -3656,7 +3699,7 @@ export default function MawridDashboard() {
                     </div>
                     <select
                       required
-                      value={newInvoice.warehouse || (warehouses.length > 0 ? warehouses[0] : "")}
+                      value={newInvoice.warehouse}
                       onChange={(e) => setNewInvoice({ ...newInvoice, warehouse: e.target.value })}
                       className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
                     >
@@ -3668,10 +3711,10 @@ export default function MawridDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-slate-500 block mb-1">البيانات / مذكرات عامة</label>
+                    <label className="text-slate-505 block mb-1">البيانات / مذكرات عامة</label>
                     <input 
                       type="text" 
-                      value={newInvoice.notes}
+                      value={newInvoice.notes || ""}
                       onChange={(e) => setNewInvoice({ ...newInvoice, notes: e.target.value })}
                       className="w-full border border-slate-200 rounded-lg p-2.5 bg-white"
                       placeholder="شحنة التجهيز المقررة لمخازن العاشر"
@@ -3681,110 +3724,153 @@ export default function MawridDashboard() {
 
                 {/* Left Side Panel: Items Row Editor & VAT/Calculations */}
                 <div className="lg:col-span-7 space-y-4">
+                  
                   {/* Items header */}
-                  <div className="border border-slate-200 p-4 rounded-2xl bg-white space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-850 text-xs">بنود الفاتورة وقائمة التوريد:</span>
-                      <button 
-                        type="button" 
-                        onClick={handleAddItemRow}
-                        className="text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 cursor-pointer"
-                      >
-                        <Plus className="w-4 h-4" />
-                        اضافة سطر توريد
-                      </button>
+                  <div className="border border-slate-200 p-5 rounded-2xl bg-white space-y-4">
+                    <div>
+                      <label className="text-slate-600 block mb-1 font-bold">القيمة الأساسية للفاتورة (قبل الخصم) *</label>
+                      <div className="relative">
+                        <input 
+                          type="number"
+                          required
+                          min="0.01"
+                          step="any"
+                          value={invoiceBaseAmount || ""}
+                          onChange={(e) => setInvoiceBaseAmount(parseFloat(e.target.value) || 0)}
+                          placeholder="مثال: 15000"
+                          className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50 font-mono font-bold text-slate-900 text-sm focus:ring-1 focus:ring-sky-500 focus:bg-white"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs select-none">ج.م</span>
+                      </div>
                     </div>
 
-                    <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
-                      {/* Item Column Headers */}
-                      <div className="flex items-center justify-between px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
-                        <div>التسلسل</div>
-                        <div className="w-48 text-left pl-6">القيمة الإجمالية للبند (ج.م) *</div>
+                    <div className="border-t border-slate-100 pt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-slate-700 block font-bold text-xs">الخصومات المطبقة على الفاتورة (تنقص من الإجمالي):</label>
+                        <button 
+                          type="button" 
+                          onClick={handleAddDiscountRow}
+                          className="text-teal-600 hover:text-teal-700 font-bold text-xs flex items-center gap-1 cursor-pointer bg-teal-50 hover:bg-teal-100/70 py-1.5 px-2.5 rounded-lg border border-teal-100 transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          إضافة خصم جديد
+                        </button>
                       </div>
 
-                      {newInvoice.items.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between gap-3 bg-slate-50 p-2 rounded-lg border border-slate-150">
-                          <span className="text-slate-600 text-xs font-bold font-mono">البند #{index + 1}</span>
-                          <div className="flex items-center gap-2 flex-1 max-w-xs">
-                            <input 
-                              type="number" 
-                              required
-                              min="0"
-                              step="any"
-                              placeholder="أدخل القيمة الإجمالية"
-                              value={item.price || ""}
-                              onChange={(e) => {
-                                handleUpdateItemRow(index, "price", parseFloat(e.target.value) || 0);
-                                if (!item.name) {
-                                  handleUpdateItemRow(index, "name", "بند شحنة");
-                                }
-                              }}
-                              className="w-full border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-left text-xs focus:ring-1 focus:ring-sky-500"
-                            />
-                            <span className="text-slate-400 text-[10px] font-bold">ج.م</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItemRow(index)}
-                            className="p-1 text-slate-400 hover:text-red-500 rounded cursor-pointer"
-                            title="حذف هذا البند"
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </button>
+                      {discounts.length === 0 ? (
+                        <p className="text-[11px] text-slate-400 py-2 text-right">لا توجد خصومات مضافة حالياً. سيتم حساب القيمة الأساسية للفاتورة كاملة.</p>
+                      ) : (
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                          {discounts.map((disc, index) => (
+                            <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                              <div className="flex-1">
+                                <input 
+                                  type="text" 
+                                  required
+                                  value={disc.name}
+                                  onChange={(e) => handleUpdateDiscountRow(index, "name", e.target.value)}
+                                  placeholder="نوع الخصم (مثال: خصم تعجيل دفع، خصم تجاري...)"
+                                  className="w-full border border-slate-200 rounded-lg p-1.5 bg-white text-slate-800 focus:ring-1 focus:ring-sky-500"
+                                />
+                              </div>
+                              <div className="w-32 relative">
+                                <input 
+                                  type="number" 
+                                  required
+                                  min="0"
+                                  step="any"
+                                  value={disc.price || ""}
+                                  onChange={(e) => handleUpdateDiscountRow(index, "price", parseFloat(e.target.value) || 0)}
+                                  placeholder="المبلغ"
+                                  className="w-full border border-slate-200 rounded-lg p-1.5 bg-white font-mono text-left text-slate-900 focus:ring-1 focus:ring-sky-500 pl-8"
+                                />
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">ج.م</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveDiscountRow(index)}
+                                className="p-1 px-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-colors"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
 
                   {/* VAT and Totals Calculator */}
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
-                        <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={newInvoice.vatRate}
-                            onChange={(e) => setNewInvoice({ ...newInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
-                            className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
-                          />
-                          <span className="text-slate-500 text-xs font-bold">%</span>
+                  {(() => {
+                    const totalDiscounts = discounts.reduce((sum, d) => sum + d.price, 0);
+                    const subtotal = Math.max(0, invoiceBaseAmount - totalDiscounts);
+                    const vatRate = newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14;
+                    const vatAmount = subtotal * (vatRate / 100);
+                    const totalAmount = subtotal + vatAmount;
+
+                    return (
+                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
+                            <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14}
+                                onChange={(e) => setNewInvoice({ ...newInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
+                                className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                              />
+                              <span className="text-slate-500 text-xs font-bold">%</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setNewInvoice({ ...newInvoice, vatRate: (newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14) === 14 ? 0 : 14 })}
+                              className="text-[9px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1 rounded-lg border border-sky-100 cursor-pointer transition-colors"
+                            >
+                              {(newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14) === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
+                            </button>
+                          </div>
+                          
+                          <div className="space-y-1 w-full sm:w-auto text-left font-mono">
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                              <span>قيمة الفاتورة الأساسية:</span>
+                              <span className="font-bold">
+                                {invoiceBaseAmount.toLocaleString()} ج.م
+                              </span>
+                            </div>
+                            {totalDiscounts > 0 && (
+                              <div className="flex justify-between sm:justify-end gap-6 text-rose-650 text-[11px] text-right">
+                                <span>إجمالي الخصم المطبق (-):</span>
+                                <span className="font-bold">
+                                  {totalDiscounts.toLocaleString()} ج.م
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                              <span>الإجمالي قبل الضريبة:</span>
+                              <span className="font-bold">
+                                {subtotal.toLocaleString()} ج.م
+                              </span>
+                            </div>
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                              <span>قيمة الضريبة ({newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14}%):</span>
+                              <span className="font-bold">
+                                {vatAmount.toLocaleString()} ج.م
+                              </span>
+                            </div>
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-xs border-t border-slate-200 pt-1 mt-1 text-right">
+                              <span>الصافي المطلوب للتوريد:</span>
+                              <span className="text-sky-600 font-black text-sm">
+                                {totalAmount.toLocaleString()} ج.م
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setNewInvoice({ ...newInvoice, vatRate: newInvoice.vatRate === 14 ? 0 : 14 })}
-                          className="text-[9px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1 rounded-lg border border-sky-100 cursor-pointer transition-colors"
-                        >
-                          {newInvoice.vatRate === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
-                        </button>
                       </div>
-                      
-                      <div className="space-y-1 w-full sm:w-auto text-left font-mono">
-                        <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
-                          <span>الإجمالي قبل الضريبة:</span>
-                          <span className="font-bold">
-                            {newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
-                          </span>
-                        </div>
-                        <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
-                          <span>قيمة الضريبة ({newInvoice.vatRate}%):</span>
-                          <span className="font-bold">
-                            {(newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (newInvoice.vatRate / 100)).toLocaleString()} ج.م
-                          </span>
-                        </div>
-                        <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-xs border-t border-slate-200 pt-1 mt-1 text-right">
-                          <span>الصافي المطلوب للتوريد:</span>
-                          <span className="text-sky-600 font-black text-sm">
-                            {(
-                              newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (1 + newInvoice.vatRate / 100)
-                            ).toLocaleString()} ج.م
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
 
                   {/* Submission and Action Panel */}
                   <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
@@ -3852,30 +3938,30 @@ export default function MawridDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-slate-500 block mb-1">رقم الفاتورة الصادر *</label>
+                    <label className="text-slate-500 block mb-1 font-bold">رقم الفاتورة الصادر *</label>
                     <input 
                       type="text" 
                       required
                       placeholder="FT-2026-X"
                       value={editingInvoice.invoiceNumber}
                       onChange={(e) => setEditingInvoice({ ...editingInvoice, invoiceNumber: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-850"
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-855"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-slate-500 block mb-1">تاريخ الاستحقاق المتوقع *</label>
+                      <label className="text-slate-505 block mb-1 font-bold">تاريخ الاستحقاق المتوقع *</label>
                       <input 
                         type="date" 
                         required
                         value={editingInvoice.dueDate}
                         onChange={(e) => setEditingInvoice({ ...editingInvoice, dueDate: e.target.value })}
-                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-850"
+                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-855"
                       />
                     </div>
                     <div>
-                      <label className="text-slate-500 block mb-1">حالة سداد الفاتورة *</label>
+                      <label className="text-slate-505 block mb-1 font-bold">حالة سداد الفاتورة *</label>
                       <select 
                         required
                         value={editingInvoice.status}
@@ -3890,7 +3976,7 @@ export default function MawridDashboard() {
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-slate-500 block">المخزن المتلقي للشحنة *</label>
+                      <label className="text-slate-505 block">المخزن المتلقي للشحنة *</label>
                       <button
                         type="button"
                         onClick={() => {
@@ -3927,7 +4013,7 @@ export default function MawridDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-slate-500 block mb-1">البيانات / مذكرات عامة</label>
+                    <label className="text-slate-505 block mb-1">البيانات / مذكرات عامة</label>
                     <input 
                       type="text" 
                       value={editingInvoice.notes || ""}
@@ -3942,84 +4028,113 @@ export default function MawridDashboard() {
                 <div className="lg:col-span-7 space-y-4">
                   
                   {/* Items header */}
-                  <div className="border border-slate-200 p-4 rounded-2xl bg-white space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-850 text-xs">بنود الفاتورة وقائمة التوريد:</span>
-                      <button 
-                        type="button" 
-                        onClick={handleAddEditItemRow}
-                        className="text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 cursor-pointer"
-                      >
-                        <Plus className="w-4 h-4" />
-                        اضافة سطر توريد
-                      </button>
+                  <div className="border border-slate-200 p-5 rounded-2xl bg-white space-y-4">
+                    <div>
+                      <label className="text-slate-600 block mb-1 font-bold">القيمة الأساسية للفاتورة (قبل الخصم) *</label>
+                      <div className="relative">
+                        <input 
+                          type="number"
+                          required
+                          min="0.01"
+                          step="any"
+                          value={editInvoiceBaseAmount || ""}
+                          onChange={(e) => setEditInvoiceBaseAmount(parseFloat(e.target.value) || 0)}
+                          placeholder="مثال: 15000"
+                          className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50 font-mono font-bold text-slate-900 text-sm focus:ring-1 focus:ring-emerald-500 focus:bg-white"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs select-none">ج.م</span>
+                      </div>
                     </div>
 
-                    <div className="max-h-44 overflow-y-auto space-y-2 pr-1">
-                      {/* Item Column Headers */}
-                      <div className="flex items-center justify-between px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
-                        <div>التسلسل</div>
-                        <div className="w-48 text-left pl-6">القيمة الإجمالية للبند (ج.م) *</div>
+                    <div className="border-t border-slate-100 pt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-slate-700 block font-bold text-xs">الخصومات المطبقة على الفاتورة (تنقص من الإجمالي):</label>
+                        <button 
+                          type="button" 
+                          onClick={handleAddEditDiscountRow}
+                          className="text-teal-600 hover:text-teal-700 font-bold text-xs flex items-center gap-1 cursor-pointer bg-teal-50 hover:bg-teal-100/70 py-1.5 px-2.5 rounded-lg border border-teal-100 transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          إضافة خصم جديد
+                        </button>
                       </div>
 
-                      {editingInvoice.items.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between gap-3 bg-slate-50 p-2 rounded-lg border border-slate-150">
-                          <span className="text-slate-600 text-xs font-bold font-mono">البند #{index + 1}</span>
-                          <div className="flex items-center gap-2 flex-1 max-w-xs">
-                            <input 
-                              type="number" 
-                              required
-                              min="0"
-                              step="any"
-                              placeholder="أدخل القيمة الإجمالية"
-                              value={item.price || ""}
-                              onChange={(e) => {
-                                handleUpdateEditItemRow(index, "price", parseFloat(e.target.value) || 0);
-                                if (!item.name) {
-                                  handleUpdateEditItemRow(index, "name", "بند شحنة");
-                                }
-                              }}
-                              className="w-full border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-left text-xs focus:ring-1 focus:ring-sky-500"
-                            />
-                            <span className="text-slate-400 text-[10px] font-bold">ج.م</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveEditItemRow(index)}
-                            className="p-1 text-slate-400 hover:text-red-500 rounded cursor-pointer"
-                            title="حذف هذا البند"
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </button>
+                      {editDiscounts.length === 0 ? (
+                        <p className="text-[11px] text-slate-400 py-2 text-right">لا توجد خصومات مضافة حالياً. سيتم حساب القيمة الأساسية للفاتورة كاملة.</p>
+                      ) : (
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                          {editDiscounts.map((disc, index) => (
+                            <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                              <div className="flex-1">
+                                <input 
+                                  type="text" 
+                                  required
+                                  value={disc.name}
+                                  onChange={(e) => handleUpdateEditDiscountRow(index, "name", e.target.value)}
+                                  placeholder="نوع الخصم (مثال: خصم تعجيل دفع، خصم تجاري...)"
+                                  className="w-full border border-slate-200 rounded-lg p-1.5 bg-white text-slate-800 focus:ring-1 focus:ring-emerald-500"
+                                />
+                              </div>
+                              <div className="w-32 relative">
+                                <input 
+                                  type="number" 
+                                  required
+                                  min="0"
+                                  step="any"
+                                  value={disc.price || ""}
+                                  onChange={(e) => handleUpdateEditDiscountRow(index, "price", parseFloat(e.target.value) || 0)}
+                                  placeholder="المبلغ"
+                                  className="w-full border border-slate-200 rounded-lg p-1.5 bg-white font-mono text-left text-slate-900 focus:ring-1 focus:ring-emerald-500 pl-8"
+                                />
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">ج.م</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveEditDiscountRow(index)}
+                                className="p-1 px-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-colors"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
 
                   {/* VAT and Totals Calculator */}
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
-                        <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14}
-                            onChange={(e) => setEditingInvoice({ ...editingInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
-                            className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
-                          />
-                          <span className="text-slate-500 text-xs font-bold">%</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setEditingInvoice({ ...editingInvoice, vatRate: (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? 0 : 14 })}
-                          className="text-[9px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1 rounded-lg border border-sky-100 cursor-pointer transition-colors"
-                        >
-                          {(editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
-                        </button>
-                      </div>
+                  {(() => {
+                    const totalDiscounts = editDiscounts.reduce((sum, d) => sum + d.price, 0);
+                    const subtotal = Math.max(0, editInvoiceBaseAmount - totalDiscounts);
+                    const vatRate = editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14;
+                    const vatAmount = subtotal * (vatRate / 100);
+                    const totalAmount = subtotal + vatAmount;
+
+                    return (
+                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
+                            <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14}
+                                onChange={(e) => setEditingInvoice({ ...editingInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
+                                className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                              />
+                              <span className="text-slate-500 text-xs font-bold">%</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setEditingInvoice({ ...editingInvoice, vatRate: (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? 0 : 14 })}
+                              className="text-[9px] text-emerald-600 hover:text-emerald-700 font-extrabold bg-emerald-50 hover:bg-emerald-100/70 px-2.5 py-1 rounded-lg border border-emerald-100 cursor-pointer transition-colors"
+                            >
+                              {(editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
+                            </button>
+
+                          </div>
                       
                       <div className="space-y-1 w-full sm:w-auto text-left font-mono">
                         <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
@@ -4045,6 +4160,8 @@ export default function MawridDashboard() {
                       </div>
                     </div>
                   </div>
+                );
+              })()}
 
                   {/* Option to create a Credit Note associated with this Invoice */}
                   <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3">
