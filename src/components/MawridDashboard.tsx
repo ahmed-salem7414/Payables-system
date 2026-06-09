@@ -3876,8 +3876,8 @@ export default function MawridDashboard() {
                     const totalDiscounts = discounts.reduce((sum, d) => sum + d.price, 0);
                     const subtotal = Math.max(0, invoiceBaseAmount - totalDiscounts);
                     const vatAmount = newInvoice.isCustomVat 
-                      ? (newInvoice.customVatAmount !== undefined ? newInvoice.customVatAmount : 0) 
-                      : subtotal * ((newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14) / 100);
+                      ? Math.round((newInvoice.customVatAmount !== undefined ? newInvoice.customVatAmount : 0) * 10) / 10 
+                      : Math.round(subtotal * ((newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14) / 100) * 10) / 10;
                     const vatRateDisplay = newInvoice.isCustomVat 
                       ? Math.round((vatAmount / (subtotal || 1)) * 100 * 10) / 10 
                       : (newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14);
@@ -3929,8 +3929,13 @@ export default function MawridDashboard() {
                                   <input
                                     type="number"
                                     min="0"
+                                    step="any"
                                     value={newInvoice.customVatAmount !== undefined ? newInvoice.customVatAmount : 0}
                                     onChange={(e) => setNewInvoice({ ...newInvoice, customVatAmount: Math.max(0, parseFloat(e.target.value) || 0) })}
+                                    onBlur={(e) => {
+                                      const rounded = Math.round((parseFloat(e.target.value) || 0) * 10) / 10;
+                                      setNewInvoice({ ...newInvoice, customVatAmount: rounded });
+                                    }}
                                     className="w-24 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
                                     placeholder="ادخل القيمة..."
                                   />
@@ -4261,8 +4266,8 @@ export default function MawridDashboard() {
                     const totalDiscounts = editDiscounts.reduce((sum, d) => sum + d.price, 0);
                     const subtotal = Math.max(0, editInvoiceBaseAmount - totalDiscounts);
                     const vatAmount = editingInvoice.isCustomVat 
-                      ? (editingInvoice.customVatAmount !== undefined ? editingInvoice.customVatAmount : 0) 
-                      : subtotal * ((editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100);
+                      ? Math.round((editingInvoice.customVatAmount !== undefined ? editingInvoice.customVatAmount : 0) * 10) / 10 
+                      : Math.round(subtotal * ((editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100) * 10) / 10;
                     const vatRateDisplay = editingInvoice.isCustomVat 
                       ? Math.round((vatAmount / (subtotal || 1)) * 100 * 10) / 10 
                       : (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14);
@@ -4314,8 +4319,13 @@ export default function MawridDashboard() {
                                   <input
                                     type="number"
                                     min="0"
+                                    step="any"
                                     value={editingInvoice.customVatAmount !== undefined ? editingInvoice.customVatAmount : 0}
                                     onChange={(e) => setEditingInvoice({ ...editingInvoice, customVatAmount: Math.max(0, parseFloat(e.target.value) || 0) })}
+                                    onBlur={(e) => {
+                                      const rounded = Math.round((parseFloat(e.target.value) || 0) * 10) / 10;
+                                      setEditingInvoice({ ...editingInvoice, customVatAmount: rounded });
+                                    }}
                                     className="w-24 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
                                     placeholder="ادخل القيمة..."
                                   />
