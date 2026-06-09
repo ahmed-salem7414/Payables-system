@@ -37,6 +37,8 @@ export interface Invoice {
   creditNotes?: CreditNote[]; // الإشعارات الدائنة المرتبطة بالفاتورة
   vatRate?: number;     // نسبة ضريبة القيمة المضافة بالـ %
   vatAmount?: number;    // قيمة ضريبة القيمة المضافة المحسوبة
+  customVatAmount?: number; // قيمة ضريبة مخصصة مدخلة يدوياً
+  isCustomVat?: boolean; // هل تم إدخال الضريبة يدوياً
   attachment?: { name: string; type: string; dataUrl: string }; // المرفق
 }
 

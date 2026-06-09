@@ -178,6 +178,8 @@ export default function MawridDashboard() {
     supplierId: "", invoiceNumber: "", dueDate: "", notes: "",
     items: [{ name: "بند شحنة", quantity: 1, price: 0 }],
     vatRate: 14,
+    isCustomVat: false,
+    customVatAmount: 0,
     warehouse: ""
   });
 
@@ -780,8 +782,8 @@ export default function MawridDashboard() {
     });
 
     const subtotal = Math.round(compiledItems.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 10) / 10;
-    const vatRate = newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14;
-    const vatAmount = Math.round(subtotal * (vatRate / 100) * 10) / 10;
+    const vatRate = newInvoice.isCustomVat ? Math.round((newInvoice.customVatAmount / (subtotal || 1)) * 100 * 10) / 10 : (newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14);
+    const vatAmount = newInvoice.isCustomVat ? Math.round(newInvoice.customVatAmount * 10) / 10 : Math.round(subtotal * (vatRate / 100) * 10) / 10;
     const calculatedTotal = Math.round((subtotal + vatAmount) * 10) / 10;
 
     const createdInvoice: Invoice = {
@@ -797,6 +799,8 @@ export default function MawridDashboard() {
       warehouse: newInvoice.warehouse || warehouses[0],
       vatRate: vatRate,
       vatAmount: vatAmount,
+      isCustomVat: newInvoice.isCustomVat,
+      customVatAmount: newInvoice.isCustomVat ? newInvoice.customVatAmount : undefined,
       attachment: invoiceAttachment || undefined
     };
 
@@ -811,6 +815,8 @@ export default function MawridDashboard() {
       supplierId: "", invoiceNumber: "", dueDate: "", notes: "",
       items: [{ name: "بند شحنة", quantity: 1, price: 0 }],
       vatRate: 14,
+      isCustomVat: false,
+      customVatAmount: 0,
       warehouse: ""
     });
     showToast(`تم تسجيل فاتورة جديدة ${createdInvoice.invoiceNumber} بقيمة ${calculatedTotal.toLocaleString()} ج.م (تتضمن ضريبة ق.م: ${vatAmount.toLocaleString()} ج.م).`);
@@ -881,8 +887,8 @@ export default function MawridDashboard() {
     });
 
     const subtotal = Math.round(compiledItems.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 10) / 10;
-    const vatRate = editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14;
-    const vatAmount = Math.round(subtotal * (vatRate / 100) * 10) / 10;
+    const vatRate = editingInvoice.isCustomVat ? Math.round(((editingInvoice.customVatAmount || 0) / (subtotal || 1)) * 100 * 10) / 10 : (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14);
+    const vatAmount = editingInvoice.isCustomVat ? Math.round((editingInvoice.customVatAmount || 0) * 10) / 10 : Math.round(subtotal * (vatRate / 100) * 10) / 10;
     const calculatedTotal = Math.round((subtotal + vatAmount) * 10) / 10;
 
     const updatedInvoice: Invoice = {
@@ -3711,7 +3717,7 @@ export default function MawridDashboard() {
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-slate-505 block">المخزن المتلقي للشحنة *</label>
+                      <label className="text-slate-550 block">المخزن المتلقي للشحنة *</label>
                       <button
                         type="button"
                         onClick={() => {
@@ -3748,7 +3754,7 @@ export default function MawridDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-slate-505 block mb-1">البيانات / مذكرات عامة</label>
+                    <label className="text-slate-550 block mb-1">البيانات / مذكرات عامة</label>
                     <input 
                       type="text" 
                       value={newInvoice.notes || ""}
@@ -3759,7 +3765,7 @@ export default function MawridDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-slate-505 block mb-1 font-bold">مرفق الفاتورة (صورة أو ملف)</label>
+                    <label className="text-slate-550 block mb-1 font-bold">مرفق الفاتورة (صورة أو ملف)</label>
                     <div className="flex items-center gap-2">
                       <label className="flex-1 flex items-center justify-between border border-dashed border-slate-300 hover:border-sky-500 rounded-lg p-2 bg-white cursor-pointer transition-colors">
                         <span className="text-slate-500 text-[11px] truncate max-w-[170px]">
@@ -3869,33 +3875,69 @@ export default function MawridDashboard() {
                   {(() => {
                     const totalDiscounts = discounts.reduce((sum, d) => sum + d.price, 0);
                     const subtotal = Math.max(0, invoiceBaseAmount - totalDiscounts);
-                    const vatRate = newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14;
-                    const vatAmount = subtotal * (vatRate / 100);
+                    const vatAmount = newInvoice.isCustomVat 
+                      ? (newInvoice.customVatAmount !== undefined ? newInvoice.customVatAmount : 0) 
+                      : subtotal * ((newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14) / 100);
+                    const vatRateDisplay = newInvoice.isCustomVat 
+                      ? Math.round((vatAmount / (subtotal || 1)) * 100 * 10) / 10 
+                      : (newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14);
                     const totalAmount = subtotal + vatAmount;
 
                     return (
                       <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
-                            <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
-                              <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14}
-                                onChange={(e) => setNewInvoice({ ...newInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
-                                className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
-                              />
-                              <span className="text-slate-500 text-xs font-bold">%</span>
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                          <div className="flex flex-col gap-2.5 w-full md:w-auto">
+                            {/* Toggle between Automatic Percentage and Custom Tax Amount */}
+                            <div className="flex items-center gap-2">
+                              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={newInvoice.isCustomVat || false}
+                                  onChange={(e) => setNewInvoice({ ...newInvoice, isCustomVat: e.target.checked })}
+                                  className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 w-3.5 h-3.5 cursor-pointer"
+                                />
+                                <span>كتابة قيمة ضريبة مخصصة (يدوياً بالجنيه)</span>
+                              </label>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => setNewInvoice({ ...newInvoice, vatRate: (newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14) === 14 ? 0 : 14 })}
-                              className="text-[9px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1 rounded-lg border border-sky-100 cursor-pointer transition-colors"
-                            >
-                              {(newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14) === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
-                            </button>
+
+                            {!newInvoice.isCustomVat ? (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs text-slate-600 font-bold">ضريبة القيمة المضافة (VAT):</span>
+                                <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14}
+                                    onChange={(e) => setNewInvoice({ ...newInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
+                                    className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                                  />
+                                  <span className="text-slate-500 text-xs font-bold">%</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setNewInvoice({ ...newInvoice, vatRate: (newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14) === 14 ? 0 : 14 })}
+                                  className="text-[9px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1 rounded-lg border border-sky-100 cursor-pointer transition-colors"
+                                >
+                                  {(newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14) === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs text-slate-600 font-bold font-sans">قيمة الضريبة المخصصة:</span>
+                                <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-1 shadow-xs">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={newInvoice.customVatAmount !== undefined ? newInvoice.customVatAmount : 0}
+                                    onChange={(e) => setNewInvoice({ ...newInvoice, customVatAmount: Math.max(0, parseFloat(e.target.value) || 0) })}
+                                    className="w-24 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                                    placeholder="ادخل القيمة..."
+                                  />
+                                  <span className="text-slate-500 text-[10px] font-bold">ج.م</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           
                           <div className="space-y-1 w-full sm:w-auto text-left font-mono">
@@ -3920,7 +3962,7 @@ export default function MawridDashboard() {
                               </span>
                             </div>
                             <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
-                              <span>قيمة الضريبة ({newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14}%):</span>
+                              <span>قيمة الضريبة ({vatRateDisplay}%):</span>
                               <span className="font-bold">
                                 {vatAmount.toLocaleString()} ج.م
                               </span>
@@ -4218,62 +4260,109 @@ export default function MawridDashboard() {
                   {(() => {
                     const totalDiscounts = editDiscounts.reduce((sum, d) => sum + d.price, 0);
                     const subtotal = Math.max(0, editInvoiceBaseAmount - totalDiscounts);
-                    const vatRate = editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14;
-                    const vatAmount = subtotal * (vatRate / 100);
+                    const vatAmount = editingInvoice.isCustomVat 
+                      ? (editingInvoice.customVatAmount !== undefined ? editingInvoice.customVatAmount : 0) 
+                      : subtotal * ((editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100);
+                    const vatRateDisplay = editingInvoice.isCustomVat 
+                      ? Math.round((vatAmount / (subtotal || 1)) * 100 * 10) / 10 
+                      : (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14);
                     const totalAmount = subtotal + vatAmount;
 
                     return (
                       <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-bold text-slate-700">ضريبة القيمة المضافة (VAT):</span>
-                            <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
-                              <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14}
-                                onChange={(e) => setEditingInvoice({ ...editingInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
-                                className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
-                              />
-                              <span className="text-slate-500 text-xs font-bold">%</span>
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                          <div className="flex flex-col gap-2.5 w-full md:w-auto">
+                            {/* Toggle between Automatic Percentage and Custom Tax Amount */}
+                            <div className="flex items-center gap-2">
+                              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={editingInvoice.isCustomVat || false}
+                                  onChange={(e) => setEditingInvoice({ ...editingInvoice, isCustomVat: e.target.checked })}
+                                  className="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-3.5 h-3.5 cursor-pointer"
+                                />
+                                <span>كتابة قيمة ضريبة مخصصة (يدوياً بالجنيه)</span>
+                              </label>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => setEditingInvoice({ ...editingInvoice, vatRate: (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? 0 : 14 })}
-                              className="text-[9px] text-emerald-600 hover:text-emerald-700 font-extrabold bg-emerald-50 hover:bg-emerald-100/70 px-2.5 py-1 rounded-lg border border-emerald-100 cursor-pointer transition-colors"
-                            >
-                              {(editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
-                            </button>
 
+                            {!editingInvoice.isCustomVat ? (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs text-slate-600 font-bold">ضريبة القيمة المضافة (VAT):</span>
+                                <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14}
+                                    onChange={(e) => setEditingInvoice({ ...editingInvoice, vatRate: Math.max(0, parseFloat(e.target.value) || 0) })}
+                                    className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                                  />
+                                  <span className="text-slate-500 text-xs font-bold">%</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingInvoice({ ...editingInvoice, vatRate: (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? 0 : 14 })}
+                                  className="text-[9px] text-teal-600 hover:text-teal-700 font-extrabold bg-teal-50 hover:bg-teal-100/70 px-2.5 py-1 rounded-lg border border-teal-100 cursor-pointer transition-colors"
+                                >
+                                  {(editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) === 14 ? "تصفير الضريبة (0%)" : "تطبيق الضريبة (14%)"}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs text-slate-600 font-bold font-sans">قيمة الضريبة المخصصة:</span>
+                                <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-1 shadow-xs">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={editingInvoice.customVatAmount !== undefined ? editingInvoice.customVatAmount : 0}
+                                    onChange={(e) => setEditingInvoice({ ...editingInvoice, customVatAmount: Math.max(0, parseFloat(e.target.value) || 0) })}
+                                    className="w-24 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                                    placeholder="ادخل القيمة..."
+                                  />
+                                  <span className="text-slate-500 text-[10px] font-bold">ج.م</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                       
-                      <div className="space-y-1 w-full sm:w-auto text-left font-mono">
-                        <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
-                          <span>الإجمالي قبل الضريبة:</span>
-                          <span className="font-bold">
-                            {editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
-                          </span>
-                        </div>
-                        <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
-                          <span>قيمة الضريبة ({editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14}%):</span>
-                          <span className="font-bold">
-                            {(editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * ((editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100)).toLocaleString()} ج.م
-                          </span>
-                        </div>
-                        <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-xs border-t border-slate-200 pt-1 mt-1 text-right">
-                          <span>الصافي الإجمالي بعد الحفظ:</span>
-                          <span className="text-emerald-600 font-black text-sm">
-                            {(
-                              editingInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * (1 + (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100)
-                            ).toLocaleString()} ج.م
-                          </span>
+                          <div className="space-y-1 w-full sm:w-auto text-left font-mono">
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                              <span>قيمة الفاتورة الأساسية:</span>
+                              <span className="font-bold">
+                                {editInvoiceBaseAmount.toLocaleString()} ج.م
+                              </span>
+                            </div>
+                            {totalDiscounts > 0 && (
+                              <div className="flex justify-between sm:justify-end gap-6 text-rose-650 text-[11px] text-right">
+                                <span>إجمالي الخصم المطبق (-):</span>
+                                <span className="font-bold">
+                                  {totalDiscounts.toLocaleString()} ج.م
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                              <span>الإجمالي قبل الضريبة:</span>
+                              <span className="font-bold">
+                                {subtotal.toLocaleString()} ج.م
+                              </span>
+                            </div>
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                              <span>قيمة الضريبة ({vatRateDisplay}%):</span>
+                              <span className="font-bold">
+                                {vatAmount.toLocaleString()} ج.م
+                              </span>
+                            </div>
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-xs border-t border-slate-200 pt-1 mt-1 text-right">
+                              <span>الصافي الإجمالي بعد الحفظ:</span>
+                              <span className="text-emerald-600 font-black text-sm">
+                                {totalAmount.toLocaleString()} ج.م
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              })()}
+                    );
+                  })()}
 
                   {/* Option to create a Credit Note associated with this Invoice */}
                   <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3">
