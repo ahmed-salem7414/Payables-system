@@ -2323,7 +2323,7 @@ export default function MawridDashboard() {
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 self-end md:self-auto">
+                              <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
                                 {inv.attachment && (
                                   <button
                                     type="button"
@@ -2440,7 +2440,7 @@ export default function MawridDashboard() {
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 self-end md:self-auto font-bold text-xs">
+                              <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end font-bold text-xs">
                                 {cn.attachment && (
                                   <button
                                     type="button"
@@ -2863,7 +2863,8 @@ export default function MawridDashboard() {
                      )}
                    </div>
                    
-                   <table className="w-full text-[11px] text-right border border-slate-200">
+                   <div className="overflow-x-auto w-full max-w-full no-scrollbar">
+                      <table className="w-full text-[11px] text-right border border-slate-200 min-w-[700px]">
                      <thead>
                        <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
                          <th className="py-2.5 px-3 text-right">المورد والشركة</th>
@@ -2955,7 +2956,8 @@ export default function MawridDashboard() {
                          );
                        })()}
                      </tbody>
-                   </table>
+                  </table>
+                </div>
                  </div>
 
                 {/* Legal terms stamp bottom screen */}
@@ -3311,7 +3313,7 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-slate-900 text-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-700 space-y-4"
+            className="bg-slate-900 text-white rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-700 space-y-4"
           >
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -3491,7 +3493,7 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#1e293b] text-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-700 space-y-4"
+            className="bg-[#1e293b] text-white rounded-3xl max-w-sm w-full p-4 sm:p-6 shadow-2xl border border-slate-700 space-y-4"
           >
             <div className="flex items-center justify-between border-b border-slate-700 pb-3">
               <div className="flex items-center gap-2">
@@ -3554,7 +3556,7 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-955">إضافة مورد جديد للمنظومة</h3>
@@ -3650,7 +3652,7 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-5xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[95vh] overflow-y-auto"
+            className="bg-white rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[95vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-950 flex items-center gap-2">
@@ -3966,7 +3968,7 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-5xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800 max-h-[95vh] overflow-y-auto"
+            className="bg-white rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800 max-h-[95vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-950 flex items-center gap-2">
@@ -4435,7 +4437,7 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-950">تعديل بيانات المورد</h3>
@@ -4534,10 +4536,10 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+            className="bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-950">إضافة إشعار دائن جديد للمورد</h3>
+              <h3 className="text-base font-bold text-slate-955">إضافة إشعار دائن جديد للمورد</h3>
               <button type="button" onClick={() => setShowAddCreditNoteModal(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
                 <XCircle className="w-5 h-5" />
               </button>
@@ -4770,7 +4772,7 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+            className="bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-950 flex items-center gap-2">
