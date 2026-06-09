@@ -40,6 +40,7 @@ export interface Invoice {
   customVatAmount?: number; // قيمة ضريبة مخصصة مدخلة يدوياً
   isCustomVat?: boolean; // هل تم إدخال الضريبة يدوياً
   attachment?: { name: string; type: string; dataUrl: string }; // المرفق
+  attachments?: Array<{ name: string; type: string; dataUrl: string }>; // المرفقات المتعددة
 }
 
 export interface Payment {
@@ -90,5 +91,6 @@ export interface CreditNote {
   items: Array<{ name: string; quantity: number; price: number }>; // تفاصيل بنود الإشعار الدائن
   notes?: string;           // ملاحظات
   attachment?: { name: string; type: string; dataUrl: string }; // المرفق
+  attachments?: Array<{ name: string; type: string; dataUrl: string }>; // المرفقات المتعددة
 }
 

@@ -2829,7 +2829,7 @@ export default function MawridDashboard() {
                 </div>
 
                  {/* Report specs indicators */}
-                 <div className="grid grid-cols-3 gap-4 border border-slate-200 rounded-xl p-4 bg-slate-50">
+                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border border-slate-200 rounded-xl p-4 bg-slate-50">
                    <div className="text-center font-bold">
                      <span className="text-slate-500 text-xs font-medium block">الفترة المحاسبية والمورد</span>
                      <strong className="text-xs text-slate-800 font-bold block mt-1 leading-snug">
@@ -2838,7 +2838,7 @@ export default function MawridDashboard() {
                        {reportWarehouseFilter !== "all" ? ` | مخزن: ${reportWarehouseFilter}` : " | كافة المخازن"}
                      </strong>
                    </div>
-                   <div className="text-center border-x border-slate-200">
+                   <div className="text-center border-y border-slate-200 sm:border-y-0 sm:border-x py-2.5 sm:py-0">
                      <span className="text-slate-500 text-xs font-medium block">إجمالي التعاملات الصافية بالفترة</span>
                      <strong className="text-sm text-slate-950 font-black block mt-1">
                        {getSelectedReportFinancials().total.toLocaleString()} ج.م
@@ -3581,7 +3581,7 @@ export default function MawridDashboard() {
                     required
                     value={newSupplier.name}
                     onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-950 font-semibold placeholder:text-slate-400"
                     placeholder="م. محمد العربي"
                   />
                 </div>
@@ -3592,7 +3592,7 @@ export default function MawridDashboard() {
                     required
                     value={newSupplier.company}
                     onChange={(e) => setNewSupplier({ ...newSupplier, company: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-950 font-semibold placeholder:text-slate-400"
                     placeholder="مجموعة السويدي كابلات"
                   />
                 </div>
@@ -3605,7 +3605,7 @@ export default function MawridDashboard() {
                     type="tel" 
                     value={newSupplier.phone}
                     onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50"
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-950 font-semibold placeholder:text-slate-400"
                     placeholder="01012345678"
                   />
                 </div>
@@ -3615,7 +3615,7 @@ export default function MawridDashboard() {
                     type="text" 
                     value={newSupplier.bankAccount}
                     onChange={(e) => setNewSupplier({ ...newSupplier, bankAccount: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-[11px]"
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-[11px] text-slate-950 font-semibold placeholder:text-slate-400"
                     placeholder="EG000000000000000000000000000"
                   />
                 </div>
@@ -3626,7 +3626,7 @@ export default function MawridDashboard() {
                 <textarea 
                   value={newSupplier.notes}
                   onChange={(e) => setNewSupplier({ ...newSupplier, notes: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 h-20"
+                  className="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 h-20 text-slate-950 font-semibold placeholder:text-slate-400"
                   placeholder="أدخل أي ملاحظات حول الدفع أو السداد..."
                 />
               </div>
@@ -4383,7 +4383,7 @@ export default function MawridDashboard() {
                         className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-extrabold text-xs cursor-pointer select-none"
                       >
                         <FileText className="w-4.5 h-4.5" />
-                        <span>{showEditInvoiceCNSection ? "إغلاق نموذج الإشعار الدائن" : "عمل إشعار دائن (خصم/مرتجع) على هذه الفاتورة"}</span>
+                        <span>{showEditInvoiceCNSection ? "إغلاق نموذج الإشعار الدائن" : "عمل إشعار دائن (خصم/مرتجع) on هذه الفاتورة"}</span>
                       </button>
                       {!showEditInvoiceCNSection && (
                         <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
@@ -4555,7 +4555,7 @@ export default function MawridDashboard() {
                     required
                     value={editingSupplier.name}
                     onChange={(e) => setEditingSupplier({ ...editingSupplier, name: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold"
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-950 font-semibold placeholder:text-slate-400"
                     placeholder="م. محمد العربي"
                   />
                 </div>
@@ -4566,7 +4566,7 @@ export default function MawridDashboard() {
                     required
                     value={editingSupplier.company}
                     onChange={(e) => setEditingSupplier({ ...editingSupplier, company: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold"
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-[#f8fafc] text-slate-950 font-semibold placeholder:text-slate-400"
                     placeholder="مجموعة السويدي كابلات"
                   />
                 </div>
@@ -4580,7 +4580,7 @@ export default function MawridDashboard() {
                     required
                     value={editingSupplier.phone}
                     onChange={(e) => setEditingSupplier({ ...editingSupplier, phone: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono"
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-slate-950 font-semibold placeholder:text-slate-400"
                     placeholder="01012345678"
                   />
                 </div>
@@ -4591,7 +4591,7 @@ export default function MawridDashboard() {
                     required
                     value={editingSupplier.bankAccount}
                     onChange={(e) => setEditingSupplier({ ...editingSupplier, bankAccount: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-[11px]"
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-[#f8fafc] font-mono text-[11px] text-slate-950 font-semibold placeholder:text-slate-400"
                     placeholder="EG000000000000000000000000000"
                   />
                 </div>
@@ -4602,7 +4602,7 @@ export default function MawridDashboard() {
                 <textarea 
                   value={editingSupplier.notes}
                   onChange={(e) => setEditingSupplier({ ...editingSupplier, notes: e.target.value })}
-                  className="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 h-20"
+                  className="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 h-20 text-slate-950 font-semibold placeholder:text-slate-400"
                   placeholder="أدخل أي ملاحظات حول الدفع أو السداد..."
                 />
               </div>
