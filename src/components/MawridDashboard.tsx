@@ -8,7 +8,8 @@ import {
   Users, Receipt, CreditCard, Bell, FileText, Database, MessageSquare, 
   ShieldAlert, Plus, Trash2, Download, CheckCircle2, XCircle, AlertTriangle, 
   RefreshCw, TrendingUp, Building, Check, Key, Upload, Activity, 
-  UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save, Edit, Search, Wallet, Warehouse
+  UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save, Edit, Search, Wallet, Warehouse,
+  FileSpreadsheet
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -67,7 +68,7 @@ export default function MawridDashboard() {
         // fallback
       }
     }
-    return ["مواد خام", "شحن ولوجستيات", "خدمات مكتبية وتكنولوجيا", "تعبئة وتغليف"];
+    return ["تجهيزات ومستلزمات", "شحن ولوجستيات", "خدمات مكتبية وتكنولوجيا", "تعبئة وتغليف"];
   });
 
   useEffect(() => {
@@ -92,6 +93,7 @@ export default function MawridDashboard() {
   }, [warehouses]);
 
   const [supplierCategoryFilter, setSupplierCategoryFilter] = useState("all");
+  const [selectedSupplierInvoiceFilter, setSelectedSupplierInvoiceFilter] = useState<string>("");
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState("all");
   const [invoiceTypeFilter, setInvoiceTypeFilter] = useState<"all" | "invoices" | "credit_notes">("all");
@@ -101,6 +103,15 @@ export default function MawridDashboard() {
   const [reportEndDate, setReportEndDate] = useState<string>("2026-06-30");
   const [selectedReportSupplierId, setSelectedReportSupplierId] = useState<string>("all");
   const [reportWarehouseFilter, setReportWarehouseFilter] = useState<string>("all");
+  const [reportDateType, setReportDateType] = useState<"issue_date" | "due_date">("issue_date");
+
+  // Attachment upload states
+  const [invoiceAttachment, setInvoiceAttachment] = useState<{ name: string; type: string; dataUrl: string } | null>(null);
+  const [cnAttachment, setCnAttachment] = useState<{ name: string; type: string; dataUrl: string } | null>(null);
+
+  // New Invoice itemized discount state
+  const [invoiceBaseAmount, setInvoiceBaseAmount] = useState<number>(0);
+  const [discounts, setDiscounts] = useState<Array<{ name: string; price: number }>>([]);
   const [aiReportSummary, setAiReportSummary] = useState<string>("");
   const [isGeneratingAiSummary, setIsGeneratingAiSummary] = useState(false);
 
@@ -156,7 +167,7 @@ export default function MawridDashboard() {
 
   // New Supplier form state
   const [newSupplier, setNewSupplier] = useState<Omit<Supplier, "id" | "createdAt">>({
-    name: "", company: "", phone: "", email: "", bankAccount: "", category: "مواد خام", address: "", notes: ""
+    name: "", company: "", phone: "", email: "", bankAccount: "", category: "تجهيزات ومستلزمات", address: "", notes: ""
   });
 
   // New Invoice form state
@@ -441,7 +452,7 @@ export default function MawridDashboard() {
   const getSelectedReportFinancials = () => {
     // Filter by date range first
     const dateFilteredInvoices = invoices.filter(i => {
-      const date = i.issueDate || "2026-06-01";
+      const date = (reportDateType === "issue_date" ? i.issueDate : i.dueDate) || "2026-06-01";
       return date >= reportStartDate && date <= reportEndDate;
     });
 
@@ -482,7 +493,7 @@ export default function MawridDashboard() {
     setSuppliers([...suppliers, createdSupplier]);
     setShowAddSupplierModal(false);
     setNewSupplier({
-      name: "", company: "", phone: "", email: "", bankAccount: "", category: "مواد خام", address: "", notes: ""
+      name: "", company: "", phone: "", email: "", bankAccount: "", category: "تجهيزات ومستلزمات", address: "", notes: ""
     });
     showToast(`تمت إضافة المورد ${createdSupplier.name} بنجاح.`);
   };
@@ -542,13 +553,13 @@ export default function MawridDashboard() {
       return;
     }
 
-    const calculatedCNTotal = newCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    const calculatedCNTotal = Math.round(newCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 10) / 10;
     if (calculatedCNTotal <= 0) {
       showToast("يرجى إضافة بند واحد على الأقل بقيمة أكبر من الصفر.", "error");
       return;
     }
 
-    const remainingPayable = selectedInvoice.totalAmount - (selectedInvoice.creditNoteAmount || 0);
+    const remainingPayable = Math.round((selectedInvoice.totalAmount - (selectedInvoice.creditNoteAmount || 0)) * 10) / 10;
     if (calculatedCNTotal > remainingPayable) {
       showToast(`قيمة الإشعار الدائن (${calculatedCNTotal.toLocaleString()} ج.م) لا يمكن أن تتجاوز الرصيد المستحق المتبقي بالفاتورة وهو (${remainingPayable.toLocaleString()} ج.م).`, "error");
       return;
@@ -569,7 +580,8 @@ export default function MawridDashboard() {
       dueDate: newCreditNote.dueDate || new Date(Date.now() + 15 * 24 * 3600 * 1000).toISOString().split("T")[0],
       status: "active",
       items: newCreditNote.items,
-      notes: `${newCreditNote.notes || ""} [مرتبط بالفاتورة: ${selectedInvoice.invoiceNumber}]`
+      notes: `${newCreditNote.notes || ""} [مرتبط بالفاتورة: ${selectedInvoice.invoiceNumber}]`,
+      attachment: cnAttachment || undefined
     };
 
     setCreditNotes([...creditNotes, createdCN]);
@@ -583,7 +595,7 @@ export default function MawridDashboard() {
         return {
           ...inv,
           notes: existingNotes + cnRefText,
-          creditNoteAmount: (inv.creditNoteAmount || 0) + calculatedCNTotal,
+          creditNoteAmount: Math.round(((inv.creditNoteAmount || 0) + calculatedCNTotal) * 10) / 10,
           creditNotes: [...currentCNList, createdCN]
         };
       }
@@ -592,6 +604,7 @@ export default function MawridDashboard() {
     setInvoices(updatedInvoices);
 
     setShowAddCreditNoteModal(false);
+    setCnAttachment(null);
     setNewCreditNote({
       supplierId: "",
       invoiceId: "",
@@ -676,6 +689,43 @@ export default function MawridDashboard() {
     setNewInvoice({ ...newInvoice, items: updatedItems });
   };
 
+  // Discount management helpers
+  const handleAddDiscountRow = () => {
+    setDiscounts(prev => [...prev, { name: "", price: 0 }]);
+  };
+
+  const handleUpdateDiscountRow = (index: number, field: "name" | "price", value: any) => {
+    setDiscounts(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+  };
+
+  const handleRemoveDiscountRow = (index: number) => {
+    setDiscounts(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Attachment file upload helper
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: "invoice" | "credit_note") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (reader.result) {
+        const fileData = {
+          name: file.name,
+          type: file.type,
+          dataUrl: reader.result as string
+        };
+        if (target === "invoice") {
+          setInvoiceAttachment(fileData);
+        } else {
+          setCnAttachment(fileData);
+        }
+        showToast(`تم إرفاق الملف "${file.name}" بنجاح.`);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Handle create Invoice
   const handleAddInvoice = (e: React.FormEvent) => {
     e.preventDefault();
@@ -686,6 +736,11 @@ export default function MawridDashboard() {
       return;
     }
 
+    if (invoiceBaseAmount <= 0) {
+      showToast("يرجى إدخال قيمة الفاتورة الأساسية أكبر من الصفر.", "error");
+      return;
+    }
+
     // Verify duplicate invoice numbers
     const isDuplicate = invoices.some(i => i.invoiceNumber === newInvoice.invoiceNumber);
     if (isDuplicate) {
@@ -693,10 +748,25 @@ export default function MawridDashboard() {
       return;
     }
 
-    const subtotal = newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    // Construct the items array representing base amount and discounts
+    const compiledItems = [
+      { name: "القيمة الأساسية للفاتورة", quantity: 1, price: Math.round(invoiceBaseAmount * 10) / 10 }
+    ];
+
+    discounts.forEach(d => {
+      if (d.price > 0) {
+        compiledItems.push({
+          name: d.name.trim() || "خصم مطبق",
+          quantity: 1,
+          price: -Math.round(d.price * 10) / 10
+        });
+      }
+    });
+
+    const subtotal = Math.round(compiledItems.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 10) / 10;
     const vatRate = newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14;
-    const vatAmount = subtotal * (vatRate / 100);
-    const calculatedTotal = subtotal + vatAmount;
+    const vatAmount = Math.round(subtotal * (vatRate / 100) * 10) / 10;
+    const calculatedTotal = Math.round((subtotal + vatAmount) * 10) / 10;
 
     const createdInvoice: Invoice = {
       id: "inv-" + Date.now(),
@@ -704,17 +774,23 @@ export default function MawridDashboard() {
       supplierId: newInvoice.supplierId,
       issueDate: new Date().toISOString().split("T")[0],
       dueDate: newInvoice.dueDate || new Date(Date.now() + 15 * 24 * 3600 * 1000).toISOString().split("T")[0],
-      items: newInvoice.items,
+      items: compiledItems,
       totalAmount: calculatedTotal,
       status: "unpaid",
       notes: newInvoice.notes,
       warehouse: newInvoice.warehouse || warehouses[0],
       vatRate: vatRate,
-      vatAmount: vatAmount
+      vatAmount: vatAmount,
+      attachment: invoiceAttachment || undefined
     };
 
     setInvoices([createdInvoice, ...invoices]);
     setShowAddInvoiceModal(false);
+    
+    // Reset states
+    setInvoiceBaseAmount(0);
+    setDiscounts([]);
+    setInvoiceAttachment(null);
     setNewInvoice({
       supplierId: "", invoiceNumber: "", dueDate: "", notes: "",
       items: [{ name: "بند شحنة", quantity: 1, price: 0 }],
@@ -1328,6 +1404,67 @@ export default function MawridDashboard() {
     window.print();
   };
 
+  // Full payment status text helper
+  const getFullPaymentStatus = (inv: Invoice) => {
+    if (inv.status === "paid") {
+      const p = payments.find(pay => pay.invoiceId === inv.id);
+      if (p) {
+        if (p.method === "cash") return "تم السداد نقداً";
+        if (p.method === "bank_transfer") return "تم السداد بتحويل بنكي";
+        if (p.method === "fawry") return "تم السداد بفوري";
+        if (p.method === "check") return "تم السداد بشيك";
+      }
+      return "تم السداد";
+    } else {
+      const today = new Date().toISOString().split("T")[0];
+      if (inv.dueDate < today) {
+        return "لم يتم السداد (متجاوزة الاستحقاق)";
+      }
+      return "مستحقة للدفع";
+    }
+  };
+
+  // Export report to spreadsheet document
+  const handleExportReportToExcel = () => {
+    let csvContent = "\uFEFF"; // Enable Arabic Excel Compatibility
+    csvContent += "المورد,الشركة,رقم الفاتورة,تاريخ الإضافة,تاريخ الاستحقاق,المخزن المستلم,قيمة الفاتورة الأصلية,خصم الإشعارات الدائنة,صافي المطلوب سداده,حالة السداد\n";
+
+    const reportSuppliers = selectedReportSupplierId === "all"
+      ? suppliers
+      : suppliers.filter(s => s.id === selectedReportSupplierId);
+
+    reportSuppliers.forEach((sup) => {
+      const supInvoices = invoices.filter(i => {
+        const matchesSupplier = i.supplierId === sup.id;
+        const date = (reportDateType === "issue_date" ? i.issueDate : i.dueDate) || "2026-06-01";
+        const matchesRange = date >= reportStartDate && date <= reportEndDate;
+        const matchesWarehouse = reportWarehouseFilter === "all" || i.warehouse === reportWarehouseFilter;
+        return matchesSupplier && matchesRange && matchesWarehouse;
+      });
+
+      supInvoices.forEach((inv) => {
+        const payableAmount = Math.round((inv.totalAmount - (inv.creditNoteAmount || 0)) * 10) / 10;
+        const statusText = getFullPaymentStatus(inv);
+        const name = sup.name.replace(/,/g, " ");
+        const company = sup.company.replace(/,/g, " ");
+        const invoiceNum = inv.invoiceNumber.replace(/,/g, " ");
+        const warehouseName = (inv.warehouse || "").replace(/,/g, " ");
+        
+        csvContent += `"${name}","${company}","${invoiceNum}","${inv.issueDate || ""}","${inv.dueDate}","${warehouseName}",${inv.totalAmount},${inv.creditNoteAmount || 0},${payableAmount},"${statusText}"\n`;
+      });
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `تقرير_الموردين_${reportStartDate}_إلى_${reportEndDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("تم تصدير تقرير Excel (CSV) بنجاح.");
+  };
+
   // Filtered lists
   const filteredSuppliers = suppliers.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(supplierSearch.toLowerCase()) || 
@@ -1363,7 +1500,7 @@ export default function MawridDashboard() {
     // Group invoices total value by category or by supplier group
     const dict: { [key: string]: number } = {};
     const dateFilteredInvoices = invoices.filter(i => {
-      const date = i.issueDate || "2026-06-01";
+      const date = (reportDateType === "issue_date" ? i.issueDate : i.dueDate) || "2026-06-01";
       return date >= reportStartDate && date <= reportEndDate;
     });
 
@@ -1422,7 +1559,7 @@ export default function MawridDashboard() {
     return months.map(m => {
       // Filter invoices in this month that are within the selected supplier and date range
       const inMonthInvoices = invoices.filter(i => {
-        const date = i.issueDate || "2026-06-01";
+        const date = (reportDateType === "issue_date" ? i.issueDate : i.dueDate) || "2026-06-01";
         // Check if date belongs to this year-month and is also within general range
         const matchesMonth = date.startsWith(m.key);
         const matchesRange = date >= reportStartDate && date <= reportEndDate;
@@ -1652,19 +1789,6 @@ export default function MawridDashboard() {
               <span>النسخ الاحتياطي التلقائي</span>
             </button>
 
-            <button 
-              onClick={() => setActiveTab("chat")}
-              className={`shrink-0 lg:shrink flex items-center justify-between gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
-                activeTab === "chat" ? "bg-[#1e293b] text-[#10b981] shadow-md border border-slate-700 font-bold" : "text-slate-400 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <div className="flex items-center gap-2 lg:gap-3">
-                <MessageSquare className="w-4 h-4 lg:w-5 lg:h-5 shrink-0 text-[#10b981]" />
-                <span>الدعم الفني والذكاء الاصطناعي</span>
-              </div>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-            </button>
-
           </div>
         </aside>
 
@@ -1672,7 +1796,7 @@ export default function MawridDashboard() {
         <div className="flex-1 min-w-0">
           
           {/* Dashboard Summary Statistics Bar (Always rendered at the top of content tabs in screen) */}
-          <div className="no-print grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+          <div className="no-print grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
             
             <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-md flex items-center justify-between">
               <div>
@@ -1713,22 +1837,6 @@ export default function MawridDashboard() {
               </div>
               <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400">
                 <ShieldAlert className="w-5 h-5" />
-              </div>
-            </div>
-
-            <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-[#d97706]/5 border-amber-500/30 bg-[#1e2d3b]/80 shadow-md flex items-center justify-between">
-              <div>
-                <p className="text-xs text-slate-400 font-medium">رصيد الخزينة (كاش)</p>
-                <p className="text-lg md:text-xl font-bold text-amber-400 mt-1">{safeBalance.toLocaleString()} <span className="text-[10px] font-bold text-amber-500">ج.م</span></p>
-                <button 
-                  onClick={() => setShowSafeDepositModal(true)}
-                  className="mt-1.5 text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-900 font-extrabold px-2 py-0.5 rounded cursor-pointer transition-colors block text-center"
-                >
-                  تغذية الخزينة +
-                </button>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400">
-                <Wallet className="w-5 h-5" />
               </div>
             </div>
 
@@ -1802,18 +1910,45 @@ export default function MawridDashboard() {
                       <motion.div 
                         key={sup.id}
                         layout
-                        className="bg-[#1e293b] rounded-2xl border border-slate-700 p-5 shadow-sm hover:shadow-lg transition-shadow flex flex-col justify-between"
+                        onClick={() => {
+                          setInvoiceSearch(sup.name);
+                          setActiveTab("invoices");
+                        }}
+                        className="bg-[#1e293b] rounded-2xl border border-slate-700 p-5 shadow-sm hover:shadow-lg hover:border-emerald-500/40 transition-all flex flex-col justify-between cursor-pointer group"
                       >
                         <div>
                           <div className="flex items-start justify-between">
                             <div>
                               <span className="text-[10px] font-bold bg-slate-800 text-slate-350 px-2.5 py-1 rounded-full border border-slate-700">{sup.category}</span>
-                              <h3 className="text-base font-bold text-white mt-2">{sup.name}</h3>
+                              <h3 className="text-base font-bold text-white mt-1.5 group-hover:text-emerald-450 transition-colors flex items-center gap-1">{sup.name}</h3>
                               <p className="text-xs text-emerald-400 font-semibold">{sup.company}</p>
+                              <span className="text-[9px] text-slate-450 mt-1 block group-hover:text-emerald-400 group-hover:underline">👤 اضغط لعرض كشف فواتير المورد</span>
                             </div>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 shrink-0">
                               <button 
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (!checkPermission("write")) return;
+                                  setNewInvoice({
+                                    supplierId: sup.id,
+                                    invoiceNumber: `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+                                    dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+                                    notes: "",
+                                    items: [{ name: "بند شحنة", quantity: 1, price: 0 }],
+                                    vatRate: 14,
+                                    warehouse: "مخزن رئيسي"
+                                  });
+                                  setShowAddInvoiceModal(true);
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-1 text-[10px] rounded shadow flex items-center gap-1 cursor-pointer transition-colors"
+                                title="سجّل فاتورة شراء جديدة على هذا المورد"
+                              >
+                                <Plus className="w-3 h-3" />
+                                <span>إضافة فاتورة</span>
+                              </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   if (!checkPermission("write")) return;
                                   setEditingSupplier(sup);
                                 }}
@@ -1823,7 +1958,10 @@ export default function MawridDashboard() {
                                 <Edit className="w-4 h-4" />
                               </button>
                               <button 
-                                onClick={() => handleDeleteSupplier(sup.id, sup.name)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteSupplier(sup.id, sup.name);
+                                }}
                                 className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
                                 title="حذف هذا المورد"
                               >
@@ -2028,7 +2166,7 @@ export default function MawridDashboard() {
                     className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-colors"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>تسجيل فاتورة كرتونية جديدة</span>
+                    <span>تسجيل فاتورة جديدة</span>
                   </button>
                 </div>
 
@@ -2183,25 +2321,14 @@ export default function MawridDashboard() {
 
                             </div>
 
-                            {/* Invoice Items details line items dropdown style */}
-                            <div className="mt-4 pt-4 border-t border-slate-800">
-                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">البنود والمنتجات المسجلة:</p>
-                              <div className="bg-[#0f172a] rounded-xl p-3 space-y-2 border border-slate-800">
-                                {inv.items.map((itemRow, idx) => (
-                                  <div key={idx} className="flex items-center justify-between text-xs text-slate-300 font-medium">
-                                    <span>{itemRow.name || "بند افتراضى"}</span>
-                                    <span className="text-slate-400 font-mono">
-                                      {itemRow.quantity} × {itemRow.price.toLocaleString()} ج.م = <strong className="text-white">{(itemRow.quantity * itemRow.price).toLocaleString()} ج.م</strong>
-                                    </span>
-                                  </div>
-                                ))}
-                                {inv.notes && (
-                                  <p className="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2 font-medium">
-                                    <strong className="text-slate-300">ملاحظات:</strong> {inv.notes}
-                                  </p>
-                                )}
+                            {/* Invoice notes without item list display */}
+                            {inv.notes && (
+                              <div className="mt-4 pt-4 border-t border-slate-800">
+                                <p className="text-[11px] text-[#34d399] font-medium">
+                                  <strong className="text-slate-300">ملاحظات الفاتورة:</strong> {inv.notes}
+                                </p>
                               </div>
-                            </div>
+                            )}
 
                           </div>
                         );
@@ -2549,6 +2676,15 @@ export default function MawridDashboard() {
                     ))}
                   </select>
 
+                  <select 
+                    value={reportDateType} 
+                    onChange={(e) => setReportDateType(e.target.value as any)}
+                    className="bg-[#0f172a] text-[#38bdf8] border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer"
+                  >
+                    <option value="issue_date">📅 حسب تاريخ الإضافة</option>
+                    <option value="due_date">📅 حسب تاريخ الاستحقاق</option>
+                  </select>
+
                   {/* Calendar Range Filter */}
                   <div className="flex items-center gap-1.5 bg-[#0f172a] border border-slate-700 px-3 py-1.5 rounded-xl text-xs text-white">
                     <span className="text-slate-400 font-bold shrink-0 text-[11px]">من:</span>
@@ -2577,37 +2713,15 @@ export default function MawridDashboard() {
                     <Printer className="w-4 h-4" />
                     <span>تصدير تقرير PDF</span>
                   </button>
-                </div>
-              </div>
 
-              {/* AI Executive summary overview panel */}
-              <div className="no-print bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 p-5 rounded-2xl shadow-md">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-bold text-emerald-450 flex items-center gap-1">
-                    <TrendingUp className="w-4.5 h-4.5 text-emerald-400 animate-bounce" />
-                    الملخص التحليلي الذكي (AI executive insights)
-                  </h4>
                   <button 
-                    onClick={getAiAnalyticsDraft}
-                    disabled={isGeneratingAiSummary || isAiTyping}
-                    className="p-1.5 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors cursor-pointer"
-                    title="تحديث التلخيص بالذكاء الاصطناعي"
+                    onClick={handleExportReportToExcel}
+                    className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-500 active:bg-teal-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-colors"
                   >
-                    <RefreshCw className={`w-4 h-4 ${isGeneratingAiSummary ? "animate-spin" : ""}`} />
+                    <FileSpreadsheet className="w-4 h-4" />
+                    <span>تصدير Excel</span>
                   </button>
                 </div>
-                
-                {isGeneratingAiSummary ? (
-                  <div className="space-y-2 py-2">
-                    <div className="h-3 w-3/4 rounded bg-emerald-500/20 animate-pulse"></div>
-                    <div className="h-3 w-5/6 rounded bg-emerald-500/20 animate-pulse"></div>
-                    <div className="h-3 w-1/2 rounded bg-emerald-500/20 animate-pulse"></div>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-200 leading-relaxed font-medium">
-                    {aiReportSummary || "الرجاء الضغط على زر التحديث لتوليد تقرير الذكاء الاصطناعي الفوري بخصوص أرقام هذا الشهر."}
-                  </p>
-                )}
               </div>
 
 
@@ -2697,7 +2811,7 @@ export default function MawridDashboard() {
                              {filteredSuppliers.map((sup) => {
                                const supInvoices = invoices.filter(i => {
                                  const matchesSupplier = i.supplierId === sup.id;
-                                 const date = i.issueDate || "2026-06-01";
+                                 const date = (reportDateType === "issue_date" ? i.issueDate : i.dueDate) || "2026-06-01";
                                  const matchesRange = date >= reportStartDate && date <= reportEndDate;
                                  const matchesWarehouse = reportWarehouseFilter === "all" || i.warehouse === reportWarehouseFilter;
                                  return matchesSupplier && matchesRange && matchesWarehouse;
@@ -2725,11 +2839,28 @@ export default function MawridDashboard() {
                                      </td>
                                      <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">{payableAmount.toLocaleString()} ج.م</td>
                                      <td className="py-2.5 px-3 text-center">
-                                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                                         inv.status === "paid" ? "bg-emerald-100 text-emerald-800 border border-emerald-200" : "bg-rose-100 text-rose-800 border border-rose-200"
-                                       }`}>
-                                         {inv.status === "paid" ? "تم السداد" : "مستحقة للدفع"}
-                                       </span>
+                                       {(() => {
+                                         const statusText = getFullPaymentStatus(inv);
+                                         let badgeClass = "bg-slate-100 text-slate-800 border border-slate-200";
+                                         if (statusText === "تم السداد نقداً") {
+                                           badgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-200";
+                                         } else if (statusText === "تم السداد بتحويل بنكي") {
+                                           badgeClass = "bg-sky-100 text-sky-800 border border-sky-200";
+                                         } else if (statusText === "تم السداد بفوري" || statusText === "تم السداد بشيك") {
+                                           badgeClass = "bg-indigo-100 text-indigo-800 border border-indigo-200";
+                                         } else if (statusText === "تم السداد") {
+                                           badgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-250";
+                                         } else if (statusText === "لم يتم السداد (متجاوزة الاستحقاق)") {
+                                           badgeClass = "bg-rose-100 text-rose-800 border border-rose-200 font-bold";
+                                         } else if (statusText === "مستحقة للدفع") {
+                                           badgeClass = "bg-amber-100 text-amber-800 border border-amber-200";
+                                         }
+                                         return (
+                                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${badgeClass}`}>
+                                             {statusText}
+                                           </span>
+                                         );
+                                        })()}
                                      </td>
                                    </tr>
                                  );
@@ -3085,76 +3216,7 @@ export default function MawridDashboard() {
             </motion.div>
           )}
 
-          {/* VIEW: CHAT DIRECT SUPPORT WITH GEMINI AI */}
-          {activeTab === "chat" && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col h-[600px] overflow-hidden justify-between"
-            >
-              
-              <div className="border-b border-slate-150 pb-3">
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <span className="w-3 h-3 bg-emerald-500 rounded-full animate-ping"></span>
-                  المساعد المالي والتقني الذكي لـ "مورد"
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">تحدث باللغة العربية مع مساعد الذكاء الاصطناعي للاستعلام الفوري عن الحسابات والمساعدة الفنية</p>
-              </div>
 
-              {/* Chat bubbles viewport Container */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 rounded-2xl my-4 border border-slate-100">
-                {supportMessages.map((msg) => (
-                  <div 
-                    key={msg.id} 
-                    className={`flex ${msg.role === "user" ? "justify-start" : "justify-end"}`}
-                  >
-                    <div className={`p-3.5 rounded-2xl text-xs max-w-2/3 leading-relaxed shadow-sm ${
-                      msg.role === "user" 
-                      ? "bg-slate-900 text-white rounded-br-none" 
-                      : "bg-white text-slate-800 border border-slate-200 rounded-bl-none font-medium"
-                    }`}>
-                      <p className="whitespace-pre-line">{msg.text}</p>
-                      <span className={`text-[9px] block text-left mt-1.5 ${msg.role === "user" ? "text-slate-400" : "text-slate-400"}`}>
-                        {new Date(msg.timestamp).toLocaleTimeString("ar", { hour: "numeric", minute: "2-digit" })}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-
-                {isAiTyping && (
-                  <div className="flex justify-end">
-                    <div className="bg-white text-slate-500 border border-slate-200 p-3.5 rounded-2xl rounded-bl-none flex items-center gap-1.5 text-xs font-semibold shadow-sm">
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
-                      <span>جاري التفكير والتوليد...</span>
-                    </div>
-                  </div>
-                )}
-                <div ref={chatBottomRef}></div>
-              </div>
-
-              {/* Chat Input form */}
-              <form onSubmit={handleSendChatMessage} className="flex items-center gap-2">
-                <input 
-                  type="text" 
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  disabled={isAiTyping}
-                  placeholder="اسألني عن الموردين، المديونات، أو كيفية تسجيل الفواتير والسداد..."
-                  className="flex-1 text-xs border border-slate-200 p-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-slate-50"
-                />
-                <button 
-                  type="submit"
-                  disabled={!chatInput.trim() || isAiTyping}
-                  className="bg-slate-950 hover:bg-slate-800 text-white p-3.5 rounded-xl font-bold cursor-pointer transition-colors shrink-0 flex items-center justify-center disabled:opacity-45"
-                >
-                  <Send className="w-4.5 h-4.5" />
-                </button>
-              </form>
-
-            </motion.div>
-          )}
 
         </div>
 

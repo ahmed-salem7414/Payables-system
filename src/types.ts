@@ -37,6 +37,7 @@ export interface Invoice {
   creditNotes?: CreditNote[]; // الإشعارات الدائنة المرتبطة بالفاتورة
   vatRate?: number;     // نسبة ضريبة القيمة المضافة بالـ %
   vatAmount?: number;    // قيمة ضريبة القيمة المضافة المحسوبة
+  attachment?: { name: string; type: string; dataUrl: string }; // المرفق
 }
 
 export interface Payment {
@@ -86,5 +87,6 @@ export interface CreditNote {
   status: 'active' | 'applied'; // حالة الإشعار (نشط / مطبق)
   items: Array<{ name: string; quantity: number; price: number }>; // تفاصيل بنود الإشعار الدائن
   notes?: string;           // ملاحظات
+  attachment?: { name: string; type: string; dataUrl: string }; // المرفق
 }
 
