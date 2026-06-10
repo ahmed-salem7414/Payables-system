@@ -21,6 +21,12 @@ import { Supplier, Invoice, Payment, BackupRecord, UserRole, BankConfig, Support
 import { INITIAL_SUPPLIERS, INITIAL_INVOICES, INITIAL_PAYMENTS, INITIAL_BACKUPS, LOCAL_BANKS_SELECTION } from "../data";
 import { MersalLogo } from "./MersalLogo";
 
+const fAmt = (val: number | undefined | null): string => {
+  if (val === undefined || val === null) return "0.00";
+  const rounded = Math.round(val * 100) / 100;
+  return rounded.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 export default function MawridDashboard() {
   // Application State
   const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
@@ -107,6 +113,7 @@ export default function MawridDashboard() {
 
   // Attachment upload states
   const [invoiceAttachment, setInvoiceAttachment] = useState<{ name: string; type: string; dataUrl: string } | null>(null);
+  const [invoiceAttachments, setInvoiceAttachments] = useState<Array<{ name: string; type: string; dataUrl: string }>>([]);
   const [cnAttachment, setCnAttachment] = useState<{ name: string; type: string; dataUrl: string } | null>(null);
   const [previewAttachment, setPreviewAttachment] = useState<{ name: string; type: string; dataUrl: string } | null>(null);
 
@@ -558,15 +565,15 @@ export default function MawridDashboard() {
       return;
     }
 
-    const calculatedCNTotal = Math.round(newCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 10) / 10;
+    const calculatedCNTotal = Math.round(newCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 100) / 100;
     if (calculatedCNTotal <= 0) {
       showToast("يرجى إضافة بند واحد على الأقل بقيمة أكبر من الصفر.", "error");
       return;
     }
 
-    const remainingPayable = Math.round((selectedInvoice.totalAmount - (selectedInvoice.creditNoteAmount || 0)) * 10) / 10;
+    const remainingPayable = Math.round((selectedInvoice.totalAmount - (selectedInvoice.creditNoteAmount || 0)) * 100) / 100;
     if (calculatedCNTotal > remainingPayable) {
-      showToast(`قيمة الإشعار الدائن (${calculatedCNTotal.toLocaleString()} ج.م) لا يمكن أن تتجاوز الرصيد المستحق المتبقي بالفاتورة وهو (${remainingPayable.toLocaleString()} ج.م).`, "error");
+      showToast(`قيمة الإشعار الدائن (${fAmt(calculatedCNTotal)} ج.م) لا يمكن أن تتجاوز الرصيد المستحق المتبقي بالفاتورة وهو (${fAmt(remainingPayable)} ج.م).`, "error");
       return;
     }
 
@@ -594,13 +601,13 @@ export default function MawridDashboard() {
     // Update the matched invoice directly
     const updatedInvoices = invoices.map(inv => {
       if (inv.id === selectedInvoice.id) {
-        const cnRefText = `[تم إصدار إشعار دائن مرتبط برقم: ${createdCN.creditNoteNumber} بقيمة: ${createdCN.amount.toLocaleString()} ج.م]`;
+        const cnRefText = `[تم إصدار إشعار دائن مرتبط برقم: ${createdCN.creditNoteNumber} بقيمة: ${fAmt(createdCN.amount)} ج.م]`;
         const existingNotes = inv.notes ? `${inv.notes} ` : "";
         const currentCNList = inv.creditNotes || [];
         return {
           ...inv,
           notes: existingNotes + cnRefText,
-          creditNoteAmount: Math.round(((inv.creditNoteAmount || 0) + calculatedCNTotal) * 10) / 10,
+          creditNoteAmount: Math.round(((inv.creditNoteAmount || 0) + calculatedCNTotal) * 100) / 100,
           creditNotes: [...currentCNList, createdCN]
         };
       }
@@ -744,6 +751,42 @@ export default function MawridDashboard() {
     reader.readAsDataURL(file);
   };
 
+  const handleMultipleFilesUpload = (e: React.ChangeEvent<HTMLInputElement>, target: "invoice" | "edit_invoice" | "credit_note") => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file: any) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          const fileData = {
+            name: file.name,
+            type: file.type,
+            dataUrl: reader.result as string
+          };
+          if (target === "invoice") {
+            setInvoiceAttachments(prev => [...prev, fileData]);
+          } else if (target === "edit_invoice") {
+            setEditingInvoice(prev => {
+              if (!prev) return prev;
+              const currentAttachments = prev.attachments || (prev.attachment ? [prev.attachment] : []);
+              // prevent duplicate exact name
+              if (currentAttachments.some(att => att.name === fileData.name)) return prev;
+              return {
+                ...prev,
+                attachments: [...currentAttachments, fileData]
+              };
+            });
+          } else {
+            setCnAttachment(fileData);
+          }
+          showToast(`تم إرفاق الملف "${file.name}" بنجاح.`);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Handle create Invoice
   const handleAddInvoice = (e: React.FormEvent) => {
     e.preventDefault();
@@ -768,7 +811,7 @@ export default function MawridDashboard() {
 
     // Construct the items array representing base amount and discounts
     const compiledItems = [
-      { name: "القيمة الأساسية للفاتورة", quantity: 1, price: Math.round(invoiceBaseAmount * 10) / 10 }
+      { name: "القيمة الأساسية للفاتورة", quantity: 1, price: Math.round(invoiceBaseAmount * 100) / 100 }
     ];
 
     discounts.forEach(d => {
@@ -776,15 +819,15 @@ export default function MawridDashboard() {
         compiledItems.push({
           name: d.name.trim() ? `خصم: ${d.name.trim()}` : "خصم مطبق",
           quantity: 1,
-          price: -Math.round(d.price * 10) / 10
+          price: -Math.round(d.price * 100) / 100
         });
       }
     });
 
-    const subtotal = Math.round(compiledItems.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 10) / 10;
-    const vatRate = newInvoice.isCustomVat ? Math.round((newInvoice.customVatAmount / (subtotal || 1)) * 100 * 10) / 10 : (newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14);
-    const vatAmount = newInvoice.isCustomVat ? Math.round(newInvoice.customVatAmount * 10) / 10 : Math.round(subtotal * (vatRate / 100) * 10) / 10;
-    const calculatedTotal = Math.round((subtotal + vatAmount) * 10) / 10;
+    const subtotal = Math.round(compiledItems.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 100) / 100;
+    const vatRate = newInvoice.isCustomVat ? Math.round((newInvoice.customVatAmount / (subtotal || 1)) * 100 * 100) / 100 : (newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14);
+    const vatAmount = newInvoice.isCustomVat ? Math.round(newInvoice.customVatAmount * 100) / 100 : Math.round(subtotal * (vatRate / 100) * 100) / 100;
+    const calculatedTotal = Math.round((subtotal + vatAmount) * 100) / 100;
 
     const createdInvoice: Invoice = {
       id: "inv-" + Date.now(),
@@ -801,7 +844,8 @@ export default function MawridDashboard() {
       vatAmount: vatAmount,
       isCustomVat: newInvoice.isCustomVat,
       customVatAmount: newInvoice.isCustomVat ? newInvoice.customVatAmount : undefined,
-      attachment: invoiceAttachment || undefined
+      attachment: invoiceAttachments[0] || invoiceAttachment || undefined,
+      attachments: invoiceAttachments
     };
 
     setInvoices([createdInvoice, ...invoices]);
@@ -811,6 +855,7 @@ export default function MawridDashboard() {
     setInvoiceBaseAmount(0);
     setDiscounts([]);
     setInvoiceAttachment(null);
+    setInvoiceAttachments([]);
     setNewInvoice({
       supplierId: "", invoiceNumber: "", dueDate: "", notes: "",
       items: [{ name: "بند شحنة", quantity: 1, price: 0 }],
@@ -819,7 +864,7 @@ export default function MawridDashboard() {
       customVatAmount: 0,
       warehouse: ""
     });
-    showToast(`تم تسجيل فاتورة جديدة ${createdInvoice.invoiceNumber} بقيمة ${calculatedTotal.toLocaleString()} ج.م (تتضمن ضريبة ق.م: ${vatAmount.toLocaleString()} ج.م).`);
+    showToast(`تم تسجيل فاتورة جديدة ${createdInvoice.invoiceNumber} بقيمة ${fAmt(calculatedTotal)} ج.م (تتضمن ضريبة ق.م: ${fAmt(vatAmount)} ج.م).`);
   };
 
   // Edit Invoice Handlers
@@ -873,7 +918,7 @@ export default function MawridDashboard() {
     }
 
     const compiledItems = [
-      { name: "القيمة الأساسية للفاتورة", quantity: 1, price: Math.round(editInvoiceBaseAmount * 10) / 10 }
+      { name: "القيمة الأساسية للفاتورة", quantity: 1, price: Math.round(editInvoiceBaseAmount * 100) / 100 }
     ];
 
     editDiscounts.forEach(d => {
@@ -881,15 +926,15 @@ export default function MawridDashboard() {
         compiledItems.push({
           name: d.name.trim() ? `خصم: ${d.name.trim()}` : "خصم مطبق",
           quantity: 1,
-          price: -Math.round(d.price * 10) / 10
+          price: -Math.round(d.price * 100) / 100
         });
       }
     });
 
-    const subtotal = Math.round(compiledItems.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 10) / 10;
-    const vatRate = editingInvoice.isCustomVat ? Math.round(((editingInvoice.customVatAmount || 0) / (subtotal || 1)) * 100 * 10) / 10 : (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14);
-    const vatAmount = editingInvoice.isCustomVat ? Math.round((editingInvoice.customVatAmount || 0) * 10) / 10 : Math.round(subtotal * (vatRate / 100) * 10) / 10;
-    const calculatedTotal = Math.round((subtotal + vatAmount) * 10) / 10;
+    const subtotal = Math.round(compiledItems.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 100) / 100;
+    const vatRate = editingInvoice.isCustomVat ? Math.round(((editingInvoice.customVatAmount || 0) / (subtotal || 1)) * 100 * 100) / 100 : (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14);
+    const vatAmount = editingInvoice.isCustomVat ? Math.round((editingInvoice.customVatAmount || 0) * 100) / 100 : Math.round(subtotal * (vatRate / 100) * 100) / 100;
+    const calculatedTotal = Math.round((subtotal + vatAmount) * 100) / 100;
 
     const updatedInvoice: Invoice = {
       ...editingInvoice,
@@ -985,7 +1030,7 @@ export default function MawridDashboard() {
     setShowEditInvoiceCNSection(false);
     
     // Auto-append details to invoice notes so it acts as reference
-    const cnReferenceText = `[تم إصدار إشعار دائن مرتبط برقم: ${createdCN.creditNoteNumber} بقيمة: ${createdCN.amount.toLocaleString()} ج.م]`;
+    const cnReferenceText = `[تم إصدار إشعار دائن مرتبط برقم: ${createdCN.creditNoteNumber} بقيمة: ${fAmt(createdCN.amount)} ج.م]`;
     const existingNotes = editingInvoice.notes ? `${editingInvoice.notes} ` : "";
     
     // Set the credit note amount and list on editingInvoice directly so it saves together
@@ -1058,7 +1103,7 @@ export default function MawridDashboard() {
         { text: `📡 جاري تهيئة الاتصال فوري عبر قنوات التسوية الفورية مع البنك المحلي المرتبط (${userBank.bankName})...`, progress: 10, wait: 400 },
         { text: `🔑 جاري تأكيد الرموز الأمنية المشفرة وتصريح الـ API لـ "مورد"...`, progress: 25, wait: 800 },
         { text: `🏦 التحقق من رصيد الحساب المصدق رقم: ${userBank.accountNumber}...`, progress: 40, wait: 1200 },
-        { text: `💸 إرسال طلب تحويل فوري للمبلغ (${payableAmount.toLocaleString()} ج.م) لحساب المورد المستلم بنجاح...`, progress: 60, wait: 1900 },
+        { text: `💸 إرسال طلب تحويل فوري للمبلغ (${fAmt(payableAmount)} ج.م) لحساب المورد المستلم بنجاح...`, progress: 60, wait: 1900 },
         { text: `📥 جاري إرسال المستحقات لحساب المورد: ${supplier.company} (حساب IBAN: ${supplier.bankAccount})...`, progress: 80, wait: 2400 },
         { text: `✅ استلام رد تأكيدي من البنك المركزي المصري (CBE RTGS). رمز المعاملة: TXN-BM-${Math.floor(100000 + Math.random() * 900000)}`, progress: 100, wait: 3000 }
       ];
@@ -1113,8 +1158,8 @@ export default function MawridDashboard() {
       const steps = [
         { text: `📡 جاري فتح قفل الخزينة الرقمية الآمنة لشركة "مورد"...`, progress: 15, wait: 400 },
         { text: `🔑 مطابقة التواقيع الصلاحية وإذن الصرف النقدي المولد للفاتورة رقم: ${invoice.invoiceNumber}...`, progress: 35, wait: 800 },
-        { text: `🧮 التحقق من كفاية السيولة النقدية (الرصيد الحالي: ${safeBalance.toLocaleString()} ج.م)...`, progress: 55, wait: 1200 },
-        { text: `💵 عد وفرز أوراق البنكنوت فئة (200 ج.م و 100 ج.م) بقيمة إجمالية ${payableAmount.toLocaleString()} ج.م...`, progress: 75, wait: 1900 },
+        { text: `🧮 التحقق من كفاية السيولة النقدية (الرصيد الحالي: ${fAmt(safeBalance)} ج.م)...`, progress: 55, wait: 1200 },
+        { text: `💵 عد وفرز أوراق البنكنوت فئة (200 ج.م و 100 ج.م) بقيمة إجمالية ${fAmt(payableAmount)} ج.م...`, progress: 75, wait: 1900 },
         { text: `📝 إصدار وتوثيق سند صرف الخزينة العاجل رقم: CSH-VOUCH-${Math.floor(1000 + Math.random() * 9000)}...`, progress: 90, wait: 2400 },
         { text: `✅ تم تسليم المبلغ نقداً لمندوب المورد والتسوية للخزية بنجاح!`, progress: 100, wait: 3000 }
       ];
@@ -1485,7 +1530,7 @@ export default function MawridDashboard() {
       });
 
       supInvoices.forEach((inv) => {
-        const payableAmount = Math.round((inv.totalAmount - (inv.creditNoteAmount || 0)) * 10) / 10;
+        const payableAmount = Math.round((inv.totalAmount - (inv.creditNoteAmount || 0)) * 100) / 100;
         const statusText = getFullPaymentStatus(inv);
         const name = sup.name.replace(/,/g, " ");
         const company = sup.company.replace(/,/g, " ");
@@ -1843,7 +1888,7 @@ export default function MawridDashboard() {
             <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-md flex items-center justify-between">
               <div>
                 <p className="text-xs text-slate-400 font-medium">إجمالي المشتريات</p>
-                <p className="text-lg md:text-xl font-bold text-white mt-1">{dashboardStats.totalInvoicesAmount.toLocaleString()} <span className="text-xs text-slate-400">ج.م</span></p>
+                <p className="text-lg md:text-xl font-bold text-white mt-1">{fAmt(dashboardStats.totalInvoicesAmount)} <span className="text-xs text-slate-400">ج.م</span></p>
                 <div className="flex items-center gap-1 mt-1.5 text-slate-500 text-[10px]">
                   <Activity className="w-3.5 h-3.5 text-slate-500" />
                   <span>تاريخ آخر تحديث اليوم</span>
@@ -1857,7 +1902,7 @@ export default function MawridDashboard() {
             <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-md flex items-center justify-between">
               <div>
                 <p className="text-xs text-slate-400 font-medium">إجمالي المسدد</p>
-                <p className="text-lg md:text-xl font-bold text-emerald-400 mt-1">{dashboardStats.paidAmount.toLocaleString()} <span className="text-xs text-slate-400">ج.م</span></p>
+                <p className="text-lg md:text-xl font-bold text-emerald-400 mt-1">{fAmt(dashboardStats.paidAmount)} <span className="text-xs text-slate-400">ج.م</span></p>
                 <div className="flex items-center gap-1 mt-1.5 text-emerald-500 text-[10px] font-medium">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>معدل تسوية {dashboardStats.paymentRatio}%</span>
@@ -1871,7 +1916,7 @@ export default function MawridDashboard() {
             <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-md flex items-center justify-between">
               <div>
                 <p className="text-xs text-slate-400 font-medium">المديونية المستحقة</p>
-                <p className="text-lg md:text-xl font-bold text-rose-400 mt-1">{dashboardStats.pendingAmount.toLocaleString()} <span className="text-xs text-slate-400">ج.م</span></p>
+                <p className="text-lg md:text-xl font-bold text-rose-400 mt-1">{fAmt(dashboardStats.pendingAmount)} <span className="text-xs text-slate-400">ج.م</span></p>
                 <div className="flex items-center gap-1 mt-1.5 text-rose-400 text-[10px] font-medium">
                   <AlertTriangle className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
                   <span>{dashboardStats.unpaidInvoicesCount} فواتير تحتاج سداد</span>
@@ -2083,14 +2128,14 @@ export default function MawridDashboard() {
                                           )}
                                           {cn.notes && <span className="text-slate-400 text-[9px] truncate max-w-[150px]">{cn.notes}</span>}
                                           {cn.items && cn.items.length > 0 && (
-                                            <div className="text-[9px] text-emerald-400 max-w-[180px] truncate mt-0.5" title={cn.items.map(item => `${item.name} (${item.quantity} × ${item.price.toLocaleString()} ج.م)`).join("\n")}>
+                                            <div className="text-[9px] text-emerald-400 max-w-[180px] truncate mt-0.5" title={cn.items.map(item => `${item.name} (${item.quantity} × ${fAmt(item.price)} ج.م)`).join("\n")}>
                                               <span className="text-slate-500">البنود: </span>
                                               {cn.items.map(item => `${item.name} (${item.quantity}×)`).join("، ")}
                                             </div>
                                           )}
                                         </div>
                                         <div className="flex items-center gap-2">
-                                          <span className="font-bold text-emerald-400 font-mono">{cn.amount.toLocaleString()} ج.م</span>
+                                          <span className="font-bold text-emerald-400 font-mono">{fAmt(cn.amount)} ج.م</span>
                                           <button
                                             type="button"
                                             onClick={() => handleToggleCreditNoteStatus(cn.id)}
@@ -2134,12 +2179,12 @@ export default function MawridDashboard() {
                             <div className="mt-5 pt-4 border-t border-slate-800 flex items-center justify-between text-xs bg-[#0f172a]/60 -mx-5 -mb-5 px-5 py-3 rounded-b-2xl">
                               <div>
                                 <span className="text-slate-400 block mb-0.5">إجمالي الفواتير / دائنة:</span>
-                                <span className="font-bold text-white">{supTotal.toLocaleString()} <span className="text-[10px] text-slate-400">ج.م</span> {activeCNTotal > 0 && <span className="text-emerald-400 font-mono text-[10px]">(-{activeCNTotal.toLocaleString()})</span>}</span>
+                                <span className="font-bold text-white">{fAmt(supTotal)} <span className="text-[10px] text-slate-400">ج.م</span> {activeCNTotal > 0 && <span className="text-emerald-400 font-mono text-[10px]">(-{fAmt(activeCNTotal)})</span>}</span>
                               </div>
                               <div className="text-left">
                                 <span className="text-slate-400 block mb-0.5">الصافي بعد الإشعارات:</span>
                                 <span className={`font-bold ${netPending > 0 ? "text-red-400" : "text-emerald-400"}`}>
-                                  {netPending.toLocaleString()} <span className="text-[10px]">ج.م</span>
+                                  {fAmt(netPending)} <span className="text-[10px]">ج.م</span>
                                 </span>
                               </div>
                             </div>
@@ -2271,11 +2316,18 @@ export default function MawridDashboard() {
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold text-white font-mono text-sm">{inv.invoiceNumber}</span>
-                                    {inv.attachment && (
-                                      <span className="bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 font-sans" title={inv.attachment.name}>
+                                    {inv.attachments && inv.attachments.length > 0 ? (
+                                      <span className="bg-sky-500/10 text-sky-450 border border-sky-500/20 text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 font-sans">
                                         <Paperclip className="w-2.5 h-2.5" />
-                                        مرفق الفاتورة
+                                        {inv.attachments.length} مرفقات
                                       </span>
+                                    ) : (
+                                      inv.attachment && (
+                                        <span className="bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 font-sans" title={inv.attachment.name}>
+                                          <Paperclip className="w-2.5 h-2.5" />
+                                          مرفق واحد
+                                        </span>
+                                      )
                                     )}
                                     <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
                                       inv.status === "paid" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-300"
@@ -2314,32 +2366,47 @@ export default function MawridDashboard() {
                                     <>
                                       <span className="text-slate-400 block mb-0.5">صافي القيمة بعد الخصم:</span>
                                       <span className="text-sm font-black text-[#34d399] font-mono block">
-                                        {(inv.totalAmount - inv.creditNoteAmount).toLocaleString()} ج.م
+                                        {fAmt(inv.totalAmount - inv.creditNoteAmount)} ج.م
                                       </span>
                                       <span className="text-[9px] text-slate-450 text-slate-500 block leading-tight mt-0.5">
-                                        (الأصل: {inv.totalAmount.toLocaleString()} - خصم: {inv.creditNoteAmount.toLocaleString()})
+                                        (الأصل: {fAmt(inv.totalAmount)} - خصم: {fAmt(inv.creditNoteAmount)})
                                       </span>
                                     </>
                                   ) : (
                                     <>
                                       <span className="text-slate-400 block mb-0.5">القيمة الإجمالية:</span>
-                                      <span className="text-sm font-black text-white font-mono block">{inv.totalAmount.toLocaleString()} ج.م</span>
+                                      <span className="text-sm font-black text-white font-mono block">{fAmt(inv.totalAmount)} ج.م</span>
                                     </>
                                   )}
                                 </div>
                               </div>
 
                               <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
-                                {inv.attachment && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setPreviewAttachment(inv.attachment!)}
-                                    className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 hover:text-sky-300 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
-                                    title="عرض وتنزيل المرفق"
-                                  >
-                                    <Paperclip className="w-3.5 h-3.5" />
-                                    <span>المرفق</span>
-                                  </button>
+                                {inv.attachments && inv.attachments.length > 0 ? (
+                                  inv.attachments.map((att, attIdx) => (
+                                    <button
+                                      key={attIdx}
+                                      type="button"
+                                      onClick={() => setPreviewAttachment(att)}
+                                      className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 hover:text-sky-305 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors max-w-[150px] truncate"
+                                      title={`عرض وتنزيل المرفق ${attIdx + 1}: ${att.name}`}
+                                    >
+                                      <Paperclip className="w-3 h-3 shrink-0" />
+                                      <span className="truncate">{att.name}</span>
+                                    </button>
+                                  ))
+                                ) : (
+                                  inv.attachment && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setPreviewAttachment(inv.attachment!)}
+                                      className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 hover:text-sky-300 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                      title="عرض وتنزيل المرفق"
+                                    >
+                                      <Paperclip className="w-3.5 h-3.5" />
+                                      <span>المرفق الرئيسي</span>
+                                    </button>
+                                  )
                                 )}
                                 <button 
                                   onClick={() => {
@@ -2442,7 +2509,7 @@ export default function MawridDashboard() {
                                 </div>
                                 <div className="col-span-2 md:col-span-1">
                                   <span className="text-slate-400 block mb-0.5">قيمة الإشعار (خصم):</span>
-                                  <span className="text-sm font-black text-emerald-400 font-mono">-{cn.amount.toLocaleString()} ج.م</span>
+                                  <span className="text-sm font-black text-emerald-400 font-mono">-{fAmt(cn.amount)} ج.م</span>
                                 </div>
                               </div>
 
@@ -2491,7 +2558,7 @@ export default function MawridDashboard() {
                                     <div key={idx} className="flex items-center justify-between text-xs text-emerald-300 font-medium">
                                       <span>{itemRow.name || "بند الإشعار"}</span>
                                       <span className="text-slate-450 font-mono">
-                                        {itemRow.quantity} × {itemRow.price.toLocaleString()} ج.م = <strong className="text-emerald-400">{(itemRow.quantity * itemRow.price).toLocaleString()} ج.م</strong>
+                                        {itemRow.quantity} × {fAmt(itemRow.price)} ج.م = <strong className="text-emerald-400">{fAmt(itemRow.quantity * itemRow.price)} ج.م</strong>
                                       </span>
                                     </div>
                                   ))
@@ -2567,7 +2634,7 @@ export default function MawridDashboard() {
                               </span>
                             </td>
                             <td className="py-4 px-4 font-mono text-slate-400 text-[11px] font-medium">{p.transRef}</td>
-                            <td className="py-4 px-4 font-bold text-emerald-400 text-left text-sm">{p.amount.toLocaleString()} ج.م</td>
+                            <td className="py-4 px-4 font-bold text-emerald-400 text-left text-sm">{fAmt(p.amount)} ج.م</td>
                           </tr>
                         );
                       })
@@ -2695,7 +2762,7 @@ export default function MawridDashboard() {
                                 <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                                   <div className="text-left font-mono">
                                     <span className="text-emerald-400 font-bold text-xs block">
-                                      {(inv.totalAmount - (inv.creditNoteAmount || 0)).toLocaleString()} ج.م
+                                      {fAmt(inv.totalAmount - (inv.creditNoteAmount || 0))} ج.م
                                     </span>
                                     {inv.creditNoteAmount && inv.creditNoteAmount > 0 ? (
                                       <span className="text-[9px] text-slate-500 block leading-none">
@@ -2841,13 +2908,13 @@ export default function MawridDashboard() {
                    <div className="text-center border-y border-slate-200 sm:border-y-0 sm:border-x py-2.5 sm:py-0">
                      <span className="text-slate-500 text-xs font-medium block">إجمالي التعاملات الصافية بالفترة</span>
                      <strong className="text-sm text-slate-950 font-black block mt-1">
-                       {getSelectedReportFinancials().total.toLocaleString()} ج.م
+                       {fAmt(getSelectedReportFinancials().total)} ج.م
                      </strong>
                    </div>
                    <div className="text-center">
                      <span className="text-slate-500 text-xs font-medium block">المديونية غير المسواة المتبقية</span>
                      <strong className="text-sm text-red-650 font-black block mt-1">
-                       {getSelectedReportFinancials().pending.toLocaleString()} ج.م
+                       {fAmt(getSelectedReportFinancials().pending)} ج.م
                      </strong>
                    </div>
                  </div>
@@ -2918,11 +2985,11 @@ export default function MawridDashboard() {
                                      <td className="py-2.5 px-3 font-mono font-bold text-sky-800">{inv.invoiceNumber}</td>
                                      <td className="py-2.5 px-3 font-mono text-slate-600">{inv.issueDate || "2026-06-01"}</td>
                                      <td className="py-2.5 px-3 font-mono text-slate-500">{inv.dueDate}</td>
-                                     <td className="py-2.5 px-3 font-mono text-left font-medium">{inv.totalAmount.toLocaleString()} ج.م</td>
+                                     <td className="py-2.5 px-3 font-mono text-left font-medium">{fAmt(inv.totalAmount)} ج.م</td>
                                      <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-left">
-                                       {inv.creditNoteAmount && inv.creditNoteAmount > 0 ? `-${inv.creditNoteAmount.toLocaleString()} ج.م` : "0 ج.م"}
+                                       {inv.creditNoteAmount && inv.creditNoteAmount > 0 ? `-${fAmt(inv.creditNoteAmount)} ج.م` : "0.0 ج.م"}
                                      </td>
-                                     <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">{payableAmount.toLocaleString()} ج.م</td>
+                                     <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">{fAmt(payableAmount)} ج.م</td>
                                      <td className="py-2.5 px-3 text-center">
                                        {(() => {
                                          const statusText = getFullPaymentStatus(inv);
@@ -3242,7 +3309,7 @@ export default function MawridDashboard() {
                           <div>
                             <span className="text-[10px] text-slate-400 font-bold block mb-0.5">القيمة المالية الكلية</span>
                             <span className="text-xs font-black text-slate-800 font-mono">
-                              {totalShipmentsValue.toLocaleString()} ج.م
+                              {fAmt(totalShipmentsValue)} ج.م
                             </span>
                           </div>
                           <div>
@@ -3351,18 +3418,18 @@ export default function MawridDashboard() {
                   <>
                     <div className="flex justify-between items-center text-slate-400">
                       <span>القيمة الأصلية للفاتورة:</span>
-                      <span className="font-mono">{invoiceToSettle.totalAmount.toLocaleString()} ج.م</span>
+                      <span className="font-mono">{fAmt(invoiceToSettle.totalAmount)} ج.م</span>
                     </div>
                     <div className="flex justify-between items-center text-rose-450 text-rose-400">
                       <span>خصم الإشعار الدائن:</span>
-                      <span className="font-mono font-bold">- {invoiceToSettle.creditNoteAmount.toLocaleString()} ج.م</span>
+                      <span className="font-mono font-bold">- {fAmt(invoiceToSettle.creditNoteAmount)} ج.م</span>
                     </div>
                   </>
                 ) : null}
                 <div className="flex justify-between items-center border-t border-slate-800 pt-2">
                   <span className="text-slate-200 font-bold">صافي القيمة المطلوبة للسداد:</span>
                   <span className="text-base font-black text-[#34d399] font-mono">
-                    {(invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0)).toLocaleString()} ج.م
+                    {fAmt(invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0))} ج.م
                   </span>
                 </div>
               </div>
@@ -3434,7 +3501,7 @@ export default function MawridDashboard() {
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400">السيولة النقدية المتوفرة بالخزينة:</span>
                     <span className={`font-mono font-black text-sm ${safeBalance >= (invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0)) ? "text-amber-400" : "text-rose-450 text-rose-450 text-rose-400"}`}>
-                      {safeBalance.toLocaleString()} ج.م
+                      {fAmt(safeBalance)} ج.م
                     </span>
                   </div>
 
@@ -3450,7 +3517,7 @@ export default function MawridDashboard() {
                          }}
                          className="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-2 rounded-lg text-[11px] cursor-pointer text-center"
                        >
-                         قم بتغذية الخزينة الآن بقيمة العجز ({ ((invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0)) - safeBalance).toLocaleString() } ج.م) +
+                         قم بتغذية الخزينة الآن بقيمة العجز ({ fAmt((invoiceToSettle.totalAmount - (invoiceToSettle.creditNoteAmount || 0)) - safeBalance) } ج.م) +
                        </button>
                     </div>
                   ) : (
@@ -3535,7 +3602,7 @@ export default function MawridDashboard() {
                   type="button"
                   onClick={() => {
                     setSafeBalance(prev => prev + safeDepositAmount);
-                    showToast(`تم إيداع مبلغ ${safeDepositAmount.toLocaleString()} ج.م وتغذية خزينة المنشأة بنجاح.`);
+                    showToast(`تم إيداع مبلغ ${fAmt(safeDepositAmount)} ج.م وتغذية خزينة المنشأة بنجاح.`);
                     setShowSafeDepositModal(false);
                   }}
                   className="flex-1 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-905 font-extrabold py-3 px-4 rounded-xl text-center cursor-pointer shadow-md text-xs font-bold"
@@ -3565,7 +3632,7 @@ export default function MawridDashboard() {
             className="bg-white rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-955">إضافة مورد جديد للمنظومة</h3>
+              <h3 className="text-base font-extrabold text-black">إضافة مورد جديد</h3>
               <button onClick={() => setShowAddSupplierModal(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
                 <XCircle className="w-5 h-5" />
               </button>
@@ -3765,29 +3832,35 @@ export default function MawridDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-slate-550 block mb-1 font-bold">مرفق الفاتورة (صورة أو ملف)</label>
-                    <div className="flex items-center gap-2">
-                      <label className="flex-1 flex items-center justify-between border border-dashed border-slate-300 hover:border-sky-500 rounded-lg p-2 bg-white cursor-pointer transition-colors">
-                        <span className="text-slate-500 text-[11px] truncate max-w-[170px]">
-                          {invoiceAttachment ? invoiceAttachment.name : "اختر ملفاً لإرفاقه..."}
-                        </span>
-                        <span className="bg-sky-50 text-sky-650 px-2 py-1 rounded text-[10px] font-bold">تصفح</span>
+                    <label className="text-slate-500 block mb-1 font-bold">مرفقات الفاتورة (يمكنك اختيار ملف أو أكثر) *</label>
+                    <div className="space-y-2">
+                      <label className="w-full flex items-center justify-between border border-dashed border-slate-300 hover:border-sky-500 rounded-lg p-2.5 bg-white cursor-pointer transition-colors">
+                        <span className="text-slate-400 text-[11px] block">اضغط لتصفح واختيار ملف أو أكثر...</span>
+                        <span className="bg-sky-50 text-sky-650 px-2 py-1 rounded text-[10px] font-bold">تصفح المرفقات</span>
                         <input 
                           type="file" 
+                          multiple
                           accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" 
-                          onChange={(e) => handleFileUpload(e, "invoice")} 
+                          onChange={(e) => handleMultipleFilesUpload(e, "invoice")} 
                           className="hidden" 
                         />
                       </label>
-                      {invoiceAttachment && (
-                        <button
-                          type="button"
-                          onClick={() => setInvoiceAttachment(null)}
-                          className="p-1.5 text-red-500 hover:bg-rose-50 rounded-lg cursor-pointer"
-                          title="حذف المرفق"
-                        >
-                          <XCircle className="w-4.5 h-4.5" />
-                        </button>
+                      {invoiceAttachments.length > 0 && (
+                        <div className="bg-slate-50 p-2 rounded-xl border border-slate-200 mt-2 space-y-1">
+                          <p className="font-bold text-slate-700 text-[10px] mb-1">المرفقات المختارة ({invoiceAttachments.length}):</p>
+                          {invoiceAttachments.map((f, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-white text-slate-805 p-1.5 rounded border border-slate-100 text-[11px]">
+                              <span className="font-mono font-semibold truncate max-w-[200px]" title={f.name}>{f.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => setInvoiceAttachments(prev => prev.filter((_, i) => i !== idx))}
+                                className="p-1 text-rose-500 hover:bg-rose-50 rounded cursor-pointer"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -3876,10 +3949,10 @@ export default function MawridDashboard() {
                     const totalDiscounts = discounts.reduce((sum, d) => sum + d.price, 0);
                     const subtotal = Math.max(0, invoiceBaseAmount - totalDiscounts);
                     const vatAmount = newInvoice.isCustomVat 
-                      ? Math.round((newInvoice.customVatAmount !== undefined ? newInvoice.customVatAmount : 0) * 10) / 10 
-                      : Math.round(subtotal * ((newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14) / 100) * 10) / 10;
+                      ? Math.round((newInvoice.customVatAmount !== undefined ? newInvoice.customVatAmount : 0) * 100) / 100 
+                      : Math.round(subtotal * ((newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14) / 100) * 100) / 100;
                     const vatRateDisplay = newInvoice.isCustomVat 
-                      ? Math.round((vatAmount / (subtotal || 1)) * 100 * 10) / 10 
+                      ? Math.round((vatAmount / (subtotal || 1)) * 100 * 100) / 100 
                       : (newInvoice.vatRate !== undefined ? newInvoice.vatRate : 14);
                     const totalAmount = subtotal + vatAmount;
 
@@ -3933,7 +4006,7 @@ export default function MawridDashboard() {
                                     value={newInvoice.customVatAmount !== undefined ? newInvoice.customVatAmount : 0}
                                     onChange={(e) => setNewInvoice({ ...newInvoice, customVatAmount: Math.max(0, parseFloat(e.target.value) || 0) })}
                                     onBlur={(e) => {
-                                      const rounded = Math.round((parseFloat(e.target.value) || 0) * 10) / 10;
+                                      const rounded = Math.round((parseFloat(e.target.value) || 0) * 100) / 100;
                                       setNewInvoice({ ...newInvoice, customVatAmount: rounded });
                                     }}
                                     className="w-24 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
@@ -3949,33 +4022,33 @@ export default function MawridDashboard() {
                             <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
                               <span>قيمة الفاتورة الأساسية:</span>
                               <span className="font-bold">
-                                {invoiceBaseAmount.toLocaleString()} ج.م
+                                {fAmt(invoiceBaseAmount)} ج.م
                               </span>
                             </div>
                             {totalDiscounts > 0 && (
                               <div className="flex justify-between sm:justify-end gap-6 text-rose-650 text-[11px] text-right">
                                 <span>إجمالي الخصم المطبق (-):</span>
                                 <span className="font-bold">
-                                  {totalDiscounts.toLocaleString()} ج.م
+                                  {fAmt(totalDiscounts)} ج.م
                                 </span>
                               </div>
                             )}
                             <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
                               <span>الإجمالي قبل الضريبة:</span>
                               <span className="font-bold">
-                                {subtotal.toLocaleString()} ج.م
+                                {fAmt(subtotal)} ج.م
                               </span>
                             </div>
                             <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
                               <span>قيمة الضريبة ({vatRateDisplay}%):</span>
                               <span className="font-bold">
-                                {vatAmount.toLocaleString()} ج.م
+                                {fAmt(vatAmount)} ج.م
                               </span>
                             </div>
                             <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-xs border-t border-slate-200 pt-1 mt-1 text-right">
                               <span>الصافي المطلوب للتوريد:</span>
                               <span className="text-sky-600 font-black text-sm">
-                                {totalAmount.toLocaleString()} ج.م
+                                {fAmt(totalAmount)} ج.م
                               </span>
                             </div>
                           </div>
@@ -4136,48 +4209,58 @@ export default function MawridDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-slate-505 block mb-1 font-bold">مرفق الفاتورة (صورة أو ملف)</label>
-                    <div className="flex items-center gap-2">
-                      <label className="flex-1 flex items-center justify-between border border-dashed border-slate-300 hover:border-emerald-500 rounded-lg p-2 bg-white cursor-pointer transition-colors">
-                        <span className="text-slate-500 text-[11px] truncate max-w-[170px]">
-                          {editingInvoice.attachment ? editingInvoice.attachment.name : "اختر ملفاً لإرفاقه..."}
-                        </span>
-                        <span className="bg-emerald-50 text-emerald-650 px-2 py-1 rounded text-[10px] font-bold">تصفح</span>
+                    <label className="text-slate-505 block mb-1 font-bold">مرفقات الفاتورة (يمكنك اختيار ملف أو أكثر)</label>
+                    <div className="space-y-2">
+                      <label className="w-full flex items-center justify-between border border-dashed border-slate-300 hover:border-emerald-500 rounded-lg p-3 bg-white cursor-pointer transition-colors">
+                        <span className="text-slate-400 text-[11px] block">اضغط لتصفح وإضافة مرفقات جديدة...</span>
+                        <span className="bg-emerald-50 text-emerald-650 px-2.5 py-1.5 rounded text-[10px] font-bold">تصفح المرفقات</span>
                         <input 
                           type="file" 
+                          multiple
                           accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" 
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => {
-                                if (reader.result) {
-                                  setEditingInvoice({
-                                    ...editingInvoice,
-                                    attachment: {
-                                      name: file.name,
-                                      type: file.type,
-                                      dataUrl: reader.result as string
-                                    }
-                                  });
-                                  showToast(`تم إرسال الملف "${file.name}" وتجهيز تحديث المرفق بنجاح.`);
-                                }
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }} 
+                          onChange={(e) => handleMultipleFilesUpload(e, "edit_invoice")} 
                           className="hidden" 
                         />
                       </label>
-                      {editingInvoice.attachment && (
-                        <button
-                          type="button"
-                          onClick={() => setEditingInvoice({ ...editingInvoice, attachment: undefined })}
-                          className="p-1.5 text-red-500 hover:bg-rose-50 rounded-lg cursor-pointer"
-                          title="حذف المرفق"
-                        >
-                          <XCircle className="w-4.5 h-4.5" />
-                        </button>
+                      
+                      {((editingInvoice.attachments && editingInvoice.attachments.length > 0) || editingInvoice.attachment) && (
+                        <div className="bg-slate-50 p-2 rounded-xl border border-slate-200 mt-2 space-y-1">
+                          <p className="font-bold text-slate-700 text-[10px] mb-1">المرفقات الحالية:</p>
+                          {editingInvoice.attachments && editingInvoice.attachments.length > 0 ? (
+                            editingInvoice.attachments.map((file, idx) => (
+                              <div key={idx} className="flex items-center justify-between bg-white text-slate-805 p-1.5 rounded border border-slate-100 text-[11px]">
+                                <span className="font-mono font-semibold truncate max-w-[200px]" title={file.name}>{file.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = editingInvoice.attachments?.filter((_, i) => i !== idx) || [];
+                                    setEditingInvoice({
+                                      ...editingInvoice,
+                                      attachments: updated,
+                                      attachment: updated[0] || undefined
+                                    });
+                                  }}
+                                  className="p-1 text-rose-500 hover:bg-rose-50 rounded cursor-pointer transition-colors"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))
+                          ) : (
+                            editingInvoice.attachment && (
+                              <div className="flex items-center justify-between bg-white text-slate-805 p-1.5 rounded border border-slate-100 text-[11px]">
+                                <span className="font-mono font-semibold truncate max-w-[200px]" title={editingInvoice.attachment.name}>{editingInvoice.attachment.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingInvoice({ ...editingInvoice, attachment: undefined, attachments: [] })}
+                                  className="p-1 text-rose-500 hover:bg-rose-50 rounded cursor-pointer transition-colors"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -4266,10 +4349,10 @@ export default function MawridDashboard() {
                     const totalDiscounts = editDiscounts.reduce((sum, d) => sum + d.price, 0);
                     const subtotal = Math.max(0, editInvoiceBaseAmount - totalDiscounts);
                     const vatAmount = editingInvoice.isCustomVat 
-                      ? Math.round((editingInvoice.customVatAmount !== undefined ? editingInvoice.customVatAmount : 0) * 10) / 10 
-                      : Math.round(subtotal * ((editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100) * 10) / 10;
+                      ? Math.round((editingInvoice.customVatAmount !== undefined ? editingInvoice.customVatAmount : 0) * 100) / 100 
+                      : Math.round(subtotal * ((editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14) / 100) * 100) / 100;
                     const vatRateDisplay = editingInvoice.isCustomVat 
-                      ? Math.round((vatAmount / (subtotal || 1)) * 100 * 10) / 10 
+                      ? Math.round((vatAmount / (subtotal || 1)) * 100 * 100) / 100 
                       : (editingInvoice.vatRate !== undefined ? editingInvoice.vatRate : 14);
                     const totalAmount = subtotal + vatAmount;
 
@@ -4323,7 +4406,7 @@ export default function MawridDashboard() {
                                     value={editingInvoice.customVatAmount !== undefined ? editingInvoice.customVatAmount : 0}
                                     onChange={(e) => setEditingInvoice({ ...editingInvoice, customVatAmount: Math.max(0, parseFloat(e.target.value) || 0) })}
                                     onBlur={(e) => {
-                                      const rounded = Math.round((parseFloat(e.target.value) || 0) * 10) / 10;
+                                      const rounded = Math.round((parseFloat(e.target.value) || 0) * 100) / 100;
                                       setEditingInvoice({ ...editingInvoice, customVatAmount: rounded });
                                     }}
                                     className="w-24 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
@@ -4339,33 +4422,33 @@ export default function MawridDashboard() {
                             <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
                               <span>قيمة الفاتورة الأساسية:</span>
                               <span className="font-bold">
-                                {editInvoiceBaseAmount.toLocaleString()} ج.م
+                                {fAmt(editInvoiceBaseAmount)} ج.م
                               </span>
                             </div>
                             {totalDiscounts > 0 && (
                               <div className="flex justify-between sm:justify-end gap-6 text-rose-650 text-[11px] text-right">
                                 <span>إجمالي الخصم المطبق (-):</span>
                                 <span className="font-bold">
-                                  {totalDiscounts.toLocaleString()} ج.م
+                                  {fAmt(totalDiscounts)} ج.م
                                 </span>
                               </div>
                             )}
                             <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
                               <span>الإجمالي قبل الضريبة:</span>
                               <span className="font-bold">
-                                {subtotal.toLocaleString()} ج.م
+                                {fAmt(subtotal)} ج.م
                               </span>
                             </div>
                             <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
                               <span>قيمة الضريبة ({vatRateDisplay}%):</span>
                               <span className="font-bold">
-                                {vatAmount.toLocaleString()} ج.م
+                                {fAmt(vatAmount)} ج.م
                               </span>
                             </div>
                             <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-xs border-t border-slate-200 pt-1 mt-1 text-right">
                               <span>الصافي الإجمالي بعد الحفظ:</span>
                               <span className="text-emerald-600 font-black text-sm">
-                                {totalAmount.toLocaleString()} ج.م
+                                {fAmt(totalAmount)} ج.م
                               </span>
                             </div>
                           </div>
@@ -4465,7 +4548,7 @@ export default function MawridDashboard() {
                                   className="w-24 border border-slate-200 rounded p-1.5 text-left font-mono text-slate-800 text-xs bg-slate-50"
                                 />
                                 <div className="w-24 font-mono font-bold text-slate-700 text-left bg-slate-100 border border-slate-150 rounded p-1.5 text-xs overflow-hidden">
-                                  {(item.quantity * item.price).toLocaleString()} ج.م
+                                  {fAmt(item.quantity * item.price)} ج.م
                                 </div>
                                 <button
                                   type="button"
@@ -4486,7 +4569,7 @@ export default function MawridDashboard() {
                             <span>إجمالي رصيد الخصم الصادر:</span>
                           </div>
                           <span className="text-emerald-700 font-black text-sm font-mono">
-                            {editInvoiceCNData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
+                            {fAmt(editInvoiceCNData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0))} ج.م
                           </span>
                         </div>
 
@@ -4711,7 +4794,7 @@ export default function MawridDashboard() {
                       const remaining = i.totalAmount - (i.creditNoteAmount || 0);
                       return (
                         <option key={i.id} value={i.id}>
-                          فاتورة رقم {i.invoiceNumber} (قيمة الفاتورة: {i.totalAmount.toLocaleString()} ج.م | المتبقي للاستحقاق: {remaining.toLocaleString()} ج.م)
+                          فاتورة رقم {i.invoiceNumber} (قيمة الفاتورة: {fAmt(i.totalAmount)} ج.م | المتبقي للاستحقاق: {fAmt(remaining)} ج.م)
                         </option>
                       );
                     })
@@ -4726,15 +4809,15 @@ export default function MawridDashboard() {
                       <div className="bg-white p-3 rounded-xl border border-slate-200 mt-2 space-y-1 font-sans">
                         <div className="flex justify-between text-slate-500 text-[11px]">
                           <span>قيمة الفاتورة المحددة الأصلية:</span>
-                          <span className="font-bold text-slate-700">{selectedInvoice.totalAmount.toLocaleString()} ج.م</span>
+                          <span className="font-bold text-slate-700">{fAmt(selectedInvoice.totalAmount)} ج.م</span>
                         </div>
                         <div className="flex justify-between text-slate-500 text-[11px]">
                           <span>الخصم المطبق مسبقاً بالإشعارات الدائنة:</span>
-                          <span className="font-bold text-amber-600">{selectedInvoice.creditNoteAmount ? `${selectedInvoice.creditNoteAmount.toLocaleString()} ج.م` : "0 ج.م"}</span>
+                          <span className="font-bold text-amber-600">{selectedInvoice.creditNoteAmount ? `${fAmt(selectedInvoice.creditNoteAmount)} ج.م` : "0.00 ج.م"}</span>
                         </div>
                         <div className="flex justify-between text-slate-800 text-[11px] font-bold border-t border-slate-100 pt-1 mt-1">
                           <span>الحد الأقصى المسموح به لقيمة الإشعار الدائن:</span>
-                          <span className="text-emerald-700 font-black">{remaining.toLocaleString()} ج.م</span>
+                          <span className="text-emerald-700 font-black">{fAmt(remaining)} ج.م</span>
                         </div>
                       </div>
                     );
@@ -4840,7 +4923,7 @@ export default function MawridDashboard() {
               <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex justify-between items-center select-none text-slate-800">
                 <span className="text-emerald-800 font-bold">إجمالي قيمة الإشعار الدائن:</span>
                 <span className="text-emerald-700 text-base font-black font-mono">
-                  {newCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()} ج.م
+                  {fAmt(newCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0))} ج.م
                 </span>
               </div>
 
