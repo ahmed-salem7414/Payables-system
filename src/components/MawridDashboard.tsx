@@ -1801,7 +1801,7 @@ export default function MawridDashboard() {
         
         {/* RIGHT SIDEBAR - Tab controller and dynamic Navigation */}
         <aside className="no-print w-full lg:w-64 shrink-0">
-          <div className="bg-[#111827] rounded-2xl border border-slate-700 p-2.5 lg:p-4 shadow-lg flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible sticky top-20 lg:top-24 z-30 w-full no-scrollbar">
+          <div className="bg-[#111827] rounded-2xl border border-slate-700 p-2.5 lg:p-4 shadow-lg flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible lg:sticky lg:top-24 z-30 w-full no-scrollbar">
             
             <p className="hidden lg:block text-[11px] font-bold text-slate-500 tracking-wider uppercase px-3 pb-2 border-b border-slate-800 mb-2">القائمة المالية</p>
             
@@ -2007,10 +2007,10 @@ export default function MawridDashboard() {
                         <div>
                           <div className="flex items-start justify-between">
                             <div>
-                              <span className="text-[10px] font-bold bg-slate-800 text-slate-350 px-2.5 py-1 rounded-full border border-slate-700">{sup.category}</span>
-                              <h3 className="text-base font-bold text-white mt-1.5 group-hover:text-emerald-450 transition-colors flex items-center gap-1">{sup.name}</h3>
+                              <span className="text-[10px] font-bold bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">{sup.category}</span>
+                              <h3 className="text-base font-bold text-white mt-1.5 group-hover:text-emerald-400 transition-colors flex items-center gap-1">{sup.name}</h3>
                               <p className="text-xs text-emerald-400 font-semibold">{sup.company}</p>
-                              <span className="text-[9px] text-slate-450 mt-1 block group-hover:text-emerald-400 group-hover:underline">👤 اضغط لعرض كشف فواتير المورد</span>
+                              <span className="text-[9px] text-slate-400 mt-1 block group-hover:text-emerald-400 group-hover:underline">👤 اضغط لعرض كشف فواتير المورد</span>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
                               <button 
@@ -2060,19 +2060,19 @@ export default function MawridDashboard() {
 
                           <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-800 text-xs text-slate-300">
                             <div>
-                              <span className="text-slate-450 text-slate-400 block mb-0.5">رقم الهاتف:</span>
+                              <span className="text-slate-400 block mb-0.5">رقم الهاتف:</span>
                               <span className="font-semibold text-white font-mono">{sup.phone}</span>
                             </div>
                             <div>
-                              <span className="text-slate-450 text-slate-400 block mb-0.5">البريد الإلكتروني:</span>
+                              <span className="text-slate-400 block mb-0.5">البريد الإلكتروني:</span>
                               <span className="font-semibold text-white break-all">{sup.email}</span>
                             </div>
                             <div className="col-span-2">
-                              <span className="text-slate-450 text-slate-400 block mb-0.5">رقم الحساب البنكي / IBAN:</span>
+                              <span className="text-slate-400 block mb-0.5">رقم الحساب البنكي / IBAN:</span>
                               <span className="font-mono text-slate-300 text-[11px] block bg-[#0f172a] p-1 px-2 rounded border border-slate-800">{sup.bankAccount}</span>
                             </div>
                             <div className="col-span-2">
-                              <span className="text-slate-450 text-slate-400 block mb-0.5">العنوان المسجل:</span>
+                              <span className="text-slate-400 block mb-0.5">العنوان المسجل:</span>
                               <span className="text-slate-300 text-xs">{sup.address}</span>
                             </div>
                           </div>
@@ -2084,7 +2084,7 @@ export default function MawridDashboard() {
                               <div className="mt-4 pt-4 border-t border-slate-800">
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                                    <FileText className="w-3.5 h-3.5 text-emerald-450 text-emerald-450 text-emerald-400" />
+                                    <FileText className="w-3.5 h-3.5 text-emerald-400" />
                                     <span>الإشعارات الدائنة ({supCreditNotes.length})</span>
                                   </span>
                                   <button
@@ -2123,8 +2123,8 @@ export default function MawridDashboard() {
                                             </span>
                                           </span>
                                           {cn.dueDate && (
-                                            <span className="text-slate-450 text-[9px]">
-                                              استحقاق: <span className="font-mono text-slate-350">{cn.dueDate}</span>
+                                            <span className="text-slate-400 text-[9px]">
+                                              استحقاق: <span className="font-mono text-slate-300">{cn.dueDate}</span>
                                             </span>
                                           )}
                                           {cn.notes && <span className="text-slate-400 text-[9px] truncate max-w-[150px]">{cn.notes}</span>}
@@ -4961,7 +4961,7 @@ export default function MawridDashboard() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 flex flex-col space-y-4 text-slate-800"
+            className="bg-white rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 flex flex-col space-y-4 text-slate-800 max-h-[92vh] overflow-y-auto custom-scrollbar"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-950 flex items-center gap-2">
@@ -4984,9 +4984,9 @@ export default function MawridDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5 overflow-hidden">
               
               {/* Right list pane (RTL right): Lists all files with option to download next to each */}
-              <div className="md:col-span-4 flex flex-col space-y-3 bg-slate-50/50 p-3 rounded-2xl border border-slate-200 max-h-[400px]">
+              <div className="md:col-span-4 flex flex-col space-y-3 bg-slate-50/50 p-3 rounded-2xl border border-slate-200 max-h-[220px] md:max-h-[400px]">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <span className="text-xs font-black text-slate-705 text-slate-700">الملفات المتاحة ({(previewAttachmentList || []).length > 0 ? previewAttachmentList.length : 1})</span>
+                  <span className="text-xs font-black text-slate-600">الملفات المتاحة ({(previewAttachmentList || []).length > 0 ? previewAttachmentList.length : 1})</span>
                 </div>
                 
                 <div className="space-y-2 overflow-y-auto flex-1 pr-0.5 custom-scrollbar">
@@ -5036,8 +5036,8 @@ export default function MawridDashboard() {
               </div>
 
               {/* Left view pane (RTL left): displays active picture / file details */}
-              <div className="md:col-span-8 flex flex-col space-y-3 min-h-[350px]">
-                <div className="bg-slate-50 border border-slate-205 border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center flex-1 min-h-[300px] overflow-hidden">
+              <div className="md:col-span-8 flex flex-col space-y-3 min-h-[240px] md:min-h-[350px]">
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center flex-1 min-h-[200px] md:min-h-[300px] overflow-hidden">
                   {previewAttachment.type && previewAttachment.type.startsWith("image/") ? (
                     <div className="w-full flex justify-center items-center overflow-auto max-h-[360px]">
                       <img 
