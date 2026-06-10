@@ -661,7 +661,25 @@ export default function MawridDashboard() {
 
     if (window.confirm(`هل أنت متأكد من رغبتك في حذف الإشعار الدائن رقم ${cnNumber} نهائياً؟`)) {
       setCreditNotes(creditNotes.filter(cn => cn.id !== id));
-      showToast(`تم حذف الإشعار الدائن ${cnNumber} بنجاح.`);
+      
+      const updatedInvoices = invoices.map(inv => {
+        const hasCN = (inv.creditNotes || []).some(cn => cn.id === id);
+        if (hasCN) {
+          const targetCN = (inv.creditNotes || []).find(cn => cn.id === id)!;
+          const remainingCNs = (inv.creditNotes || []).filter(cn => cn.id !== id);
+          const newCNAmount = Math.max(0, Math.round(((inv.creditNoteAmount || 0) - targetCN.amount) * 100) / 100);
+          return {
+            ...inv,
+            creditNoteAmount: newCNAmount,
+            creditNotes: remainingCNs,
+            notes: (inv.notes || "") + ` [تم حذف الإشعار الدائن المرتبط رقم: ${cnNumber}]`
+          };
+        }
+        return inv;
+      });
+      setInvoices(updatedInvoices);
+
+      showToast(`تم حذف الإشعار الدائن ${cnNumber} بنجاح وتحديث الفواتير المرتبطة.`);
     }
   };
 
@@ -1056,6 +1074,47 @@ export default function MawridDashboard() {
       setPayments(payments.filter(p => p.invoiceId !== id));
       setInvoices(invoices.filter(i => i.id !== id));
       showToast(`تم حذف الفاتورة رقم ${invoiceNumber} بنجاح.`);
+    }
+  };
+
+  // Cancel/Unlink Credit Note from an Invoice
+  const handleCancelCreditNoteFromInvoice = (invoiceId: string, creditNoteId: string) => {
+    if (!checkPermission("write")) return;
+
+    const targetInvoice = invoices.find(inv => inv.id === invoiceId);
+    if (!targetInvoice) return;
+
+    const targetCN = (targetInvoice.creditNotes || []).find(cn => cn.id === creditNoteId);
+    if (!targetCN) return;
+
+    if (window.confirm(`هل أنت متأكد من رغبتك في إلغاء ربط وخصم الإشعار الدائن رقم ${targetCN.creditNoteNumber} من هذه الفاتورة؟`)) {
+      // 1. Update the Invoice
+      const updatedInvoices = invoices.map(inv => {
+        if (inv.id === invoiceId) {
+          const remainingCNs = (inv.creditNotes || []).filter(cn => cn.id !== creditNoteId);
+          const newCNAmount = Math.max(0, Math.round(((inv.creditNoteAmount || 0) - targetCN.amount) * 100) / 100);
+          const cancelRefText = ` [تم إلغاء ربط الإشعار الدائن رقم: ${targetCN.creditNoteNumber} بقيمة: ${fAmt(targetCN.amount)} ج.م]`;
+          const existingNotes = inv.notes ? `${inv.notes} ` : "";
+          return {
+            ...inv,
+            notes: existingNotes + cancelRefText,
+            creditNoteAmount: newCNAmount,
+            creditNotes: remainingCNs
+          };
+        }
+        return inv;
+      });
+      setInvoices(updatedInvoices);
+
+      // 2. Also update global Credit Note status to "active" so it's active and reusable
+      setCreditNotes(creditNotes.map(cn => {
+        if (cn.id === creditNoteId) {
+          return { ...cn, status: "active" };
+        }
+        return cn;
+      }));
+
+      showToast(`تم إلغاء ربط وخصم الإشعار الدائن رقم ${targetCN.creditNoteNumber} من الفاتورة بنجاح.`);
     }
   };
 
@@ -2058,7 +2117,7 @@ export default function MawridDashboard() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-800 text-xs text-slate-300">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-800 text-xs text-slate-300">
                             <div>
                               <span className="text-slate-400 block mb-0.5">رقم الهاتف:</span>
                               <span className="font-semibold text-white font-mono">{sup.phone}</span>
@@ -2067,11 +2126,11 @@ export default function MawridDashboard() {
                               <span className="text-slate-400 block mb-0.5">البريد الإلكتروني:</span>
                               <span className="font-semibold text-white break-all">{sup.email}</span>
                             </div>
-                            <div className="col-span-2">
+                            <div className="col-span-1 sm:col-span-2">
                               <span className="text-slate-400 block mb-0.5">رقم الحساب البنكي / IBAN:</span>
                               <span className="font-mono text-slate-300 text-[11px] block bg-[#0f172a] p-1 px-2 rounded border border-slate-800">{sup.bankAccount}</span>
                             </div>
-                            <div className="col-span-2">
+                            <div className="col-span-1 sm:col-span-2">
                               <span className="text-slate-400 block mb-0.5">العنوان المسجل:</span>
                               <span className="text-slate-300 text-xs">{sup.address}</span>
                             </div>
@@ -2353,7 +2412,7 @@ export default function MawridDashboard() {
                                 </div>
                               </div>
 
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
                                 <div>
                                   <span className="text-slate-400 block mb-0.5">تاريخ الإصدار:</span>
                                   <span className="font-semibold text-white font-mono">{inv.issueDate}</span>
@@ -2362,7 +2421,7 @@ export default function MawridDashboard() {
                                   <span className="text-slate-400 block mb-0.5">تاريخ الاستحقاق:</span>
                                   <span className={`font-semibold font-mono ${inv.status === "unpaid" ? "text-rose-400" : "text-white"}`}>{inv.dueDate}</span>
                                 </div>
-                                <div className="col-span-2 md:col-span-1 border-r border-slate-800/60 pr-3">
+                                <div className="col-span-1 sm:col-span-2 md:col-span-1 border-r-0 md:border-r border-slate-800/60 pr-0 md:pr-3">
                                   {inv.creditNoteAmount && inv.creditNoteAmount > 0 ? (
                                     <>
                                       <span className="text-slate-400 block mb-0.5">صافي القيمة بعد الخصم:</span>
@@ -2468,6 +2527,40 @@ export default function MawridDashboard() {
                               </div>
                             )}
 
+                            {/* Linked Credit Notes Details */}
+                            {inv.creditNotes && inv.creditNotes.length > 0 && (
+                              <div className="mt-4 pt-4 border-t border-slate-800/80">
+                                <div className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5 mb-2.5">
+                                  <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>الإشعارات الدائنة المرتبطة بالفاتورة للخصم:</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {inv.creditNotes.map((cn) => (
+                                    <div key={cn.id} className="flex items-center justify-between bg-[#111827]/40 p-3 rounded-xl border border-slate-800 text-xs gap-3">
+                                      <div className="flex flex-col gap-0.5">
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="font-bold text-white font-mono">{cn.creditNoteNumber}</span>
+                                          <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">مُطبّق خصم</span>
+                                        </div>
+                                        <span className="text-[10px] text-slate-400 mt-0.5">تاريخ الإصدار: <span className="font-mono text-slate-300">{cn.issueDate}</span></span>
+                                        <span className="text-emerald-400 font-extrabold font-mono mt-0.5">المبلغ المخفض: {fAmt(cn.amount)} ج.م</span>
+                                      </div>
+                                      
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCancelCreditNoteFromInvoice(inv.id, cn.id)}
+                                        className="text-[10px] bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/35 text-rose-450 text-rose-400 font-bold border border-rose-500/20 rounded-lg px-2.5 py-1.5 cursor-pointer transition-colors flex items-center gap-1 shrink-0"
+                                        title="إلغاء الخصم المالي وإلغاء ربط الإشعار الدائن بالفاتورة"
+                                      >
+                                        <XCircle className="w-3.5 h-3.5 shrink-0" />
+                                        <span>إلغاء الخصم</span>
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                           </div>
                         );
                       } else {
@@ -2502,7 +2595,7 @@ export default function MawridDashboard() {
                                 </div>
                               </div>
 
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
                                 <div>
                                   <span className="text-slate-400 block mb-0.5">تاريخ الإصدار:</span>
                                   <span className="font-semibold text-white font-mono">{cn.issueDate}</span>
@@ -2511,7 +2604,7 @@ export default function MawridDashboard() {
                                   <span className="text-slate-400 block mb-0.5">تاريخ الاستحقاق المتوقع:</span>
                                   <span className="font-semibold font-mono text-white">{cn.dueDate || "-"}</span>
                                 </div>
-                                <div className="col-span-2 md:col-span-1">
+                                <div className="col-span-1 sm:col-span-2 md:col-span-1">
                                   <span className="text-slate-400 block mb-0.5">قيمة الإشعار (خصم):</span>
                                   <span className="text-sm font-black text-emerald-400 font-mono">-{fAmt(cn.amount)} ج.م</span>
                                 </div>
