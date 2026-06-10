@@ -221,6 +221,10 @@ export default function MawridDashboard() {
   // Edit Supplier form state
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
 
+  // Edit Credit Note states
+  const [editingCreditNote, setEditingCreditNote] = useState<CreditNote | null>(null);
+  const [showEditCreditNoteModal, setShowEditCreditNoteModal] = useState(false);
+
   // Credit Notes state
   const [creditNotes, setCreditNotes] = useState<CreditNote[]>(() => {
     const saved = localStorage.getItem("mawrid_credit_notes");
@@ -515,6 +519,10 @@ export default function MawridDashboard() {
   const handleDeleteSupplier = (id: string, name: string) => {
     if (!checkPermission("delete")) return;
 
+    if (!window.confirm(`هل أنت متأكد من رغبتك في حذف المورد "${name}" وكافة فواتيره وبياناته المرتبطة به نهائياً؟`)) {
+      return;
+    }
+
     // Verify if there are unpaid invoices before deleting
     const hasUnpaid = invoices.some(i => i.supplierId === id && i.status === "unpaid");
     if (hasUnpaid) {
@@ -681,6 +689,103 @@ export default function MawridDashboard() {
 
       showToast(`تم حذف الإشعار الدائن ${cnNumber} بنجاح وتحديث الفواتير المرتبطة.`);
     }
+  };
+
+  // Initiate Edit Credit Note
+  const handleInitiateEditCreditNote = (cn: CreditNote) => {
+    if (!checkPermission("write")) return;
+    setEditingCreditNote(JSON.parse(JSON.stringify(cn)));
+    setShowEditCreditNoteModal(true);
+  };
+
+  const handleEditCNAddItemRow = () => {
+    if (!editingCreditNote) return;
+    setEditingCreditNote({
+      ...editingCreditNote,
+      items: [...editingCreditNote.items, { name: "بند إشعار", quantity: 1, price: 0 }]
+    });
+  };
+
+  const handleEditCNRemoveItemRow = (index: number) => {
+    if (!editingCreditNote || editingCreditNote.items.length === 1) return;
+    setEditingCreditNote({
+      ...editingCreditNote,
+      items: editingCreditNote.items.filter((_, i) => i !== index)
+    });
+  };
+
+  const handleEditCNUpdateItemRow = (index: number, field: string, value: any) => {
+    if (!editingCreditNote) return;
+    const updated = editingCreditNote.items.map((item, i) => {
+      if (i === index) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    });
+    setEditingCreditNote({ ...editingCreditNote, items: updated });
+  };
+
+  const handleUpdateCreditNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!checkPermission("write")) return;
+    if (!editingCreditNote) return;
+
+    if (!editingCreditNote.creditNoteNumber) {
+      showToast("يرجى تعبئة كافة الحقول الإجبارية للإشعار الدائن.", "error");
+      return;
+    }
+
+    const calculatedTotal = Math.round(editingCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0) * 100) / 100;
+    if (calculatedTotal <= 0) {
+      showToast("يرجى إضافة بند واحد على الأقل بقيمة أكبر من الصفر.", "error");
+      return;
+    }
+
+    const hasEmptyItem = editingCreditNote.items.some(item => !item.name.trim() || item.price <= 0);
+    if (hasEmptyItem) {
+      showToast("يرجى التأكد من كتابة وصف كافة البنود وتحديد سعر أكبر من الصفر.", "error");
+      return;
+    }
+
+    // Find linked invoice (if any)
+    const linkedInvoice = invoices.find(inv => (inv.creditNotes || []).some(cn => cn.id === editingCreditNote.id));
+    if (linkedInvoice) {
+      // Find original credit note amount in invoice
+      const originalCN = (linkedInvoice.creditNotes || []).find(cn => cn.id === editingCreditNote.id);
+      const originalAmount = originalCN ? originalCN.amount : 0;
+      const otherCNAmount = (linkedInvoice.creditNoteAmount || 0) - originalAmount;
+      const remainingPayable = Math.round((linkedInvoice.totalAmount - otherCNAmount) * 100) / 100;
+
+      if (calculatedTotal > remainingPayable) {
+        showToast(`قيمة الإشعار الدائن المعدلة (${fAmt(calculatedTotal)} ج.م) لا يمكن أن تتجاوز الرصيد المستحق المتبقي بالفاتورة وهو (${fAmt(remainingPayable)} ج.م).`, "error");
+        return;
+      }
+
+      // Update invoice side
+      const updatedInvoices = invoices.map(inv => {
+        if (inv.id === linkedInvoice.id) {
+          const updatedCNList = (inv.creditNotes || []).map(cn => 
+            cn.id === editingCreditNote.id ? { ...editingCreditNote, amount: calculatedTotal } : cn
+          );
+          return {
+            ...inv,
+            creditNoteAmount: Math.round((otherCNAmount + calculatedTotal) * 100) / 100,
+            creditNotes: updatedCNList
+          };
+        }
+        return inv;
+      });
+      setInvoices(updatedInvoices);
+    }
+
+    // Update global creditNotes list
+    setCreditNotes(creditNotes.map(cn => 
+      cn.id === editingCreditNote.id ? { ...editingCreditNote, amount: calculatedTotal } : cn
+    ));
+
+    setShowEditCreditNoteModal(false);
+    setEditingCreditNote(null);
+    showToast(`تم تعديل الإشعار الدائن رقم ${editingCreditNote.creditNoteNumber} بنجاح.`);
   };
 
   // Mark/Toggle Credit Note status handler
@@ -2210,6 +2315,14 @@ export default function MawridDashboard() {
                                           </button>
                                           <button
                                             type="button"
+                                            onClick={() => handleInitiateEditCreditNote(cn)}
+                                            className="text-slate-500 hover:text-emerald-400 p-0.5 rounded hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                                            title="تعديل الإشعار"
+                                          >
+                                            <Edit className="w-3 h-3" />
+                                          </button>
+                                          <button
+                                            type="button"
                                             onClick={() => handleDeleteCreditNote(cn.id, cn.creditNoteNumber)}
                                             className="text-slate-500 hover:text-rose-400 p-0.5 rounded hover:bg-rose-500/10 transition-colors cursor-pointer"
                                             title="حذف الإشعار"
@@ -2635,6 +2748,15 @@ export default function MawridDashboard() {
                                   }`}
                                 >
                                   {cn.status === "active" ? "تحديد كمُطبّق" : "إعادة تنشيط الإشعار"}
+                                </button>
+
+                                <button 
+                                  onClick={() => handleInitiateEditCreditNote(cn)}
+                                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 text-slate-350 hover:text-white text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                  title="تعديل بيانات الإشعار الدائن"
+                                >
+                                  <Edit className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>تعديل</span>
                                 </button>
 
                                 <button 
@@ -5040,6 +5162,181 @@ export default function MawridDashboard() {
                   className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer"
                 >
                   تسجيل الإشعار الدائن
+                </button>
+              </div>
+
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT CREDIT NOTE */}
+      {showEditCreditNoteModal && editingCreditNote && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-950">تعديل الإشعار الدائن للمورد</h3>
+              <button type="button" onClick={() => { setShowEditCreditNoteModal(false); setEditingCreditNote(null); }} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateCreditNote} className="space-y-4 text-xs">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">المورد المرتبط</label>
+                  <select 
+                    disabled
+                    value={editingCreditNote.supplierId}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-100 font-semibold text-slate-700 focus:outline-none cursor-not-allowed"
+                  >
+                    {suppliers.map(s => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.company})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">رقم الإشعار الدائن *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={editingCreditNote.creditNoteNumber}
+                    onChange={(e) => setEditingCreditNote({ ...editingCreditNote, creditNoteNumber: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-bold text-slate-900"
+                    placeholder="CN-2026-XYZ"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">تاريخ الاستحقاق المتوقع *</label>
+                  <input 
+                    type="date" 
+                    required
+                    value={editingCreditNote.dueDate}
+                    onChange={(e) => setEditingCreditNote({ ...editingCreditNote, dueDate: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold text-slate-900 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">البيانات / مذكرات عامة</label>
+                  <input 
+                    type="text" 
+                    value={editingCreditNote.notes || ""}
+                    onChange={(e) => setEditingCreditNote({ ...editingCreditNote, notes: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-950 font-semibold"
+                    placeholder="خصم ترويجي للمواد الخام الربع السنوي"
+                  />
+                </div>
+              </div>
+
+              {/* Linked Invoice Info block */}
+              {(() => {
+                const linkedInvoice = invoices.find(inv => (inv.creditNotes || []).some(cn => cn.id === editingCreditNote.id));
+                if (linkedInvoice) {
+                  const originalCN = (linkedInvoice.creditNotes || []).find(cn => cn.id === editingCreditNote.id);
+                  const originalAmount = originalCN ? originalCN.amount : 0;
+                  const otherCNAmount = (linkedInvoice.creditNoteAmount || 0) - originalAmount;
+                  const remaining = Math.round((linkedInvoice.totalAmount - otherCNAmount) * 100) / 100;
+                  return (
+                    <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 space-y-2">
+                      <span className="text-slate-700 block font-bold text-xs">الفاتورة المربوط بها الخصم:</span>
+                      <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1 font-sans">
+                        <div className="flex justify-between text-slate-500 text-[11px]">
+                          <span>الفاتورة المرتبطة:</span>
+                          <span className="font-bold text-slate-700">{linkedInvoice.invoiceNumber}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-500 text-[11px]">
+                          <span>الحد الأقصى المسموح به لقيمة الإشعار الدائن:</span>
+                          <span className="text-emerald-700 font-black">{fAmt(remaining)} ج.م</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-slate-500 block font-bold font-sans">بنود الإشعار وقائمة التوريد الدائنة:</label>
+                  <button 
+                    type="button"
+                    onClick={handleEditCNAddItemRow}
+                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>إضافة بند جديد</span>
+                  </button>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  <div className="flex items-center justify-between px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
+                    <div>التسلسل</div>
+                    <div className="w-48 text-left pl-6">القيمة الإجمالية للبند (ج.م) *</div>
+                  </div>
+
+                  {editingCreditNote.items.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between gap-3 bg-slate-50 p-2 rounded-lg border border-slate-150">
+                      <span className="text-slate-600 text-xs font-bold font-mono">البند #{index + 1}</span>
+                      <div className="flex items-center gap-2 flex-1 max-w-xs">
+                        <input 
+                          type="number" 
+                          required
+                          min="0"
+                          step="any"
+                          placeholder="أدخل القيمة الإجمالية"
+                          value={item.price || ""}
+                          onChange={(e) => {
+                            handleEditCNUpdateItemRow(index, "price", parseFloat(e.target.value) || 0);
+                            if (!item.name) {
+                              handleEditCNUpdateItemRow(index, "name", "بند إشعار");
+                            }
+                          }}
+                          className="w-full border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-left text-xs focus:ring-1 focus:ring-emerald-500"
+                        />
+                        <span className="text-slate-400 text-[10px] font-bold">ج.م</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleEditCNRemoveItemRow(index)}
+                        className="p-1 text-slate-400 hover:text-red-500 rounded cursor-pointer"
+                        title="حذف هذا البند"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total Display */}
+              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex justify-between items-center select-none text-slate-800">
+                <span className="text-emerald-800 font-bold">إجمالي قيمة الإشعار الدائن بعد التعديل:</span>
+                <span className="text-emerald-700 text-base font-black font-mono">
+                  {fAmt(editingCreditNote.items.reduce((sum, item) => sum + (item.quantity * item.price), 0))} ج.م
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                <button 
+                  type="button"
+                  onClick={() => { setShowEditCreditNoteModal(false); setEditingCreditNote(null); }}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                >
+                  إلغاء وعودة
+                </button>
+                <button 
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer"
+                >
+                  حفظ التعديلات
                 </button>
               </div>
 
