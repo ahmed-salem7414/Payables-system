@@ -9,7 +9,7 @@ import {
   ShieldAlert, Plus, Trash2, Download, CheckCircle2, XCircle, AlertTriangle, 
   RefreshCw, TrendingUp, Building, Check, Key, Upload, Activity, 
   UserCheck, Send, Printer, Shield, ChevronLeft, HelpCircle, Save, Edit, Search, Wallet, Warehouse,
-  FileSpreadsheet, Paperclip
+  FileSpreadsheet, Paperclip, Image
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -116,6 +116,7 @@ export default function MawridDashboard() {
   const [invoiceAttachments, setInvoiceAttachments] = useState<Array<{ name: string; type: string; dataUrl: string }>>([]);
   const [cnAttachment, setCnAttachment] = useState<{ name: string; type: string; dataUrl: string } | null>(null);
   const [previewAttachment, setPreviewAttachment] = useState<{ name: string; type: string; dataUrl: string } | null>(null);
+  const [previewAttachmentList, setPreviewAttachmentList] = useState<Array<{ name: string; type: string; dataUrl: string }>>([]);
 
   // New Invoice itemized discount state
   const [invoiceBaseAmount, setInvoiceBaseAmount] = useState<number>(0);
@@ -2383,28 +2384,31 @@ export default function MawridDashboard() {
 
                               <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
                                 {inv.attachments && inv.attachments.length > 0 ? (
-                                  inv.attachments.map((att, attIdx) => (
-                                    <button
-                                      key={attIdx}
-                                      type="button"
-                                      onClick={() => setPreviewAttachment(att)}
-                                      className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 hover:text-sky-305 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors max-w-[150px] truncate"
-                                      title={`عرض وتنزيل المرفق ${attIdx + 1}: ${att.name}`}
-                                    >
-                                      <Paperclip className="w-3 h-3 shrink-0" />
-                                      <span className="truncate">{att.name}</span>
-                                    </button>
-                                  ))
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setPreviewAttachment(inv.attachments[0]);
+                                      setPreviewAttachmentList(inv.attachments);
+                                    }}
+                                    className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 hover:text-sky-300 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors"
+                                    title={`عرض وتنزيل المرفقات (${inv.attachments.length})`}
+                                  >
+                                    <Paperclip className="w-3.5 h-3.5 shrink-0" />
+                                    <span>عرض المرفقات ({inv.attachments.length})</span>
+                                  </button>
                                 ) : (
                                   inv.attachment && (
                                     <button
                                       type="button"
-                                      onClick={() => setPreviewAttachment(inv.attachment!)}
+                                      onClick={() => {
+                                         setPreviewAttachment(inv.attachment!);
+                                         setPreviewAttachmentList([inv.attachment!]);
+                                       }}
                                       className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 hover:text-sky-300 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
-                                      title="عرض وتنزيل المرفق"
+                                      title="عرض المرفق"
                                     >
                                       <Paperclip className="w-3.5 h-3.5" />
-                                      <span>المرفق الرئيسي</span>
+                                      <span>عرض المرفق</span>
                                     </button>
                                   )
                                 )}
@@ -2517,7 +2521,10 @@ export default function MawridDashboard() {
                                 {cn.attachment && (
                                   <button
                                     type="button"
-                                    onClick={() => setPreviewAttachment(cn.attachment!)}
+                                    onClick={() => {
+                                       setPreviewAttachment(cn.attachment!);
+                                       setPreviewAttachmentList([cn.attachment!]);
+                                     }}
                                     className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 hover:text-sky-300 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
                                     title="عرض وتنزيل المرفق"
                                   >
@@ -4950,66 +4957,137 @@ export default function MawridDashboard() {
 
       {/* MODAL: PREVIEW ATTACHMENT */}
       {previewAttachment && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans dir-rtl">
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+            className="bg-white rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 flex flex-col space-y-4 text-slate-800"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-950 flex items-center gap-2">
                 <Paperclip className="w-5 h-5 text-sky-600" />
-                <span>عرض مستند المرفق: {previewAttachment.name}</span>
+                <span>مستندات ومرفقات المعاملة</span>
               </h3>
               <button 
                 type="button" 
-                onClick={() => setPreviewAttachment(null)} 
+                onClick={() => {
+                  setPreviewAttachment(null);
+                  setPreviewAttachmentList([]);
+                }} 
                 className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors cursor-pointer"
               >
                 <XCircle className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[300px]">
-              {previewAttachment.type.startsWith("image/") ? (
-                <img 
-                  src={previewAttachment.dataUrl} 
-                  alt={previewAttachment.name} 
-                  referrerPolicy="no-referrer"
-                  className="max-h-[60vh] max-w-full rounded-lg object-contain shadow-sm border border-slate-200"
-                />
-              ) : (
-                <div className="text-center space-y-3 py-8">
-                  <div className="mx-auto w-16 h-16 bg-sky-50 text-sky-600 rounded-full flex items-center justify-center border border-sky-100 shadow-xs">
-                    <FileText className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm">{previewAttachment.name}</h4>
-                    <p className="text-xs text-slate-450 mt-1">امتداد المرفق: {previewAttachment.type || "مستند خارجي"}</p>
-                  </div>
-                  <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-                    هذا الملف هو مستند أو تقرير رسمي لا يمكن للمتصفح عرضه مباشرة كصورة. يمكنك تحميله لفتحه على جهازك.
-                  </p>
+            {/* Layout layout grid: List of all files on the right, active preview on the left */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-5 overflow-hidden">
+              
+              {/* Right list pane (RTL right): Lists all files with option to download next to each */}
+              <div className="md:col-span-4 flex flex-col space-y-3 bg-slate-50/50 p-3 rounded-2xl border border-slate-200 max-h-[400px]">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <span className="text-xs font-black text-slate-705 text-slate-700">الملفات المتاحة ({(previewAttachmentList || []).length > 0 ? previewAttachmentList.length : 1})</span>
                 </div>
-              )}
+                
+                <div className="space-y-2 overflow-y-auto flex-1 pr-0.5 custom-scrollbar">
+                  {((previewAttachmentList && previewAttachmentList.length > 0) ? previewAttachmentList : [previewAttachment]).map((att, idx) => {
+                    const isActive = previewAttachment && previewAttachment.name === att.name && previewAttachment.dataUrl === att.dataUrl;
+                    const isImage = att.type ? att.type.startsWith("image/") : false;
+                    return (
+                      <div 
+                        key={idx}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border text-right transition-all duration-200 ${
+                          isActive 
+                            ? "bg-sky-50 border-sky-200 text-sky-900 shadow-xs" 
+                            : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setPreviewAttachment(att)}
+                          className="flex items-center gap-2 flex-1 min-w-0 text-right font-sans cursor-pointer"
+                        >
+                          <div className={`p-1.5 rounded-lg shrink-0 ${isActive ? "bg-sky-100 text-sky-600" : "bg-slate-100 text-slate-400"}`}>
+                            {isImage ? <Image className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[11px] font-bold truncate text-slate-800" title={att.name}>
+                              {att.name}
+                            </p>
+                            <p className="text-[9px] text-slate-400">
+                              {isImage ? "صورة" : "مستند"}
+                            </p>
+                          </div>
+                        </button>
+                        
+                        <a
+                          href={att.dataUrl}
+                          download={att.name}
+                          title={`تحميل الملف: ${att.name}`}
+                          className="p-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-600 hover:text-sky-700 transition-all shadow-xs shrink-0 cursor-pointer mr-2 border border-sky-100"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Left view pane (RTL left): displays active picture / file details */}
+              <div className="md:col-span-8 flex flex-col space-y-3 min-h-[350px]">
+                <div className="bg-slate-50 border border-slate-205 border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center flex-1 min-h-[300px] overflow-hidden">
+                  {previewAttachment.type && previewAttachment.type.startsWith("image/") ? (
+                    <div className="w-full flex justify-center items-center overflow-auto max-h-[360px]">
+                      <img 
+                        src={previewAttachment.dataUrl} 
+                        alt={previewAttachment.name} 
+                        referrerPolicy="no-referrer"
+                        className="max-h-[340px] max-w-full rounded-lg object-contain shadow-sm border border-slate-200"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-3 py-8">
+                      <div className="mx-auto w-16 h-16 bg-sky-50 text-sky-600 rounded-full flex items-center justify-center border border-sky-100 shadow-xs">
+                        <FileText className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-800 text-sm">{previewAttachment.name}</h4>
+                        <p className="text-xs text-slate-450 mt-1">امتداد المرفق: {previewAttachment.type || "مستند خارجي"}</p>
+                      </div>
+                      <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                        هذا الملف هو مستند أو تقرير رسمي لا يمكن للمتصفح عرضه مباشرة كصورة. يمكنك تحميله لفتحه على جهازك.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-              <button 
-                type="button"
-                onClick={() => setPreviewAttachment(null)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer text-xs"
-              >
-                إغلاق
-              </button>
-              <a 
-                href={previewAttachment.dataUrl}
-                download={previewAttachment.name}
-                className="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5 text-xs text-center"
-              >
-                <Download className="w-4 h-4" />
-                <span>تحميل وتنزيل المستند</span>
-              </a>
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+              <span className="text-[10px] text-slate-450">يمكنك التنقل بين الملفات المرفقة من خلال لوحة الاختيارات الجانبية والتحميل مباشرة لملف أو لكل المرفقات.</span>
+              <div className="flex items-center gap-2">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setPreviewAttachment(null);
+                    setPreviewAttachmentList([]);
+                  }}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-lg select-none cursor-pointer text-xs transition"
+                >
+                  إغلاق
+                </button>
+                <a 
+                  href={previewAttachment.dataUrl}
+                  download={previewAttachment.name}
+                  className="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold px-5 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 text-xs text-center transition"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>تحميل الملف النشط</span>
+                </a>
+              </div>
             </div>
           </motion.div>
         </div>
