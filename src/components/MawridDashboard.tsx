@@ -302,6 +302,7 @@ export default function MawridDashboard() {
   const [newInvoice, setNewInvoice] = useState({
     supplierId: "",
     invoiceNumber: "",
+    issueDate: new Date().toISOString().split("T")[0],
     dueDate: "",
     notes: "",
     items: [{ name: "بند شحنة", quantity: 1, price: 0 }],
@@ -1299,7 +1300,7 @@ export default function MawridDashboard() {
       id: "inv-" + Date.now(),
       invoiceNumber: newInvoice.invoiceNumber,
       supplierId: newInvoice.supplierId,
-      issueDate: new Date().toISOString().split("T")[0],
+      issueDate: newInvoice.issueDate || new Date().toISOString().split("T")[0],
       dueDate:
         newInvoice.dueDate ||
         new Date(Date.now() + 15 * 24 * 3600 * 1000)
@@ -1331,6 +1332,7 @@ export default function MawridDashboard() {
     setNewInvoice({
       supplierId: "",
       invoiceNumber: "",
+      issueDate: new Date().toISOString().split("T")[0],
       dueDate: "",
       notes: "",
       items: [{ name: "بند شحنة", quantity: 1, price: 0 }],
@@ -5576,6 +5578,24 @@ export default function MawridDashboard() {
 
                   <div>
                     <label className="text-slate-500 block mb-1 font-bold">
+                      تاريخ إضافة الفاتورة *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={newInvoice.issueDate}
+                      onChange={(e) =>
+                        setNewInvoice({
+                          ...newInvoice,
+                          issueDate: e.target.value,
+                        })
+                      }
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-black font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-500 block mb-1 font-bold">
                       تاريخ الاستحقاق المتوقع *
                     </label>
                     <input
@@ -6118,7 +6138,24 @@ export default function MawridDashboard() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-slate-505 block mb-1 font-bold">
+                        تاريخ إضافة الفاتورة *
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={editingInvoice.issueDate || ""}
+                        onChange={(e) =>
+                          setEditingInvoice({
+                            ...editingInvoice,
+                            issueDate: e.target.value,
+                          })
+                        }
+                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-855 font-semibold"
+                      />
+                    </div>
                     <div>
                       <label className="text-slate-505 block mb-1 font-bold">
                         تاريخ الاستحقاق المتوقع *
@@ -6133,7 +6170,7 @@ export default function MawridDashboard() {
                             dueDate: e.target.value,
                           })
                         }
-                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-855"
+                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-855 font-semibold"
                       />
                     </div>
                     <div>
