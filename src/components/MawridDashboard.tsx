@@ -76,6 +76,7 @@ import {
   LOCAL_BANKS_SELECTION,
 } from "../data";
 import { MersalLogo } from "./MersalLogo";
+import { testConnection, loadFromUserFirestore, saveToUserFirestore } from "../firebase";
 
 const fAmt = (val: number | undefined | null): string => {
   if (val === undefined || val === null) return "0.00";
@@ -468,68 +469,123 @@ export default function MawridDashboard() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Flag to know if server configuration has finished loading, preventing early overwrite of DB with empty state
+   // Flag to know if server configuration has finished loading, preventing early overwrite of DB with empty state
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [firebaseStatus, setFirebaseStatus] = useState<"connecting" | "success" | "fallback" | "error">("connecting");
 
-  // Load initial store from server on mount
+  // Load initial store from custom project "payable-system" via client-side Firebase (with local filesystem fallback) on mount
   useEffect(() => {
-    const fetchFromServer = async () => {
+    const initializeDataSystem = async () => {
+      let isLoadedFromFirebase = false;
       try {
-        const res = await fetch("/api/get-store");
-        if (res.ok) {
-          const data = await res.json();
-          if (data) {
-            if (Array.isArray(data.suppliers)) setSuppliers(data.suppliers);
-            if (Array.isArray(data.invoices)) setInvoices(data.invoices);
-            if (Array.isArray(data.payments)) setPayments(data.payments);
-            if (Array.isArray(data.backups)) setBackups(data.backups);
-            if (Array.isArray(data.supplierCategories))
-              setSupplierCategories(data.supplierCategories);
-            if (Array.isArray(data.warehouses)) setWarehouses(data.warehouses);
-            if (Array.isArray(data.linkedBanks))
-              setLinkedBanks(data.linkedBanks);
-            if (typeof data.safeBalance === "number")
-              setSafeBalance(data.safeBalance);
-            if (Array.isArray(data.creditNotes))
-              setCreditNotes(data.creditNotes);
+        setFirebaseStatus("connecting");
+        // Test direct client write probe to user's custom "payable-system"
+        const isClientFirebaseHealthy = await testConnection();
+        
+        if (isClientFirebaseHealthy) {
+          console.log("🔥 Successfully connected to user's payable-system Firestore database directly on client pre-flight check.");
+          // Load complete store from client-side Firestore
+          const firestoreData = await loadFromUserFirestore();
+          
+          if (firestoreData && (
+            (Array.isArray(firestoreData.suppliers) && firestoreData.suppliers.length > 0) ||
+            (Array.isArray(firestoreData.invoices) && firestoreData.invoices.length > 0) ||
+            (Array.isArray(firestoreData.supplierCategories) && firestoreData.supplierCategories.length > 0)
+          )) {
+            console.log("🔥 Found direct Firestore data in payable-system. Charging active dashboard state.");
+            if (Array.isArray(firestoreData.suppliers)) setSuppliers(firestoreData.suppliers);
+            if (Array.isArray(firestoreData.invoices)) setInvoices(firestoreData.invoices);
+            if (Array.isArray(firestoreData.payments)) setPayments(firestoreData.payments);
+            if (Array.isArray(firestoreData.backups)) setBackups(firestoreData.backups);
+            if (Array.isArray(firestoreData.supplierCategories)) setSupplierCategories(firestoreData.supplierCategories);
+            if (Array.isArray(firestoreData.warehouses)) setWarehouses(firestoreData.warehouses);
+            if (Array.isArray(firestoreData.linkedBanks)) setLinkedBanks(firestoreData.linkedBanks);
+            if (typeof firestoreData.safeBalance === "number") setSafeBalance(firestoreData.safeBalance);
+            if (Array.isArray(firestoreData.creditNotes)) setCreditNotes(firestoreData.creditNotes);
+            
+            setFirebaseStatus("success");
+            isLoadedFromFirebase = true;
+          } else {
+            console.log("ℹ️ Direct custom Firestore project is currently empty. Reconciling with local server file cache fallback...");
           }
+        } else {
+          setFirebaseStatus("fallback");
         }
       } catch (err) {
-        console.error("Failed to load server data store:", err);
-      } finally {
+        console.warn("⚠️ Custom Firestore direct load failed or permission restricted, using server local backup fallback:", err);
+        setFirebaseStatus("error");
+      }
+
+      // Local Fallback: If not loaded from custom Firestore, load local backup cache from Cloud Run server disk
+      if (!isLoadedFromFirebase) {
+        try {
+          const res = await fetch("/api/get-store");
+          if (res.ok) {
+            const data = await res.json();
+            if (data) {
+              if (Array.isArray(data.suppliers)) setSuppliers(data.suppliers);
+              if (Array.isArray(data.invoices)) setInvoices(data.invoices);
+              if (Array.isArray(data.payments)) setPayments(data.payments);
+              if (Array.isArray(data.backups)) setBackups(data.backups);
+              if (Array.isArray(data.supplierCategories)) setSupplierCategories(data.supplierCategories);
+              if (Array.isArray(data.warehouses)) setWarehouses(data.warehouses);
+              if (Array.isArray(data.linkedBanks)) setLinkedBanks(data.linkedBanks);
+              if (typeof data.safeBalance === "number") setSafeBalance(data.safeBalance);
+              if (Array.isArray(data.creditNotes)) setCreditNotes(data.creditNotes);
+            }
+          }
+        } catch (serverErr) {
+          console.error("Failed to load local backup from server:", serverErr);
+        } finally {
+          setIsDataLoaded(true);
+        }
+      } else {
         setIsDataLoaded(true);
       }
     };
-    fetchFromServer();
+
+    initializeDataSystem();
   }, []);
 
-  // Synchronize entire system state to server filesystem storage whenever any interactive changes occur
+  // Synchronize entire system state to server filesystem storage and direct custom Firestore on state change
   useEffect(() => {
     if (!isDataLoaded) return;
 
-    const syncToBackend = async () => {
+    const syncAllStates = async () => {
+      const stateDump = {
+        suppliers,
+        invoices,
+        payments,
+        backups,
+        supplierCategories,
+        warehouses,
+        linkedBanks,
+        safeBalance,
+        creditNotes,
+      };
+
+      // 1. Sync to server-side filesystem store for local caching & offline backup
       try {
         await fetch("/api/save-store", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            suppliers,
-            invoices,
-            payments,
-            backups,
-            supplierCategories,
-            warehouses,
-            linkedBanks,
-            safeBalance,
-            creditNotes,
-          }),
+          body: JSON.stringify(stateDump),
         });
       } catch (err) {
         console.error("Failed to save state update to server:", err);
       }
+
+      // 2. Sync directly to user's custom Firestore instance on the client side
+      try {
+        await saveToUserFirestore(stateDump);
+        setFirebaseStatus("success");
+      } catch (err) {
+        console.warn("⚠️ Direct client-side Firestore synchronization failed:", err);
+        setFirebaseStatus("error");
+      }
     };
 
-    const timer = setTimeout(syncToBackend, 800);
+    const timer = setTimeout(syncAllStates, 800);
     return () => clearTimeout(timer);
   }, [
     isDataLoaded,
@@ -2561,6 +2617,25 @@ export default function MawridDashboard() {
           </div>
 
           <div className="flex items-center gap-4 self-end md:self-auto">
+            {/* Firebase Live Status Badge */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700/50 bg-slate-900/30">
+              <span className={`w-2 h-2 rounded-full ${
+                firebaseStatus === "success" 
+                  ? "bg-emerald-400 animate-pulse" 
+                  : firebaseStatus === "connecting"
+                    ? "bg-amber-400 animate-pulse"
+                    : firebaseStatus === "fallback"
+                      ? "bg-emerald-400"
+                      : "bg-rose-500 animate-bounce"
+              }`} />
+              <span className="text-xs text-slate-300 font-medium">
+                {firebaseStatus === "success" && "متصل بـ Firebase"}
+                {firebaseStatus === "connecting" && "جاري الاتصال بقاعدة البيانات..."}
+                {firebaseStatus === "fallback" && "قاعدة اتصال محلية نشطة"}
+                {firebaseStatus === "error" && "خطأ في اتصال الـ Firebase"}
+              </span>
+            </div>
+
             {/* System notifications feed triggers */}
             <div className="relative">
               <button

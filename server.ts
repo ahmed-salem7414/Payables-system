@@ -5,7 +5,7 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { initializeFirestore } from "firebase-admin/firestore";
 
 // Load environment variables
 dotenv.config();
@@ -28,7 +28,9 @@ try {
     const adminApp = initializeApp({
       projectId: firebaseConfig.projectId,
     });
-    fdb = getFirestore(adminApp, firebaseConfig.firestoreDatabaseId);
+    fdb = initializeFirestore(adminApp, {
+      databaseId: firebaseConfig.firestoreDatabaseId,
+    } as any);
     console.log("🔥 Firebase Admin SDK initialized successfully with Firestore database:", firebaseConfig.firestoreDatabaseId);
   } else {
     console.warn("⚠️ Warning: firebase-applet-config.json is missing. Running in local filesystem mode.");
@@ -157,6 +159,21 @@ async function initializeDataStore() {
   }
   try {
     console.log("Starting Firestore database reconciliation...");
+    
+    // Validate if the server-side has permission to write to this Firestore project instance
+    try {
+      await fdb.collection("system_connections").doc("probe").set({
+        lastCheck: new Date().toISOString(),
+        status: "active"
+      });
+      console.log("✅ Server-side write connection test to Firestore succeeded.");
+    } catch (permError: any) {
+      console.warn("⚠️ Server-side Firebase Admin SDK lacks write privileges on this project (requires Service Account JSON credentials). Switching backend to Local Filesystem mode.");
+      fdb = null;
+      console.log("ℹ️ Server-side fallback activated successfully. Local active caching will handle backup and load/save safely.");
+      return;
+    }
+
     const storeFromDb = await loadFromFirestore();
     
     const hasData = storeFromDb && (
