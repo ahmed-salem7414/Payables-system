@@ -4296,6 +4296,78 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
+              {/* Interactive Visual Analytics Charts (no-print) */}
+              <div className="no-print grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Chart 1: Purchases vs Payments Comparison */}
+                <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-lg flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-sm font-bold text-white mb-1">
+                      📊 أداء المشتريات الشهرية مقابل المبالغ المسددة
+                    </h4>
+                    <p className="text-[11px] text-slate-400 mb-4 font-sans leading-relaxed">
+                      مقارنة بصرية واضحة بين إجمالي قيمة المشتريات المضافة ومبالغ السداد والتسوية الفعلية لكل شهر مالي.
+                    </p>
+                  </div>
+                  <div className="h-64 w-full text-xs font-sans">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={getMonthlyFinancialsData()}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
+                        <XAxis dataKey="name" stroke="#94a3b8" />
+                        <YAxis stroke="#94a3b8" tickFormatter={(v) => `${v / 1000}k`} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
+                          formatter={(value) => [`${fAmt(Number(value))} ج.م`]}
+                        />
+                        <Legend />
+                        <Bar name="إجمالي المشتريات" dataKey="إجمالي المشتريات" fill="#0284c7" radius={[4, 4, 0, 0]} />
+                        <Bar name="إجمالي المسدد" dataKey="إجمالي المسدد" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Chart 2: Category Distribution Pie Chart */}
+                <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-lg flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-sm font-bold text-white mb-1">
+                      🍕 توزيع قيمة المشتريات حسب تصنيف الموردين
+                    </h4>
+                    <p className="text-[11px] text-slate-400 mb-4 font-sans leading-relaxed">
+                      رؤية بصرية لتوزيع السيولة والموازين المالية على تخصصات الموردين المعتمدين في النظام.
+                    </p>
+                  </div>
+                  <div className="h-64 w-full text-xs font-sans flex items-center justify-center">
+                    {getPortfolioDistributionData().length === 0 ? (
+                      <span className="text-slate-500 italic">لا توجد بيانات كافية للرسم البياني</span>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={getPortfolioDistributionData()}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={50}
+                            outerRadius={80}
+                            paddingAngle={4}
+                            dataKey="value"
+                            nameKey="name"
+                          >
+                            {getPortfolioDistributionData().map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.fill} />
+                            ))}
+                          </Pie>
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
+                            formatter={(value) => [`${fAmt(Number(value))} ج.م`]}
+                          />
+                          <Legend wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* PRINT-ONLY OFFICIAL DIRECT Arabic REPORT (Will print layout exceptionally) */}
               <div className="bg-white rounded-3xl border border-slate-300 p-8 shadow-sm space-y-6 printable-report-sheet max-w-4xl mx-auto text-slate-900">
                 {/* Printed Header Banner */}
@@ -4727,17 +4799,17 @@ export default function MawridDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6"
+              className="bg-[#1e293b] p-6 rounded-2xl border border-slate-700 shadow-lg space-y-6 text-[#f1f5f9]"
             >
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-700 pb-5">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <Database className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Database className="w-5 h-5 text-indigo-400" />
                     منظومة النسخ الاحتياطي وحماية البيانات المتكاملة
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     حماية تامة من فقدان الحسابات بقاعدة بيانات دورية مشفرة،
-                    والقدرة الكاملة على تفريغ وتحميل السجلات.
+                    والقدرة الكاملة على تفريغ وتحميل السجلات المباشرة.
                   </p>
                 </div>
 
@@ -4753,14 +4825,13 @@ export default function MawridDashboard() {
               </div>
 
               {/* Database State Controllers & JSON Persistence File Actions */}
-              <div className="bg-[#f8fafc] border border-slate-200 p-5 rounded-2xl space-y-4 shadow-sm">
+              <div className="bg-[#0f172a]/60 border border-slate-700 p-5 rounded-2xl space-y-4 shadow-sm">
                 <div>
-                  <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5 uppercase tracking-wider">
-                    <Shield className="w-4 h-4 text-emerald-600" />
-                    التحكم المتقدم بالذاكرة الدائمة والملفات الشخصية (JSON Hard
-                    Drive Backup)
+                  <h4 className="font-bold text-emerald-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                    <Shield className="w-4 h-4 text-emerald-500" />
+                    التحكم المتقدم بالذاكرة الدائمة والملفات الشخصية (JSON Hard Drive Backup)
                   </h4>
-                  <p className="text-[11px] text-slate-500 mt-1">
+                  <p className="text-[11px] text-slate-400 mt-1">
                     احمِ أعمالك من إمكانية مسح ذاكرة المتصفح المؤقتة
                     (LocalStorage) أو فقدان البيانات عند التحديث. قم بتنزيل ملف
                     حساباتك كلياً على حاسوبك الشخصي واقرأه وقتما تشاء بشكل آمن
@@ -4799,33 +4870,33 @@ export default function MawridDashboard() {
                   {/* Clean system data */}
                   <button
                     onClick={clearAllData}
-                    className="flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer transition-all text-center"
+                    className="flex items-center justify-center gap-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer transition-all text-center"
                     title="تهيئة النظام للعمل من الصفر والبدء بحزمة فارغة"
                   >
-                    <Trash2 className="w-4 h-4 text-rose-600" />
+                    <Trash2 className="w-4 h-4 text-rose-400" />
                     تصفير الحسابات (شغل شخصي فارغ)
                   </button>
 
                   {/* Load demo default database */}
                   <button
                     onClick={loadDemoData}
-                    className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-250 text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer transition-all text-center"
+                    className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-755 text-slate-200 border border-slate-700 text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer transition-all text-center"
                     title="إعادة جلب وضخ بيانات الموردين التجريبية الافتراضية"
                   >
-                    <RefreshCw className="w-4 h-4 text-slate-600" />
+                    <RefreshCw className="w-4 h-4 text-slate-400" />
                     استرجع الداتا الافتراضية
                   </button>
                 </div>
               </div>
 
               {/* Automatic Backup state indicator */}
-              <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/60 flex items-center gap-3 text-xs text-slate-600">
-                <Shield className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div className="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10 flex items-center gap-3 text-xs text-slate-300">
+                <Shield className="w-5 h-5 text-emerald-400 shrink-0" />
                 <div>
-                  <span className="font-bold text-slate-900 block">
+                  <span className="font-bold text-white block">
                     حالة الحفظ الذاتي: نشط وتلقائي (Auto-save Enabled)
                   </span>
-                  <span className="text-[11px] text-slate-500">
+                  <span className="text-[11px] text-slate-400">
                     يقوم النظام تلقائياً بتحديث وحفظ أي تعديلات تجريها فورياً
                     بذاكرة المتصفح المحلية لتكون جاهزة عند إعادة التحميل.
                   </span>
@@ -4839,7 +4910,7 @@ export default function MawridDashboard() {
                 </span>
 
                 {backups.length === 0 ? (
-                  <div className="text-center py-6 text-slate-400 text-xs italic bg-slate-50 border border-dashed border-slate-200 rounded-xl">
+                  <div className="text-center py-6 text-slate-400 text-xs italic bg-[#0f172a] border border-dashed border-slate-700 rounded-xl">
                     لا يوجد نسخ احتياطية مسجلة في التايم لاين الحالي. قم بإنشاء
                     واحدة الآن كحماية دورية فائقة السرعة.
                   </div>
@@ -4847,21 +4918,21 @@ export default function MawridDashboard() {
                   backups.map((bc, idx) => (
                     <div
                       key={idx}
-                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white border border-slate-150 rounded-xl hover:border-slate-300 transition-colors justify-between gap-4"
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-[#0f172a]/40 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors justify-between gap-4"
                     >
                       <div className="flex items-start gap-2.5">
-                        <div className="p-2 rounded-lg bg-slate-100 text-slate-650 mt-0.5 shrink-0">
+                        <div className="p-2 rounded-lg bg-slate-850 text-indigo-400 mt-0.5 shrink-0">
                           <Database className="w-4.5 h-4.5" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <strong className="text-sm text-slate-900 font-bold">
+                            <strong className="text-sm text-white font-bold">
                               {bc.type === "auto"
                                 ? "نسخة احتياطية تلقائية"
                                 : "نسخة احتياطية يدوية"}
                             </strong>
                             <span
-                              className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${bc.type === "auto" ? "bg-indigo-50 text-indigo-700" : "bg-sky-50 text-sky-700"}`}
+                              className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${bc.type === "auto" ? "bg-indigo-500/20 text-indigo-300" : "bg-sky-500/20 text-sky-300"}`}
                             >
                               {bc.type === "auto" ? "تلقائي" : "يدوي مُصدَّق"}
                             </span>
@@ -4873,9 +4944,9 @@ export default function MawridDashboard() {
                       </div>
 
                       <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                        <div className="text-xs text-slate-500 text-right">
+                        <div className="text-xs text-slate-400 text-right">
                           <span>
-                            الحجم: <strong>{bc.size}</strong>
+                            الحجم: <strong className="text-slate-200">{bc.size}</strong>
                           </span>
                           <span className="block text-[11px] text-slate-400 font-bold mt-0.5">
                             {bc.recordsCount.suppliers} موردين |{" "}
@@ -4885,13 +4956,13 @@ export default function MawridDashboard() {
                         <div className="flex items-center gap-1.5 flex-row-reverse">
                           <button
                             onClick={() => restoreBackupRecord(bc)}
-                            className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[11px] px-3.5 py-1.5 rounded-xl shrink-0 cursor-pointer transition-colors"
+                            className="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-750 text-white font-bold text-[11px] px-3.5 py-1.5 rounded-xl shrink-0 cursor-pointer transition-colors"
                           >
                             استرجاع النسخة
                           </button>
                           <button
                             onClick={() => downloadBackupAsFile(bc)}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs p-2 rounded-xl shrink-0 cursor-pointer transition-colors"
+                            className="bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold text-xs p-2 rounded-xl shrink-0 cursor-pointer transition-colors border border-slate-700"
                             title="تحميل كملف JSON مستقل على الهارد ديسك"
                           >
                             <Download className="w-3.5 h-3.5" />
@@ -4910,16 +4981,16 @@ export default function MawridDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-6 animate-fade-in"
+              className="space-y-6 animate-fade-in text-[#f1f5f9]"
             >
               {/* Header Box */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="bg-[#1e293b] p-6 rounded-2xl border border-slate-700 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <Warehouse className="w-5 h-5 text-emerald-600" />
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Warehouse className="w-5 h-5 text-emerald-400" />
                     منظومة إدارة مستودعات ومخازن الشحنات
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     عرض جميع المخازن المعتمَدة لاستقبال الفواتير وإدارتها بإضافة
                     أو حذف فروع ومستودعات التوجيه
                   </p>
@@ -4931,7 +5002,7 @@ export default function MawridDashboard() {
                     type="text"
                     id="new-warehouse-input"
                     placeholder="اسم المخزن الجديد (مثال: مخزن طنطا الفرعي)"
-                    className="border border-slate-200 rounded-xl px-4 py-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none text-slate-800 font-bold bg-slate-50 min-w-[240px]"
+                    className="border border-slate-700 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none text-white font-bold bg-[#0f172a] min-w-[240px]"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         const val = (
@@ -5012,19 +5083,19 @@ export default function MawridDashboard() {
                   return (
                     <div
                       key={wh}
-                      className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-350 transition-all duration-200 group relative overflow-hidden"
+                      className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-md flex flex-col justify-between hover:border-emerald-500/40 transition-all duration-200 group relative overflow-hidden text-white"
                     >
                       {/* Ambient background decoration */}
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-6 -mt-6 -z-0 opacity-45 group-hover:bg-slate-100 transition-colors pointer-events-none"></div>
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-slate-800 rounded-full -mr-6 -mt-6 -z-0 opacity-20 group-hover:bg-slate-700 transition-colors pointer-events-none"></div>
 
                       <div className="relative z-10">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-150 flex items-center justify-center text-slate-700">
-                              <Warehouse className="w-5 h-5 text-emerald-600" />
+                            <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-750 flex items-center justify-center text-slate-300">
+                              <Warehouse className="w-5 h-5 text-emerald-400" />
                             </div>
                             <div>
-                              <h4 className="font-bold text-slate-800 text-sm leading-snug">
+                              <h4 className="font-bold text-white text-sm leading-snug">
                                 {wh}
                               </h4>
                               <p className="text-[11px] text-slate-400 font-medium">
@@ -5033,19 +5104,19 @@ export default function MawridDashboard() {
                             </div>
                           </div>
 
-                          <div className="bg-slate-50 text-slate-500 text-xs px-2.5 py-1 rounded-full border border-slate-150 font-bold">
+                          <div className="bg-[#0f172a] text-slate-300 text-xs px-2.5 py-1 rounded-full border border-slate-800 font-bold">
                             {whInvoices.length}{" "}
                             {whInvoices.length === 1 ? "شحنة" : "شحنات مسجلة"}
                           </div>
                         </div>
 
                         {/* Financial Statistics details section */}
-                        <div className="mt-5 grid grid-cols-2 gap-3 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                        <div className="mt-5 grid grid-cols-2 gap-3 bg-[#0f172a]/30 p-3 rounded-xl border border-slate-805">
                           <div>
                             <span className="text-[10px] text-slate-400 font-bold block mb-0.5">
                               القيمة المالية الكلية
                             </span>
-                            <span className="text-xs font-black text-slate-800 font-mono">
+                            <span className="text-xs font-black text-emerald-400 font-mono">
                               {fAmt(totalShipmentsValue)} ج.م
                             </span>
                           </div>
@@ -5054,11 +5125,11 @@ export default function MawridDashboard() {
                               تحليل الشحنات
                             </span>
                             <div className="flex items-center gap-1.5 text-[10px] font-bold">
-                              <span className="text-emerald-605 text-emerald-600">
+                              <span className="text-emerald-400">
                                 ✓ {paidInvoicesCount} مسدد
                               </span>
-                              <span className="text-slate-300">|</span>
-                              <span className="text-amber-605 text-amber-600">
+                              <span className="text-slate-600">|</span>
+                              <span className="text-amber-400">
                                 🕞 {unpaidInvoicesCount} مستحق
                               </span>
                             </div>
@@ -5067,26 +5138,26 @@ export default function MawridDashboard() {
 
                         {/* Last Shipment tracker */}
                         {lastShipment ? (
-                          <div className="mt-4 text-[11px] text-slate-500 flex items-center gap-1.5 border-t border-slate-100 pt-3">
+                          <div className="mt-4 text-[11px] text-slate-400 flex items-center gap-1.5 border-t border-slate-800/80 pt-3">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                             <span>آخر شحنة واردة:</span>
-                            <span className="font-mono font-bold text-slate-800">
+                            <span className="font-mono font-bold text-slate-200">
                               #{lastShipment.invoiceNumber}
                             </span>
                             <span className="text-slate-400">بتاريخ</span>
-                            <span className="font-bold">
+                            <span className="font-bold text-slate-300">
                               {lastShipment.issueDate || "2026-06-01"}
                             </span>
                           </div>
                         ) : (
-                          <div className="mt-4 text-[11px] text-slate-400 italic border-t border-slate-100 pt-3">
+                          <div className="mt-4 text-[11px] text-slate-500 italic border-t border-slate-800/80 pt-3">
                             لا يوجد فواتير واردة مسجلة لهذا المخزن حتى الآن.
                           </div>
                         )}
                       </div>
 
                       {/* Action buttons section */}
-                      <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end relative z-10">
+                      <div className="mt-5 pt-3 border-t border-slate-800 flex items-center justify-end relative z-10">
                         <button
                           onClick={() => {
                             if (whInvoices.length > 0) {
@@ -5113,7 +5184,7 @@ export default function MawridDashboard() {
                               "info",
                             );
                           }}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1 cursor-pointer"
+                          className="text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 p-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1 cursor-pointer"
                           title="حذف المخزن من قائمة الخيارات"
                         >
                           <Trash2 className="w-4 h-4" />
