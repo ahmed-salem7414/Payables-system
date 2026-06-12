@@ -4740,19 +4740,14 @@ export default function MawridDashboard() {
                                       key={inv.id}
                                       className="border-b border-slate-200 hover:bg-slate-50/50"
                                     >
-                                      {idx === 0 ? (
-                                        <td
-                                          className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans"
-                                          rowSpan={supInvoices.length}
-                                        >
-                                          <div className="font-bold text-slate-950">
-                                            {sup.name}
-                                          </div>
-                                          <div className="text-[10px] text-slate-500 font-normal">
-                                            {sup.company}
-                                          </div>
-                                        </td>
-                                      ) : null}
+                                      <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
+                                        <div className="font-bold text-slate-950">
+                                          {sup.name}
+                                        </div>
+                                        <div className="text-[10px] text-slate-500 font-normal">
+                                          {sup.company}
+                                        </div>
+                                      </td>
                                       <td className="py-2.5 px-3 font-mono font-bold text-sky-800">
                                         {inv.invoiceNumber}
                                       </td>
