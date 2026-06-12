@@ -46,7 +46,7 @@ html, body {
 
 @media print {
   @page {
-    size: A4;
+    size: auto;
     margin: 1cm 1.2cm;
   }
   
@@ -60,7 +60,6 @@ html, body {
   html, body {
     background: #ffffff !important;
     color: #0f172a !important;
-    font-size: 10pt !important;
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -74,31 +73,25 @@ html, body {
   .print-only-tr {
     display: table-row !important;
   }
-  .printable-report-sheet {
-    max-width: 100% !important;
-    width: 100% !important;
-    background: #ffffff !important;
-    color: #0f172a !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 1.5rem !important; /* rounded-3xl */
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
-    padding: 2rem !important; /* p-8 */
-    margin: 0 0 1.5cm 0 !important;
-  }
-  .printable-report-page {
+  .printable-report-sheet, .printable-report-page {
     display: block !important;
     page-break-after: always !important;
     break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     background: #ffffff !important;
     color: #0f172a !important;
-    max-width: 100% !important;
-    width: 100% !important;
+    
     /* Retain 100% of the gorgeous display layout, including borders, gaps, margins, paddings, and shadow */
+    width: 896px !important; /* Matches exactly 100% of screen's max-w-4xl width to keep columns and text flow perfect */
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    
     border: 1px solid #cbd5e1 !important;
     border-radius: 1.5rem !important; /* rounded-3xl */
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
     padding: 2rem !important; /* p-8 */
-    margin: 0 0 1.5cm 0 !important;
+    margin: 0 auto 1.5cm auto !important;
   }
   .printable-report-page:last-child {
     page-break-after: avoid !important;
@@ -127,7 +120,7 @@ html, body {
     /* Do not force override font size, color and padding, allowing Tailwind's beautiful screen values to work 100% */
   }
   /* Retain original badge color themes with a subtle print border if needed */
-  .printable-report-sheet .rounded-full {
+  .printable-report-sheet .rounded-full, .printable-report-page .rounded-full {
     border: 1px solid currentColor !important;
   }
 }
