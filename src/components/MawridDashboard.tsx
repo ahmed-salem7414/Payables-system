@@ -76,7 +76,11 @@ import {
   LOCAL_BANKS_SELECTION,
 } from "../data";
 import { MersalLogo } from "./MersalLogo";
-import { testConnection, loadFromUserFirestore, saveToUserFirestore } from "../firebase";
+import {
+  testConnection,
+  loadFromUserFirestore,
+  saveToUserFirestore,
+} from "../firebase";
 
 const fAmt = (val: number | undefined | null): string => {
   if (val === undefined || val === null) return "0.00";
@@ -470,9 +474,11 @@ export default function MawridDashboard() {
     setTimeout(() => setToast(null), 4000);
   };
 
-   // Flag to know if server configuration has finished loading, preventing early overwrite of DB with empty state
+  // Flag to know if server configuration has finished loading, preventing early overwrite of DB with empty state
   const [isDataLoaded, setIsDataLoaded] = useState(false);
-  const [firebaseStatus, setFirebaseStatus] = useState<"connecting" | "success" | "fallback" | "error">("connecting");
+  const [firebaseStatus, setFirebaseStatus] = useState<
+    "connecting" | "success" | "fallback" | "error"
+  >("connecting");
 
   // Load initial store from custom project "payable-system" via client-side Firebase (with local filesystem fallback) on mount
   useEffect(() => {
@@ -482,38 +488,60 @@ export default function MawridDashboard() {
         setFirebaseStatus("connecting");
         // Test direct client write probe to user's custom "payable-system"
         const isClientFirebaseHealthy = await testConnection();
-        
+
         if (isClientFirebaseHealthy) {
-          console.log("🔥 Successfully connected to user's payable-system Firestore database directly on client pre-flight check.");
+          console.log(
+            "🔥 Successfully connected to user's payable-system Firestore database directly on client pre-flight check.",
+          );
           // Load complete store from client-side Firestore
           const firestoreData = await loadFromUserFirestore();
-          
-          if (firestoreData && (
-            (Array.isArray(firestoreData.suppliers) && firestoreData.suppliers.length > 0) ||
-            (Array.isArray(firestoreData.invoices) && firestoreData.invoices.length > 0) ||
-            (Array.isArray(firestoreData.supplierCategories) && firestoreData.supplierCategories.length > 0)
-          )) {
-            console.log("🔥 Found direct Firestore data in payable-system. Charging active dashboard state.");
-            if (Array.isArray(firestoreData.suppliers)) setSuppliers(firestoreData.suppliers);
-            if (Array.isArray(firestoreData.invoices)) setInvoices(firestoreData.invoices);
-            if (Array.isArray(firestoreData.payments)) setPayments(firestoreData.payments);
-            if (Array.isArray(firestoreData.backups)) setBackups(firestoreData.backups);
-            if (Array.isArray(firestoreData.supplierCategories)) setSupplierCategories(firestoreData.supplierCategories);
-            if (Array.isArray(firestoreData.warehouses)) setWarehouses(firestoreData.warehouses);
-            if (Array.isArray(firestoreData.linkedBanks)) setLinkedBanks(firestoreData.linkedBanks);
-            if (typeof firestoreData.safeBalance === "number") setSafeBalance(firestoreData.safeBalance);
-            if (Array.isArray(firestoreData.creditNotes)) setCreditNotes(firestoreData.creditNotes);
-            
+
+          if (
+            firestoreData &&
+            ((Array.isArray(firestoreData.suppliers) &&
+              firestoreData.suppliers.length > 0) ||
+              (Array.isArray(firestoreData.invoices) &&
+                firestoreData.invoices.length > 0) ||
+              (Array.isArray(firestoreData.supplierCategories) &&
+                firestoreData.supplierCategories.length > 0))
+          ) {
+            console.log(
+              "🔥 Found direct Firestore data in payable-system. Charging active dashboard state.",
+            );
+            if (Array.isArray(firestoreData.suppliers))
+              setSuppliers(firestoreData.suppliers);
+            if (Array.isArray(firestoreData.invoices))
+              setInvoices(firestoreData.invoices);
+            if (Array.isArray(firestoreData.payments))
+              setPayments(firestoreData.payments);
+            if (Array.isArray(firestoreData.backups))
+              setBackups(firestoreData.backups);
+            if (Array.isArray(firestoreData.supplierCategories))
+              setSupplierCategories(firestoreData.supplierCategories);
+            if (Array.isArray(firestoreData.warehouses))
+              setWarehouses(firestoreData.warehouses);
+            if (Array.isArray(firestoreData.linkedBanks))
+              setLinkedBanks(firestoreData.linkedBanks);
+            if (typeof firestoreData.safeBalance === "number")
+              setSafeBalance(firestoreData.safeBalance);
+            if (Array.isArray(firestoreData.creditNotes))
+              setCreditNotes(firestoreData.creditNotes);
+
             setFirebaseStatus("success");
             isLoadedFromFirebase = true;
           } else {
-            console.log("ℹ️ Direct custom Firestore project is currently empty. Reconciling with local server file cache fallback...");
+            console.log(
+              "ℹ️ Direct custom Firestore project is currently empty. Reconciling with local server file cache fallback...",
+            );
           }
         } else {
           setFirebaseStatus("fallback");
         }
       } catch (err) {
-        console.warn("⚠️ Custom Firestore direct load failed or permission restricted, using server local backup fallback:", err);
+        console.warn(
+          "⚠️ Custom Firestore direct load failed or permission restricted, using server local backup fallback:",
+          err,
+        );
         setFirebaseStatus("error");
       }
 
@@ -528,11 +556,16 @@ export default function MawridDashboard() {
               if (Array.isArray(data.invoices)) setInvoices(data.invoices);
               if (Array.isArray(data.payments)) setPayments(data.payments);
               if (Array.isArray(data.backups)) setBackups(data.backups);
-              if (Array.isArray(data.supplierCategories)) setSupplierCategories(data.supplierCategories);
-              if (Array.isArray(data.warehouses)) setWarehouses(data.warehouses);
-              if (Array.isArray(data.linkedBanks)) setLinkedBanks(data.linkedBanks);
-              if (typeof data.safeBalance === "number") setSafeBalance(data.safeBalance);
-              if (Array.isArray(data.creditNotes)) setCreditNotes(data.creditNotes);
+              if (Array.isArray(data.supplierCategories))
+                setSupplierCategories(data.supplierCategories);
+              if (Array.isArray(data.warehouses))
+                setWarehouses(data.warehouses);
+              if (Array.isArray(data.linkedBanks))
+                setLinkedBanks(data.linkedBanks);
+              if (typeof data.safeBalance === "number")
+                setSafeBalance(data.safeBalance);
+              if (Array.isArray(data.creditNotes))
+                setCreditNotes(data.creditNotes);
             }
           }
         } catch (serverErr) {
@@ -581,7 +614,10 @@ export default function MawridDashboard() {
         await saveToUserFirestore(stateDump);
         setFirebaseStatus("success");
       } catch (err) {
-        console.warn("⚠️ Direct client-side Firestore synchronization failed:", err);
+        console.warn(
+          "⚠️ Direct client-side Firestore synchronization failed:",
+          err,
+        );
         setFirebaseStatus("error");
       }
     };
@@ -2327,24 +2363,24 @@ export default function MawridDashboard() {
         margin: 0, // No extra margin because pages already have 15mm padding in CSS matching exactly
         filename: `تقرير_مؤسسة_مرسال_المصنف_${new Date().toISOString().split("T")[0]}.pdf`,
         image: {
-          type: 'jpeg',
-          quality: 1.0
+          type: "jpeg",
+          quality: 1.0,
         },
         html2canvas: {
           scale: 4, // High definition scaling as recommended for flawless lines and Arabic text readability
           letterRendering: true,
           useCORS: true,
           scrollX: 0,
-          scrollY: 0
+          scrollY: 0,
         },
         jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait'
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
         },
         pagebreak: {
-          mode: ['avoid-all', 'css', 'legacy']
-        }
+          mode: ["avoid-all", "css", "legacy"],
+        },
       };
 
       // Execute pdf rendering
@@ -2431,8 +2467,7 @@ export default function MawridDashboard() {
           0,
         );
         const totalNet = supInvoices.reduce(
-          (sum, inv) =>
-            sum + (inv.totalAmount - (inv.creditNoteAmount || 0)),
+          (sum, inv) => sum + (inv.totalAmount - (inv.creditNoteAmount || 0)),
           0,
         );
 
@@ -2490,7 +2525,7 @@ export default function MawridDashboard() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    
+
     const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
     link.setAttribute(
       "download",
@@ -2756,18 +2791,21 @@ export default function MawridDashboard() {
           <div className="flex items-center gap-4 self-end md:self-auto">
             {/* Firebase Live Status Badge */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700/50 bg-slate-900/30">
-              <span className={`w-2 h-2 rounded-full ${
-                firebaseStatus === "success" 
-                  ? "bg-emerald-400 animate-pulse" 
-                  : firebaseStatus === "connecting"
-                    ? "bg-amber-400 animate-pulse"
-                    : firebaseStatus === "fallback"
-                      ? "bg-emerald-400"
-                      : "bg-rose-500 animate-bounce"
-              }`} />
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  firebaseStatus === "success"
+                    ? "bg-emerald-400 animate-pulse"
+                    : firebaseStatus === "connecting"
+                      ? "bg-amber-400 animate-pulse"
+                      : firebaseStatus === "fallback"
+                        ? "bg-emerald-400"
+                        : "bg-rose-500 animate-bounce"
+                }`}
+              />
               <span className="text-xs text-slate-300 font-medium">
                 {firebaseStatus === "success" && "متصل بـ Firebase"}
-                {firebaseStatus === "connecting" && "جاري الاتصال بقاعدة البيانات..."}
+                {firebaseStatus === "connecting" &&
+                  "جاري الاتصال بقاعدة البيانات..."}
                 {firebaseStatus === "fallback" && "قاعدة اتصال محلية نشطة"}
                 {firebaseStatus === "error" && "خطأ في اتصال الـ Firebase"}
               </span>
@@ -4379,7 +4417,9 @@ export default function MawridDashboard() {
                     <select
                       value={reportDateType}
                       onChange={(e) => {
-                        setReportDateType(e.target.value as "issue_date" | "due_date");
+                        setReportDateType(
+                          e.target.value as "issue_date" | "due_date",
+                        );
                         setActiveReportPage(0);
                       }}
                       className="bg-[#0f172a] text-amber-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-amber-500 font-bold cursor-pointer font-sans w-full"
@@ -4429,7 +4469,9 @@ export default function MawridDashboard() {
                     <select
                       value={reportViewType}
                       onChange={(e) => {
-                        setReportViewType(e.target.value as "detailed" | "summary");
+                        setReportViewType(
+                          e.target.value as "detailed" | "summary",
+                        );
                         setActiveReportPage(0);
                       }}
                       className="bg-[#0f172a] text-cyan-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-cyan-500 font-bold cursor-pointer font-sans w-full"
@@ -4473,7 +4515,9 @@ export default function MawridDashboard() {
                   const targetSuppliers =
                     selectedReportSupplierId === "all"
                       ? suppliers
-                      : suppliers.filter((s) => s.id === selectedReportSupplierId);
+                      : suppliers.filter(
+                          (s) => s.id === selectedReportSupplierId,
+                        );
 
                   const items: Array<{
                     supplier: any;
@@ -4489,34 +4533,53 @@ export default function MawridDashboard() {
                     const supInvoices = invoices.filter((i) => {
                       const matchesSupplier = i.supplierId === sup.id;
                       const date =
-                        (reportDateType === "issue_date" ? i.issueDate : i.dueDate) ||
-                        "2026-06-01";
-                      const matchesRange = date >= reportStartDate && date <= reportEndDate;
+                        (reportDateType === "issue_date"
+                          ? i.issueDate
+                          : i.dueDate) || "2026-06-01";
+                      const matchesRange =
+                        date >= reportStartDate && date <= reportEndDate;
                       const matchesWarehouse =
                         reportWarehouseFilter === "all" ||
                         i.warehouse === reportWarehouseFilter;
-                      return matchesSupplier && matchesRange && matchesWarehouse;
+                      return (
+                        matchesSupplier && matchesRange && matchesWarehouse
+                      );
                     });
 
                     if (supInvoices.length === 0) return;
 
-                    const totalOriginal = supInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-                    const totalCN = supInvoices.reduce((sum, inv) => sum + (inv.creditNoteAmount || 0), 0);
-                    const totalNet = supInvoices.reduce((sum, inv) => sum + (inv.totalAmount - (inv.creditNoteAmount || 0)), 0);
+                    const totalOriginal = supInvoices.reduce(
+                      (sum, inv) => sum + inv.totalAmount,
+                      0,
+                    );
+                    const totalCN = supInvoices.reduce(
+                      (sum, inv) => sum + (inv.creditNoteAmount || 0),
+                      0,
+                    );
+                    const totalNet = supInvoices.reduce(
+                      (sum, inv) =>
+                        sum + (inv.totalAmount - (inv.creditNoteAmount || 0)),
+                      0,
+                    );
 
-                    const paidCount = supInvoices.filter((i) => getFullPaymentStatus(i).includes("تم السداد")).length;
+                    const paidCount = supInvoices.filter((i) =>
+                      getFullPaymentStatus(i).includes("تم السداد"),
+                    ).length;
 
                     let overallStatusText = "";
                     let badgeClass = "";
                     if (paidCount === supInvoices.length) {
                       overallStatusText = "مسددة بالكامل";
-                      badgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-200";
+                      badgeClass =
+                        "bg-emerald-100 text-emerald-800 border border-emerald-200";
                     } else if (paidCount > 0) {
                       overallStatusText = `مسدد جزئياً (${paidCount}/${supInvoices.length})`;
-                      badgeClass = "bg-amber-100 text-amber-800 border border-amber-200";
+                      badgeClass =
+                        "bg-amber-100 text-amber-800 border border-amber-200";
                     } else {
                       overallStatusText = "غير مسددة";
-                      badgeClass = "bg-rose-100 text-rose-800 border border-rose-250";
+                      badgeClass =
+                        "bg-rose-100 text-rose-800 border border-rose-250";
                     }
 
                     items.push({
@@ -4537,7 +4600,9 @@ export default function MawridDashboard() {
                   const targetSuppliers =
                     selectedReportSupplierId === "all"
                       ? suppliers
-                      : suppliers.filter((s) => s.id === selectedReportSupplierId);
+                      : suppliers.filter(
+                          (s) => s.id === selectedReportSupplierId,
+                        );
 
                   const items: Array<{
                     supplier: any;
@@ -4549,20 +4614,25 @@ export default function MawridDashboard() {
                     const supInvoices = invoices.filter((i) => {
                       const matchesSupplier = i.supplierId === sup.id;
                       const date =
-                        (reportDateType === "issue_date" ? i.issueDate : i.dueDate) ||
-                        "2026-06-01";
-                      const matchesRange = date >= reportStartDate && date <= reportEndDate;
+                        (reportDateType === "issue_date"
+                          ? i.issueDate
+                          : i.dueDate) || "2026-06-01";
+                      const matchesRange =
+                        date >= reportStartDate && date <= reportEndDate;
                       const matchesWarehouse =
                         reportWarehouseFilter === "all" ||
                         i.warehouse === reportWarehouseFilter;
-                      return matchesSupplier && matchesRange && matchesWarehouse;
+                      return (
+                        matchesSupplier && matchesRange && matchesWarehouse
+                      );
                     });
 
                     supInvoices.forEach((inv) => {
                       items.push({
                         supplier: sup,
                         invoice: inv,
-                        payableAmount: inv.totalAmount - (inv.creditNoteAmount || 0),
+                        payableAmount:
+                          inv.totalAmount - (inv.creditNoteAmount || 0),
                       });
                     });
                   });
@@ -4571,9 +4641,13 @@ export default function MawridDashboard() {
                 };
 
                 // Flat list of items to display
-                const rawReportItems: any[] = reportViewType === "summary" ? getReportSummaryItems() : getReportDetailedItems();
+                const rawReportItems: any[] =
+                  reportViewType === "summary"
+                    ? getReportSummaryItems()
+                    : getReportDetailedItems();
                 const reportPages = chunkArray(rawReportItems, 5);
-                const reportPagesToRender = reportPages.length > 0 ? reportPages : [[]];
+                const reportPagesToRender =
+                  reportPages.length > 0 ? reportPages : [[]];
 
                 return (
                   <div className="space-y-6">
@@ -4583,20 +4657,32 @@ export default function MawridDashboard() {
                         <button
                           type="button"
                           disabled={activeReportPage === 0}
-                          onClick={() => setActiveReportPage((prev) => Math.max(0, prev - 1))}
+                          onClick={() =>
+                            setActiveReportPage((prev) => Math.max(0, prev - 1))
+                          }
                           className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer select-none transition-colors"
                         >
                           <span>&larr;</span> الصفحة السابقة
                         </button>
 
                         <span className="text-xs font-semibold font-sans text-slate-300">
-                          معاينة الصفحة {activeReportPage + 1} من أصل {reportPagesToRender.length}
+                          معاينة الصفحة {activeReportPage + 1} من أصل{" "}
+                          {reportPagesToRender.length}
                         </span>
 
                         <button
                           type="button"
-                          disabled={activeReportPage === reportPagesToRender.length - 1}
-                          onClick={() => setActiveReportPage((prev) => Math.min(reportPagesToRender.length - 1, prev + 1))}
+                          disabled={
+                            activeReportPage === reportPagesToRender.length - 1
+                          }
+                          onClick={() =>
+                            setActiveReportPage((prev) =>
+                              Math.min(
+                                reportPagesToRender.length - 1,
+                                prev + 1,
+                              ),
+                            )
+                          }
                           className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer select-none transition-colors"
                         >
                           الصفحة التالية <span>&rarr;</span>
@@ -4614,240 +4700,203 @@ export default function MawridDashboard() {
                           <div
                             key={pageIdx}
                             className={`bg-white rounded-3xl border border-slate-300 p-8 shadow-sm space-y-6 printable-report-sheet max-w-4xl mx-auto text-slate-900 printable-report-page ${
-                              isPageActive ? "active-preview-page" : "hidden-on-screen"
+                              isPageActive
+                                ? "active-preview-page"
+                                : "hidden-on-screen"
                             }`}
                           >
-                          {/* Printed Header Banner */}
-                          <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
-                            <div>
-                              <h2 className="text-lg font-black text-slate-950 font-sans">
-                                مؤسسة مرسال - Mersal Foundation
-                              </h2>
-                              <p className="text-xs text-slate-500 font-medium font-sans">
-                                التقرير المالي المعزز لحسابات الموردين وفواتير الشراء
-                              </p>
-                              <p className="text-xs text-slate-500 font-mono mt-1">
-                                تاريخ استخراج التقرير: {new Date().toISOString().split("T")[0]}
-                              </p>
-                            </div>
-                            <div className="text-left flex flex-col items-end">
-                              <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-center">
-                                <MersalLogo
-                                  width={100}
-                                  height={100}
-                                  isDarkBackground={false}
-                                  className="h-12 w-auto"
-                                />
+                            {/* Printed Header Banner */}
+                            <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
+                              <div>
+                                <h2 className="text-lg font-black text-slate-950 font-sans">
+                                  مؤسسة مرسال - Mersal Foundation
+                                </h2>
+                                <p className="text-xs text-slate-500 font-medium font-sans">
+                                  التقرير المالي المعزز لحسابات الموردين وفواتير
+                                  الشراء
+                                </p>
+                                <p className="text-xs text-slate-500 font-mono mt-1">
+                                  تاريخ استخراج التقرير:{" "}
+                                  {new Date().toISOString().split("T")[0]}
+                                </p>
                               </div>
-                              <span className="text-xs font-bold text-slate-950 block mt-1 font-sans">
-                                مؤسسة مرسال - Mersal Foundation
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Report specs indicators (ONLY ON FIRST PAGE: pageIdx === 0) */}
-                          {pageIdx === 0 && (
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border border-slate-200 rounded-xl p-4 bg-slate-50">
-                              <div className="text-center font-bold">
-                                <span className="text-slate-500 text-xs font-medium block font-sans">
-                                  الفترة المحاسبية والمورد
+                              <div className="text-left flex flex-col items-end">
+                                <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-center">
+                                  <MersalLogo
+                                    width={100}
+                                    height={100}
+                                    isDarkBackground={false}
+                                    className="h-12 w-auto"
+                                  />
+                                </div>
+                                <span className="text-xs font-bold text-slate-950 block mt-1 font-sans">
+                                  مؤسسة مرسال - Mersal Foundation
                                 </span>
-                                <strong className="text-xs text-slate-800 font-bold block mt-1 leading-snug font-sans">
-                                  التقرير: من {reportStartDate} إلى {reportEndDate}
-                                  {selectedReportSupplierId !== "all"
-                                    ? ` | مورد: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`
-                                    : " | كشف مجمع للموردين"}
-                                  {reportWarehouseFilter !== "all"
-                                    ? ` | مخزن: ${reportWarehouseFilter}`
-                                    : " | كافة المخازن"}
-                                </strong>
                               </div>
-                              <div className="text-center border-y border-slate-200 sm:border-y-0 sm:border-x py-2.5 sm:py-0">
-                                <span className="text-slate-500 text-xs font-medium block font-sans">
-                                  إجمالي التعاملات الصافية بالفترة
-                                </span>
-                                <strong className="text-sm text-slate-950 font-black block mt-1 font-mono">
-                                  {fAmt(getSelectedReportFinancials().total)} ج.م
-                                </strong>
-                              </div>
-                              <div className="text-center">
-                                <span className="text-slate-500 text-xs font-medium block font-sans">
-                                  المديونية غير المسواة المتبقية
-                                </span>
-                                <strong className="text-sm text-red-650 font-black block mt-1 font-mono">
-                                  {fAmt(getSelectedReportFinancials().pending)} ج.م
-                                </strong>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Ledger Listing inside the PDF */}
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between border-b border-slate-150 pb-2 no-print">
-                              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-widest border-r-2 border-emerald-600 pr-2 font-sans">
-                                {selectedReportSupplierId === "all"
-                                  ? "تفاصيل أرصدة الموردين والفواتير النشطة"
-                                  : `كشف حساب المورد التفصيلي: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`}
-                              </h4>
-                              {selectedReportSupplierId !== "all" && (
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedReportSupplierId("all")}
-                                  className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors no-print font-sans"
-                                >
-                                  عرض كافة الموردين
-                                </button>
-                              )}
                             </div>
 
-                            <div className="overflow-x-auto w-full max-w-full no-scrollbar">
-                              <table className="w-full text-[11px] text-right border border-slate-200 min-w-[700px]">
-                                <thead>
-                                  {/* Repeatable print-only section title header */}
-                                  <tr className="print-only-tr bg-slate-100 border-b-2 border-slate-300">
-                                    <th
-                                      colSpan={reportViewType === "summary" ? 6 : 8}
-                                      className="py-3 px-3 text-right bg-slate-50 border border-slate-350"
-                                    >
-                                      <div className="flex items-center justify-between text-slate-950 font-bold">
-                                        <span className="text-xs border-r-2 border-emerald-600 pr-2.5 font-bold font-sans">
-                                          {selectedReportSupplierId === "all"
-                                            ? "تفاصيل أرصدة الموردين والفواتير النشطة"
-                                            : `كشف حساب المورد التفصيلي: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`}
-                                        </span>
-                                        <span className="text-[10px] text-slate-500 font-mono font-medium select-none">
-                                          مؤسسة مرسال - Mersal Foundation (تابع التقرير المالي المعتمد) - صفحة {pageIdx + 1}
-                                        </span>
-                                      </div>
-                                    </th>
-                                  </tr>
-                                  {reportViewType === "summary" ? (
-                                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold font-sans">
-                                      <th className="py-2.5 px-3 text-right">
-                                        المورد
-                                      </th>
-                                      <th className="py-2.5 px-3 text-center">
-                                        عدد الفواتير بالفترة
-                                      </th>
-                                      <th className="py-2.5 px-3 text-left">
-                                        إجمالي الفواتير الأصلية
-                                      </th>
-                                      <th className="py-2.5 px-3 text-left">
-                                        إجمالي الخصومات الدائنة
-                                      </th>
-                                      <th className="py-2.5 px-3 text-left font-bold">
-                                        إجمالي صافي المطلوب سداده
-                                      </th>
-                                      <th className="py-2.5 px-3 text-center">
-                                        حالة السداد الإجمالية
-                                      </th>
-                                    </tr>
-                                  ) : (
-                                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold font-sans">
-                                      <th className="py-2.5 px-3 text-right">
-                                        المورد
-                                      </th>
-                                      <th className="py-2.5 px-3 text-right">
-                                        رقم الفاتورة
-                                      </th>
-                                      <th className="py-2.5 px-3 text-right font-semibold">
-                                        تاريخ الإضافة
-                                      </th>
-                                      <th className="py-2.5 px-3 text-right font-semibold">
-                                        تاريخ الاستحقاق
-                                      </th>
-                                      <th className="py-2.5 px-3 text-left font-semibold">
-                                        قيمة الفاتورة الأصلية
-                                      </th>
-                                      <th className="py-2.5 px-3 text-left font-semibold">
-                                        خصم الإشعار الدائن
-                                      </th>
-                                      <th className="py-2.5 px-3 text-left font-bold">
-                                        صافي المطلوب سداده
-                                      </th>
-                                      <th className="py-2.5 px-3 text-center">
-                                        حالة السداد والتحصيل
-                                      </th>
-                                    </tr>
-                                  )}
-                                </thead>
-                                <tbody>
-                                  {!hasItems ? (
-                                    <tr>
-                                      <td
-                                        colSpan={reportViewType === "summary" ? 6 : 8}
-                                        className="py-12 text-center text-slate-400 italic font-sans"
+                            {/* Report specs indicators (ONLY ON FIRST PAGE: pageIdx === 0) */}
+                            {pageIdx === 0 && (
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border border-slate-200 rounded-xl p-4 bg-slate-50">
+                                <div className="text-center font-bold">
+                                  <span className="text-slate-500 text-xs font-medium block font-sans">
+                                    الفترة المحاسبية والمورد
+                                  </span>
+                                  <strong className="text-xs text-slate-800 font-bold block mt-1 leading-snug font-sans">
+                                    التقرير: من {reportStartDate} إلى{" "}
+                                    {reportEndDate}
+                                    {selectedReportSupplierId !== "all"
+                                      ? ` | مورد: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`
+                                      : " | كشف مجمع للموردين"}
+                                    {reportWarehouseFilter !== "all"
+                                      ? ` | مخزن: ${reportWarehouseFilter}`
+                                      : " | كافة المخازن"}
+                                  </strong>
+                                </div>
+                                <div className="text-center border-y border-slate-200 sm:border-y-0 sm:border-x py-2.5 sm:py-0">
+                                  <span className="text-slate-500 text-xs font-medium block font-sans">
+                                    إجمالي التعاملات الصافية بالفترة
+                                  </span>
+                                  <strong className="text-sm text-slate-950 font-black block mt-1 font-mono">
+                                    {fAmt(getSelectedReportFinancials().total)}{" "}
+                                    ج.م
+                                  </strong>
+                                </div>
+                                <div className="text-center">
+                                  <span className="text-slate-500 text-xs font-medium block font-sans">
+                                    المديونية غير المسواة المتبقية
+                                  </span>
+                                  <strong className="text-sm text-red-650 font-black block mt-1 font-mono">
+                                    {fAmt(
+                                      getSelectedReportFinancials().pending,
+                                    )}{" "}
+                                    ج.م
+                                  </strong>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Ledger Listing inside the PDF */}
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between border-b border-slate-150 pb-2 no-print">
+                                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-widest border-r-2 border-emerald-600 pr-2 font-sans">
+                                  {selectedReportSupplierId === "all"
+                                    ? "تفاصيل أرصدة الموردين والفواتير النشطة"
+                                    : `كشف حساب المورد التفصيلي: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`}
+                                </h4>
+                                {selectedReportSupplierId !== "all" && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSelectedReportSupplierId("all")
+                                    }
+                                    className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors no-print font-sans"
+                                  >
+                                    عرض كافة الموردين
+                                  </button>
+                                )}
+                              </div>
+
+                              <div className="overflow-x-auto w-full max-w-full no-scrollbar">
+                                <table className="w-full text-[11px] text-right border border-slate-200 min-w-[700px]">
+                                  <thead>
+                                    {/* Repeatable print-only section title header */}
+                                    <tr className="print-only-tr bg-slate-100 border-b-2 border-slate-300">
+                                      <th
+                                        colSpan={
+                                          reportViewType === "summary" ? 6 : 7
+                                        }
+                                        className="py-3 px-3 text-right bg-slate-50 border border-slate-350"
                                       >
-                                        لا توجد بيانات مسجلة للفترة المحددة أو المورد المختار.
-                                      </td>
-                                    </tr>
-                                  ) : reportViewType === "summary" ? (
-                                    (pageItems as any as Array<{
-                                      supplier: any;
-                                      supInvoices: Invoice[];
-                                      totalOriginal: number;
-                                      totalCN: number;
-                                      totalNet: number;
-                                      overallStatusText: string;
-                                      badgeClass: string;
-                                    }>).map((item) => (
-                                      <tr
-                                        key={item.supplier.id}
-                                        className="border-b border-slate-200 hover:bg-slate-50/50"
-                                      >
-                                        <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
-                                          <div className="font-bold text-slate-950 text-xs">
-                                            {item.supplier.name}
-                                          </div>
-                                        </td>
-                                        <td className="py-2.5 px-3 font-mono font-bold text-center text-slate-700">
-                                          {item.supInvoices.length} فواتير
-                                        </td>
-                                        <td className="py-2.5 px-3 font-mono text-left font-medium">
-                                          {fAmt(item.totalOriginal)} ج.م
-                                        </td>
-                                        <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-left">
-                                          {item.totalCN > 0
-                                            ? `-${fAmt(item.totalCN)} ج.م`
-                                            : "0.0 ج.م"}
-                                        </td>
-                                        <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">
-                                          {fAmt(item.totalNet)} ج.م
-                                        </td>
-                                        <td className="py-2.5 px-3 text-center">
-                                          <span
-                                            className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${item.badgeClass}`}
-                                          >
-                                            {item.overallStatusText}
+                                        <div className="flex items-center justify-between text-slate-950 font-bold">
+                                          <span className="text-xs border-r-2 border-emerald-600 pr-2.5 font-bold font-sans">
+                                            {selectedReportSupplierId === "all"
+                                              ? "تفاصيل أرصدة الموردين والفواتير النشطة"
+                                              : `كشف حساب المورد التفصيلي: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`}
                                           </span>
+                                          <span className="text-[10px] text-slate-500 font-mono font-medium select-none">
+                                            مؤسسة مرسال - Mersal Foundation
+                                            (تابع التقرير المالي المعتمد) - صفحة{" "}
+                                            {pageIdx + 1}
+                                          </span>
+                                        </div>
+                                      </th>
+                                    </tr>
+                                    {reportViewType === "summary" ? (
+                                      <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold font-sans">
+                                        <th className="py-2.5 px-3 text-right">
+                                          المورد
+                                        </th>
+                                        <th className="py-2.5 px-3 text-center">
+                                          عدد الفواتير بالفترة
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left">
+                                          إجمالي الفواتير الأصلية
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left">
+                                          إجمالي الخصومات الدائنة
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left font-bold">
+                                          إجمالي صافي المطلوب سداده
+                                        </th>
+                                        <th className="py-2.5 px-3 text-center">
+                                          حالة السداد الإجمالية
+                                        </th>
+                                      </tr>
+                                    ) : (
+                                      <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold font-sans">
+                                        <th className="py-2.5 px-3 text-right">
+                                          المورد
+                                        </th>
+                                        <th className="hidden">رقم الفاتورة</th>
+                                        <th className="py-2.5 px-3 text-right font-semibold">
+                                          تاريخ الإضافة
+                                        </th>
+                                        <th className="py-2.5 px-3 text-right font-semibold">
+                                          تاريخ الاستحقاق
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left font-semibold">
+                                          قيمة الفاتورة الأصلية
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left font-semibold">
+                                          خصم الإشعار الدائن
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left font-bold">
+                                          صافي المطلوب سداده
+                                        </th>
+                                        <th className="py-2.5 px-3 text-center">
+                                          حالة السداد والتحصيل
+                                        </th>
+                                      </tr>
+                                    )}
+                                  </thead>
+                                  <tbody>
+                                    {!hasItems ? (
+                                      <tr>
+                                        <td
+                                          colSpan={
+                                            reportViewType === "summary" ? 6 : 7
+                                          }
+                                          className="py-12 text-center text-slate-400 italic font-sans"
+                                        >
+                                          لا توجد بيانات مسجلة للفترة المحددة أو
+                                          المورد المختار.
                                         </td>
                                       </tr>
-                                    ))
-                                  ) : (
-                                    (pageItems as any as Array<{
-                                      supplier: any;
-                                      invoice: Invoice;
-                                      payableAmount: number;
-                                    }>).map((item) => {
-                                      const statusText = getFullPaymentStatus(item.invoice);
-                                      let badgeClass = "bg-slate-100 text-slate-800 border border-slate-200";
-                                      if (statusText === "تم السداد نقداً") {
-                                        badgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-200";
-                                      } else if (statusText === "تم السداد بتحويل بنكي") {
-                                        badgeClass = "bg-sky-100 text-sky-800 border border-sky-200";
-                                      } else if (statusText === "تم السداد بفوري" || statusText === "تم السداد بشيك") {
-                                        badgeClass = "bg-indigo-100 text-indigo-800 border border-indigo-200";
-                                      } else if (statusText === "تم السداد") {
-                                        badgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-250";
-                                      } else if (statusText === "لم يتم السداد (متجاوزة الاستحقاق)") {
-                                        badgeClass = "bg-rose-100 text-rose-800 border border-rose-200 font-bold";
-                                      } else if (statusText === "مستحقة للدفع") {
-                                        badgeClass = "bg-amber-100 text-amber-800 border border-amber-200";
-                                      }
-
-                                      return (
+                                    ) : reportViewType === "summary" ? (
+                                      (
+                                        pageItems as any as Array<{
+                                          supplier: any;
+                                          supInvoices: Invoice[];
+                                          totalOriginal: number;
+                                          totalCN: number;
+                                          totalNet: number;
+                                          overallStatusText: string;
+                                          badgeClass: string;
+                                        }>
+                                      ).map((item) => (
                                         <tr
-                                          key={item.invoice.id}
+                                          key={item.supplier.id}
                                           className="border-b border-slate-200 hover:bg-slate-50/50"
                                         >
                                           <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
@@ -4855,67 +4904,145 @@ export default function MawridDashboard() {
                                               {item.supplier.name}
                                             </div>
                                           </td>
-                                          <td className="py-2.5 px-3 font-mono font-bold text-sky-800">
-                                            {item.invoice.invoiceNumber}
-                                          </td>
-                                          <td className="py-2.5 px-3 font-mono text-slate-600">
-                                            {item.invoice.issueDate || "2026-06-01"}
-                                          </td>
-                                          <td className="py-2.5 px-3 font-mono text-slate-500">
-                                            {item.invoice.dueDate}
+                                          <td className="py-2.5 px-3 font-mono font-bold text-center text-slate-700">
+                                            {item.supInvoices.length} فواتير
                                           </td>
                                           <td className="py-2.5 px-3 font-mono text-left font-medium">
-                                            {fAmt(item.invoice.totalAmount)} ج.م
+                                            {fAmt(item.totalOriginal)} ج.م
                                           </td>
                                           <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-left">
-                                            {item.invoice.creditNoteAmount && item.invoice.creditNoteAmount > 0
-                                              ? `-${fAmt(item.invoice.creditNoteAmount)} ج.م`
+                                            {item.totalCN > 0
+                                              ? `-${fAmt(item.totalCN)} ج.م`
                                               : "0.0 ج.م"}
                                           </td>
                                           <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">
-                                            {fAmt(item.payableAmount)} ج.م
+                                            {fAmt(item.totalNet)} ج.م
                                           </td>
                                           <td className="py-2.5 px-3 text-center">
                                             <span
-                                              className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${badgeClass}`}
+                                              className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${item.badgeClass}`}
                                             >
-                                              {statusText}
+                                              {item.overallStatusText}
                                             </span>
                                           </td>
                                         </tr>
-                                      );
-                                    })
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
+                                      ))
+                                    ) : (
+                                      (
+                                        pageItems as any as Array<{
+                                          supplier: any;
+                                          invoice: Invoice;
+                                          payableAmount: number;
+                                        }>
+                                      ).map((item) => {
+                                        const statusText = getFullPaymentStatus(
+                                          item.invoice,
+                                        );
+                                        let badgeClass =
+                                          "bg-slate-100 text-slate-800 border border-slate-200";
+                                        if (statusText === "تم السداد نقداً") {
+                                          badgeClass =
+                                            "bg-emerald-100 text-emerald-800 border border-emerald-200";
+                                        } else if (
+                                          statusText === "تم السداد بتحويل بنكي"
+                                        ) {
+                                          badgeClass =
+                                            "bg-sky-100 text-sky-800 border border-sky-200";
+                                        } else if (
+                                          statusText === "تم السداد بفوري" ||
+                                          statusText === "تم السداد بشيك"
+                                        ) {
+                                          badgeClass =
+                                            "bg-indigo-100 text-indigo-800 border border-indigo-200";
+                                        } else if (statusText === "تم السداد") {
+                                          badgeClass =
+                                            "bg-emerald-100 text-emerald-800 border border-emerald-250";
+                                        } else if (
+                                          statusText ===
+                                          "لم يتم السداد (متجاوزة الاستحقاق)"
+                                        ) {
+                                          badgeClass =
+                                            "bg-rose-100 text-rose-800 border border-rose-200 font-bold";
+                                        } else if (
+                                          statusText === "مستحقة للدفع"
+                                        ) {
+                                          badgeClass =
+                                            "bg-amber-100 text-amber-800 border border-amber-200";
+                                        }
 
-                          {/* Legal terms stamp bottom screen */}
-                          <div className="flex items-end justify-between border-t border-slate-200 pt-6 mt-12 text-xs">
-                            <div>
-                              <p className="font-semibold text-slate-800 font-sans">
-                                توقيع الإدارة المالية والمحاسبة
-                              </p>
-                              <div className="h-10 w-32 border-b border-slate-300 border-dashed mt-2"></div>
+                                        return (
+                                          <tr
+                                            key={item.invoice.id}
+                                            className="border-b border-slate-200 hover:bg-slate-50/50"
+                                          >
+                                            <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
+                                              <div className="font-bold text-slate-950 text-xs">
+                                                {item.supplier.name}
+                                              </div>
+                                            </td>
+                                            <td className="hidden">null</td>
+                                            <td className="py-2.5 px-3 font-mono text-slate-600">
+                                              {item.invoice.issueDate ||
+                                                "2026-06-01"}
+                                            </td>
+                                            <td className="py-2.5 px-3 font-mono text-slate-500">
+                                              {item.invoice.dueDate}
+                                            </td>
+                                            <td className="py-2.5 px-3 font-mono text-left font-medium">
+                                              {fAmt(item.invoice.totalAmount)}{" "}
+                                              ج.م
+                                            </td>
+                                            <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-left">
+                                              {item.invoice.creditNoteAmount &&
+                                              item.invoice.creditNoteAmount > 0
+                                                ? `-${fAmt(item.invoice.creditNoteAmount)} ج.م`
+                                                : "0.0 ج.م"}
+                                            </td>
+                                            <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">
+                                              {fAmt(item.payableAmount)} ج.م
+                                            </td>
+                                            <td className="py-2.5 px-3 text-center">
+                                              <span
+                                                className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${badgeClass}`}
+                                              >
+                                                {statusText}
+                                              </span>
+                                            </td>
+                                          </tr>
+                                        );
+                                      })
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
                             </div>
-                            <div className="text-left font-mono text-[9px] text-slate-400 select-none">
-                              صفحة {pageIdx + 1} من {reportPagesToRender.length}
-                            </div>
-                            <div className="text-left">
-                              <p className="font-semibold text-slate-800 font-sans">
-                                خاتم وتوثيق المؤسسة
-                              </p>
-                              <div className="w-16 h-16 rounded-full border-2 border-emerald-600/30 flex items-center justify-center text-[10px] text-emerald-600 border-dashed mt-2 select-none mx-auto leading-tight font-sans">
-                                تم تصديره
-                                <br />
-                                إلكترونياً
+
+                            {/* Legal terms stamp bottom screen */}
+                            <div className="flex items-end justify-between border-t border-slate-200 pt-6 mt-12 text-xs">
+                              <div>
+                                <p className="font-semibold text-slate-800 font-sans">
+                                  توقيع الإدارة المالية والمحاسبة
+                                </p>
+                                <div className="h-10 w-32 border-b border-slate-300 border-dashed mt-2"></div>
+                              </div>
+                              <div className="text-left font-mono text-[9px] text-slate-400 select-none">
+                                صفحة {pageIdx + 1} من{" "}
+                                {reportPagesToRender.length}
+                              </div>
+                              <div className="text-left">
+                                <p className="font-semibold text-slate-800 font-sans">
+                                  خاتم وتوثيق المؤسسة
+                                </p>
+                                <div className="w-16 h-16 rounded-full border-2 border-emerald-600/30 flex items-center justify-center text-[10px] text-emerald-600 border-dashed mt-2 select-none mx-auto leading-tight font-sans">
+                                  تم تصديره
+                                  <br />
+                                  إلكترونياً
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -4957,7 +5084,8 @@ export default function MawridDashboard() {
                 <div>
                   <h4 className="font-bold text-emerald-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
                     <Shield className="w-4 h-4 text-emerald-500" />
-                    التحكم المتقدم بالذاكرة الدائمة والملفات الشخصية (JSON Hard Drive Backup)
+                    التحكم المتقدم بالذاكرة الدائمة والملفات الشخصية (JSON Hard
+                    Drive Backup)
                   </h4>
                   <p className="text-[11px] text-slate-400 mt-1">
                     احمِ أعمالك من إمكانية مسح ذاكرة المتصفح المؤقتة
@@ -5074,7 +5202,10 @@ export default function MawridDashboard() {
                       <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
                         <div className="text-xs text-slate-400 text-right">
                           <span>
-                            الحجم: <strong className="text-slate-200">{bc.size}</strong>
+                            الحجم:{" "}
+                            <strong className="text-slate-200">
+                              {bc.size}
+                            </strong>
                           </span>
                           <span className="block text-[11px] text-slate-400 font-bold mt-0.5">
                             {bc.recordsCount.suppliers} موردين |{" "}
