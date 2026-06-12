@@ -35,13 +35,14 @@ html, body {
   display: none !important;
 }
 
-/* Real-world high-fidelity A4 page design applicable to both screen preview and print */
+/* Real-world high-fidelity page design applicable to both screen preview and print */
 .printable-report-page {
-  width: 210mm !important;
-  height: 297mm !important;
-  min-height: 297mm !important;
-  max-height: 297mm !important;
-  padding: 15mm !important;
+  width: 100% !important;
+  max-width: 80rem !important; /* 7xl wide container to stay parallel with other site elements */
+  height: auto !important;
+  min-height: 480px !important;
+  max-height: none !important;
+  padding: 2.5rem !important;
   box-sizing: border-box !important;
   position: relative !important;
   overflow: hidden !important;
@@ -65,10 +66,9 @@ html, body {
   }
 }
 
-@media print {
+@media print, .generating-pdf {
   @page {
-    size: A4 portrait;
-    margin: 0;
+    margin: 0 !important;
   }
   
   /* Force exact colors and backgrounds on all printed elements */
@@ -84,11 +84,12 @@ html, body {
   html, body {
     background: #ffffff !important;
     color: #0f172a !important;
-    width: 210mm !important;
-    height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
   }
+  
   .no-print {
     display: none !important;
   }
@@ -98,6 +99,8 @@ html, body {
   .print-only-tr {
     display: table-row !important;
   }
+  
+  /* Reset page spacing and rounded borders for clean A4 paper sheets */
   .printable-report-sheet, .printable-report-page {
     display: block !important;
     page-break-after: always !important;
@@ -108,11 +111,32 @@ html, body {
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
+
+  /* Strict physical dimensions per sheet matching selected orientation */
+  .portrait-layout .printable-report-page {
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    padding: 15mm !important;
+  }
+
+  .landscape-layout .printable-report-page {
+    width: 297mm !important;
+    height: 210mm !important;
+    min-height: 210mm !important;
+    max-height: 210mm !important;
+    padding: 15mm !important;
+  }
+  
   .printable-report-page:last-child {
     page-break-after: avoid !important;
     break-after: avoid !important;
   }
+  
   table {
     width: 100% !important;
     max-width: 100% !important;
@@ -132,7 +156,8 @@ html, body {
   td {
     border: 1px solid #e2e8f0 !important;
   }
-  /* Retain original badge color themes with a subtle print border if needed */
+  
+  /* Retain original badge color themes with a subtle print border */
   .printable-report-sheet .rounded-full, .printable-report-page .rounded-full {
     border: 1px solid currentColor !important;
   }

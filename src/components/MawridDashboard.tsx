@@ -198,6 +198,9 @@ export default function MawridDashboard() {
     "detailed",
   );
   const [activeReportPage, setActiveReportPage] = useState<number>(0);
+  const [reportOrientation, setReportOrientation] = useState<"portrait" | "landscape">(
+    "portrait",
+  );
 
   // Attachment upload states
   const [invoiceAttachment, setInvoiceAttachment] = useState<{
@@ -2465,6 +2468,87 @@ export default function MawridDashboard() {
     showToast(`تم تصدير تقرير Excel (${filePrefix}) بنجاح.`);
   };
 
+  // Export report to high-fidelity PDF with exact same visual pages count
+  const handleExportReportToPDF = () => {
+    const html2pdf = (window as any).html2pdf;
+    const element = document.getElementById("printable-report-content");
+
+    if (!html2pdf) {
+      showToast("عذراً، لم يتم تحميل مكتبة تصدير PDF بعد. يرجى المحاولة مرة أخرى.");
+      return;
+    }
+
+    if (!element) return;
+
+    // 1. Add PDF generation classes to the parent wrapper
+    const parentContainer = element.parentElement;
+    const savedParentClassName = parentContainer ? parentContainer.className : "";
+    
+    if (parentContainer) {
+      parentContainer.classList.add("generating-pdf");
+      parentContainer.classList.add(reportOrientation === "portrait" ? "portrait-layout" : "landscape-layout");
+    }
+
+    // 2. Temporarily show all hidden pages
+    const pages = element.querySelectorAll(".printable-report-page");
+    const savedClasses: Array<{ element: Element; className: string }> = [];
+
+    pages.forEach((p) => {
+      savedClasses.push({ element: p, className: p.className });
+      p.classList.remove("hidden-on-screen");
+      p.classList.add("active-preview-page");
+    });
+
+    const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
+    const opt = {
+      margin: 0,
+      filename: `تقرير_مؤسسة_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: {
+        scale: 2.2, // Crystal clear scaling for Arabic fonts
+        letterRendering: true,
+        useCORS: true,
+        scrollX: 0,
+        scrollY: 0,
+      },
+      jsPDF: {
+        unit: "mm",
+        format: "a4",
+        orientation: reportOrientation,
+      },
+      pagebreak: {
+        mode: ["avoid-all", "css", "legacy"],
+      },
+    };
+
+    showToast("جاري إعداد وتحميل ملف الـ PDF... يرجى الانتظار.");
+
+    html2pdf()
+      .set(opt)
+      .from(element)
+      .save()
+      .then(() => {
+        // Restore pages state
+        savedClasses.forEach(({ element, className }) => {
+          element.className = className;
+        });
+        if (parentContainer) {
+          parentContainer.className = savedParentClassName;
+        }
+        showToast("تم تحميل تقرير PDF بنجاح.");
+      })
+      .catch((err: any) => {
+        console.error("PDF generation error:", err);
+        savedClasses.forEach(({ element, className }) => {
+          element.className = className;
+        });
+        if (parentContainer) {
+          parentContainer.className = savedParentClassName;
+        }
+        showToast("حدث خطأ أثناء تصدير ملف PDF.");
+      });
+  };
+
   // Filtered lists
   const filteredSuppliers = suppliers.filter((s) => {
     const matchesSearch =
@@ -4292,7 +4376,7 @@ export default function MawridDashboard() {
             >
               {/* Unified High-Density Single Line Control Panel for reports/portfolio */}
               <div className="no-print bg-[#1e293b]/95 p-4 rounded-xl border border-slate-700/80 shadow-2xl">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-3 items-end">
                   {/* 1. Supplier Select */}
                   <div className="flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
@@ -4304,7 +4388,7 @@ export default function MawridDashboard() {
                         setSelectedReportSupplierId(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans w-full"
+                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px]"
                     >
                       <option value="all">جميع الموردين</option>
                       {suppliers.map((s) => (
@@ -4326,7 +4410,7 @@ export default function MawridDashboard() {
                         setReportWarehouseFilter(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans w-full"
+                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px]"
                     >
                       <option value="all">كافة المستودعات</option>
                       {warehouses.map((w) => (
@@ -4350,7 +4434,7 @@ export default function MawridDashboard() {
                         );
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-amber-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-amber-500 font-bold cursor-pointer font-sans w-full"
+                      className="bg-[#0f172a] text-amber-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-amber-500 font-bold cursor-pointer font-sans w-full h-[42px]"
                     >
                       <option value="issue_date">🕒 تاريخ الإضافة</option>
                       <option value="due_date">⚠️ تاريخ الاستحقاق</option>
@@ -4402,20 +4486,48 @@ export default function MawridDashboard() {
                         );
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-cyan-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-cyan-500 font-bold cursor-pointer font-sans w-full"
+                      className="bg-[#0f172a] text-cyan-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-cyan-500 font-bold cursor-pointer font-sans w-full h-[42px]"
                     >
                       <option value="summary">📊 تقرير إجمالي</option>
                       <option value="detailed">📝 تقرير تفصيلي</option>
                     </select>
                   </div>
 
-                  {/* 7. Excel Export Button */}
+                  {/* 7. Orientation Type Select */}
+                  <div className="flex flex-col gap-1 w-full">
+                    <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
+                      <span>📐</span> الاتجاه (A4-PDF):
+                    </label>
+                    <select
+                      value={reportOrientation}
+                      onChange={(e) => {
+                        setReportOrientation(
+                          e.target.value as "portrait" | "landscape",
+                        );
+                      }}
+                      className="bg-[#0f172a] text-pink-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-pink-500 font-bold cursor-pointer font-sans w-full h-[42px]"
+                    >
+                      <option value="portrait">📐 طولي (Portrait)</option>
+                      <option value="landscape">📐 عرضي (Landscape)</option>
+                    </select>
+                  </div>
+
+                  {/* 8. Excel Export Button */}
                   <button
                     type="button"
                     onClick={handleExportReportToExcel}
                     className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
                   >
                     <span>📊</span> تصدير Excel
+                  </button>
+
+                  {/* 9. PDF Export Button */}
+                  <button
+                    type="button"
+                    onClick={handleExportReportToPDF}
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
+                  >
+                    <span>🖨️</span> تصدير PDF
                   </button>
                 </div>
               </div>
@@ -4572,7 +4684,7 @@ export default function MawridDashboard() {
                   <div className="space-y-6">
                     {/* Screen Pagination Controls */}
                     {reportPagesToRender.length > 1 && (
-                      <div className="no-print flex items-center justify-between bg-[#1e293b] border border-slate-700/60 rounded-2xl p-4 max-w-4xl mx-auto mb-4 text-white">
+                      <div className="no-print flex items-center justify-between bg-[#1e293b] border border-slate-700/60 rounded-2xl p-4 max-w-7xl mx-auto mb-4 text-white">
                         <button
                           type="button"
                           disabled={activeReportPage === 0}
@@ -4618,7 +4730,7 @@ export default function MawridDashboard() {
                         return (
                           <div
                             key={pageIdx}
-                            className={`bg-white rounded-3xl border border-slate-300 p-8 shadow-sm space-y-6 printable-report-sheet max-w-4xl mx-auto text-slate-900 printable-report-page ${
+                            className={`bg-white rounded-3xl border border-slate-300 p-8 shadow-sm space-y-6 printable-report-sheet max-w-7xl mx-auto text-slate-900 printable-report-page ${
                               isPageActive
                                 ? "active-preview-page"
                                 : "hidden-on-screen"
