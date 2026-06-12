@@ -4848,7 +4848,6 @@ export default function MawridDashboard() {
                                         <th className="py-2.5 px-3 text-right">
                                           المورد
                                         </th>
-                                        <th className="hidden">رقم الفاتورة</th>
                                         <th className="py-2.5 px-3 text-right font-semibold">
                                           تاريخ الإضافة
                                         </th>
@@ -4980,7 +4979,6 @@ export default function MawridDashboard() {
                                                 {item.supplier.name}
                                               </div>
                                             </td>
-                                            <td className="hidden">null</td>
                                             <td className="py-2.5 px-3 font-mono text-slate-600">
                                               {item.invoice.issueDate ||
                                                 "2026-06-01"}
