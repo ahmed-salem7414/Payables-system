@@ -4257,71 +4257,13 @@ export default function MawridDashboard() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6 animate-fade-in"
             >
-              {/* Enhanced Filter Parameter Grid for Monthly Reports & Investment Portfolio */}
-              <div className="no-print bg-[#1e293b]/95 p-6 rounded-2xl border border-slate-700/80 shadow-2xl space-y-5">
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-700/50 pb-4">
-                  <div>
-                    <h3 className="text-lg font-black text-white flex items-center gap-2 font-sans">
-                      <span className="text-emerald-400 bg-emerald-500/10 p-1.5 rounded-xl text-base">📊</span>
-                      منظومة التقارير الشهرية ومحفظة الاستثمار
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1 font-sans">
-                      توليد كشوفات الحسابات الإجمالية والتفصيلية للموردين مستندة إلى حالة السداد، المخازن المستلمة، ونوعية واستحقاق الحركة وتواريخ الإضافة.
-                    </p>
-                  </div>
-                  
-                  {/* Quick Preset Buttons */}
-                  <div className="flex items-center gap-2 flex-wrap text-xs">
-                    <span className="text-[10px] text-slate-400 font-bold ml-1 font-sans">الفترة السريعة:</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const now = new Date("2026-06-12");
-                        const y = now.getFullYear();
-                        const m = String(now.getMonth() + 1).padStart(2, '0');
-                        setReportStartDate(`${y}-${m}-01`);
-                        const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
-                        setReportEndDate(`${y}-${m}-${lastDay}`);
-                        setActiveReportPage(0);
-                        showToast("تم تطبيق نطاق الشهر الحالي 📅");
-                      }}
-                      className="bg-[#0f172a] hover:bg-[#152035] text-slate-350 hover:text-emerald-400 border border-slate-700 font-bold px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors"
-                    >
-                      الشهر الحالي
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setReportStartDate("2026-04-01");
-                        setReportEndDate("2026-06-30");
-                        setActiveReportPage(0);
-                        showToast("تم تطبيق نطاق الربع الثاني الحالي (أبريل - يونيو) 📅");
-                      }}
-                      className="bg-[#0f172a] hover:bg-[#152035] text-slate-350 hover:text-emerald-400 border border-slate-700 font-bold px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors"
-                    >
-                      الربع الحالي
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setReportStartDate("2026-01-01");
-                        setReportEndDate("2026-12-31");
-                        setActiveReportPage(0);
-                        showToast("تم تطبيق نطاق العام المالي الحالي بالكامل 📅");
-                      }}
-                      className="bg-[#0f172a] hover:bg-[#152035] text-slate-350 hover:text-emerald-400 border border-slate-700 font-bold px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors"
-                    >
-                      العام بالكامل
-                    </button>
-                  </div>
-                </div>
-
-                {/* Grid of All Filters */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+              {/* Unified High-Density Single Line Control Panel for reports/portfolio */}
+              <div className="no-print bg-[#1e293b]/95 p-4 rounded-xl border border-slate-700/80 shadow-2xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 items-end">
                   {/* 1. Supplier Select */}
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
-                      <span>👤</span> المورد المستهدف:
+                      <span>👤</span> المورد:
                     </label>
                     <select
                       value={selectedReportSupplierId}
@@ -4329,21 +4271,21 @@ export default function MawridDashboard() {
                         setSelectedReportSupplierId(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-3 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans w-full"
+                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans w-full"
                     >
-                      <option value="all">📁 جميع الموردين المتواجدين</option>
+                      <option value="all">جميع الموردين</option>
                       {suppliers.map((s) => (
                         <option key={s.id} value={s.id}>
-                          👤 كشف: {s.name}
+                          {s.name}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   {/* 2. Warehouse Select */}
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
-                      <span>🏭</span> المستقر المستقبِل (المستودع):
+                      <span>🏭</span> المستودع:
                     </label>
                     <select
                       value={reportWarehouseFilter}
@@ -4351,21 +4293,21 @@ export default function MawridDashboard() {
                         setReportWarehouseFilter(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-3 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans w-full"
+                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans w-full"
                     >
-                      <option value="all">🏭 كافة مستودعات التخزين</option>
+                      <option value="all">كافة المستودعات</option>
                       {warehouses.map((w) => (
                         <option key={w} value={w}>
-                          📦 {w}
+                          {w}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   {/* 3. Date Type Selection */}
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
-                      <span>📅</span> معيار ومحدد تاريخ التصفية:
+                      <span>📅</span> التاريخ بـ:
                     </label>
                     <select
                       value={reportDateType}
@@ -4373,17 +4315,17 @@ export default function MawridDashboard() {
                         setReportDateType(e.target.value as "issue_date" | "due_date");
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-amber-400 border border-slate-700 text-xs px-3 py-2.5 rounded-xl focus:ring-1 focus:ring-amber-500 font-bold cursor-pointer font-sans w-full"
+                      className="bg-[#0f172a] text-amber-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-amber-500 font-bold cursor-pointer font-sans w-full"
                     >
-                      <option value="issue_date">🕒 تاريخ الإضافة (إصدار الحركة)</option>
-                      <option value="due_date">⚠️ تاريخ الاستحقاق (سداد المورد)</option>
+                      <option value="issue_date">🕒 تاريخ الإضافة</option>
+                      <option value="due_date">⚠️ تاريخ الاستحقاق</option>
                     </select>
                   </div>
 
                   {/* 4. Start Date Input */}
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
-                      <span>📅</span> تاريخ البداية (من):
+                      <span>📅</span> من تاريخ:
                     </label>
                     <input
                       type="date"
@@ -4392,14 +4334,14 @@ export default function MawridDashboard() {
                         setReportStartDate(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-slate-200 border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold font-mono w-full"
+                      className="bg-[#0f172a] text-slate-200 border border-slate-700 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold font-mono w-full align-middle h-[42px]"
                     />
                   </div>
 
                   {/* 5. End Date Input */}
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
-                      <span>📅</span> تاريخ النهاية (إلى):
+                      <span>📅</span> إلى تاريخ:
                     </label>
                     <input
                       type="date"
@@ -4408,14 +4350,14 @@ export default function MawridDashboard() {
                         setReportEndDate(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-slate-200 border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold font-mono w-full"
+                      className="bg-[#0f172a] text-slate-200 border border-slate-700 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold font-mono w-full align-middle h-[42px]"
                     />
                   </div>
 
                   {/* 6. Report View Type Select */}
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
-                      <span>📝</span> تبويب العرض للمؤسسة:
+                      <span>📝</span> نوع التقرير:
                     </label>
                     <select
                       value={reportViewType}
@@ -4423,38 +4365,30 @@ export default function MawridDashboard() {
                         setReportViewType(e.target.value as "detailed" | "summary");
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-cyan-400 border border-slate-700 text-xs px-3 py-2.5 rounded-xl focus:ring-1 focus:ring-cyan-500 font-bold cursor-pointer font-sans w-full"
+                      className="bg-[#0f172a] text-cyan-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-cyan-500 font-bold cursor-pointer font-sans w-full"
                     >
-                      <option value="summary">📊 تقرير إجمالي (ملخص الأرصدة للمورد)</option>
-                      <option value="detailed">📝 تقرير تفصيلي (فواتير الحركة التفصيلية)</option>
+                      <option value="summary">📊 تقرير إجمالي</option>
+                      <option value="detailed">📝 تقرير تفصيلي</option>
                     </select>
                   </div>
-                </div>
 
-                {/* Row of Export Decisions */}
-                <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-700/50 pt-4 gap-3 bg-[#0f172a]/40 p-4 rounded-xl">
-                  <div className="text-[11px] text-slate-450 text-right leading-relaxed font-sans">
-                    💡 <span className="font-semibold text-slate-350">نصيحة التدقيق المالي:</span> يوصى بتجهيز الكشف الإجمالي قبل المراجعة والمطابقة، ثُم تصدير التقرير التفصيلي للحركات اليومية لحماية أرشيف التوريد والتحصيل.
-                  </div>
-                  <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
-                    {/* Excel Export Button */}
-                    <button
-                      type="button"
-                      onClick={handleExportReportToExcel}
-                      className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 font-sans shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-                    >
-                      <span>📊</span> تصدير شيت Excel
-                    </button>
+                  {/* 7. Excel Export Button */}
+                  <button
+                    type="button"
+                    onClick={handleExportReportToExcel}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
+                  >
+                    <span>📊</span> تصدير Excel
+                  </button>
 
-                    {/* Print Button */}
-                    <button
-                      type="button"
-                      onClick={handlePrintReport}
-                      className="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 font-sans shadow-lg hover:-translate-y-0.5 active:translate-y-0"
-                    >
-                      <span>🖨️</span> طباعة الكشف وتصدير PDF
-                    </button>
-                  </div>
+                  {/* 8. PDF Export Button */}
+                  <button
+                    type="button"
+                    onClick={handlePrintReport}
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
+                  >
+                    <span>🖨️</span> تصدير PDF
+                  </button>
                 </div>
               </div>
 
