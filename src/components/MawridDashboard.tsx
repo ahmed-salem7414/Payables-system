@@ -2337,76 +2337,13 @@ export default function MawridDashboard() {
     }
   };
 
-  // Printable layout window trigger (foolproof clean RTL Arabic PDF/Print setup)
+  // Printable layout trigger (standard browser printing)
   const handlePrintReport = () => {
-    // 1. Hook the window beforeprint to ensure 100% zoom and reset any shifts
+    // Ensure 100% zoom and correct sizing before triggering print dialog
     window.onbeforeprint = () => {
       document.body.style.zoom = "100%";
     };
-
-    const html2pdf = (window as any).html2pdf;
-    const element = document.getElementById("printable-report-content");
-
-    if (html2pdf && element) {
-      // Find all pages inside printable-report-content
-      const pages = element.querySelectorAll(".printable-report-page");
-      const savedClasses: Array<{ element: Element; className: string }> = [];
-
-      // Temporarily expand all pages so they are all fully displayed and styled for html2pdf
-      pages.forEach((p) => {
-        savedClasses.push({ element: p, className: p.className });
-        p.classList.remove("hidden-on-screen");
-        p.classList.add("active-preview-page");
-      });
-
-      const opt = {
-        margin: 0, // No extra margin because pages already have 15mm padding in CSS matching exactly
-        filename: `تقرير_مؤسسة_مرسال_المصنف_${new Date().toISOString().split("T")[0]}.pdf`,
-        image: {
-          type: "jpeg",
-          quality: 1.0,
-        },
-        html2canvas: {
-          scale: 4, // High definition scaling as recommended for flawless lines and Arabic text readability
-          letterRendering: true,
-          useCORS: true,
-          scrollX: 0,
-          scrollY: 0,
-        },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "portrait",
-        },
-        pagebreak: {
-          mode: ["avoid-all", "css", "legacy"],
-        },
-      };
-
-      // Execute pdf rendering
-      html2pdf()
-        .set(opt)
-        .from(element)
-        .save()
-        .then(() => {
-          // Restore exact screen pagination classes
-          savedClasses.forEach(({ element, className }) => {
-            element.className = className;
-          });
-        })
-        .catch((err: any) => {
-          console.error("Error generating PDF via html2pdf:", err);
-          // Restore classes on error first
-          savedClasses.forEach(({ element, className }) => {
-            element.className = className;
-          });
-          // Fallback to standard window print
-          window.print();
-        });
-    } else {
-      // Fallback
-      window.print();
-    }
+    window.print();
   };
 
   // Full payment status text helper
@@ -4496,7 +4433,7 @@ export default function MawridDashboard() {
                     onClick={handlePrintReport}
                     className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
                   >
-                    <span>🖨️</span> تصدير PDF
+                    <span>🖨️</span> طباعة التقرير
                   </button>
                 </div>
               </div>
