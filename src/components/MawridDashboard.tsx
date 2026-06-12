@@ -2316,53 +2316,110 @@ export default function MawridDashboard() {
   // Export report to spreadsheet document
   const handleExportReportToExcel = () => {
     let csvContent = "\uFEFF"; // Enable Arabic Excel Compatibility
-    csvContent +=
-      "المورد,الشركة,رقم الفاتورة,تاريخ الإضافة,تاريخ الاستحقاق,المخزن المستلم,قيمة الفاتورة الأصلية,خصم الإشعارات الدائنة,صافي المطلوب سداده,حالة السداد\n";
 
     const reportSuppliers =
       selectedReportSupplierId === "all"
         ? suppliers
         : suppliers.filter((s) => s.id === selectedReportSupplierId);
 
-    reportSuppliers.forEach((sup) => {
-      const supInvoices = invoices.filter((i) => {
-        const matchesSupplier = i.supplierId === sup.id;
-        const date =
-          (reportDateType === "issue_date" ? i.issueDate : i.dueDate) ||
-          "2026-06-01";
-        const matchesRange = date >= reportStartDate && date <= reportEndDate;
-        const matchesWarehouse =
-          reportWarehouseFilter === "all" ||
-          i.warehouse === reportWarehouseFilter;
-        return matchesSupplier && matchesRange && matchesWarehouse;
-      });
+    if (reportViewType === "summary") {
+      // Summary/Aggregated Excel format
+      csvContent +=
+        "المورد والشركة,عمليات الشراء النشطة بالفترة,إجمالي فواتير الشراء الأصلية,إجمالي خصومات الإشعارات الدائنة,إجمالي صافي المطلوب سداده,حالة السداد الإجمالية\n";
 
-      supInvoices.forEach((inv) => {
-        const payableAmount =
-          Math.round((inv.totalAmount - (inv.creditNoteAmount || 0)) * 100) /
-          100;
-        const statusText = getFullPaymentStatus(inv);
-        const name = sup.name.replace(/,/g, " ");
-        const company = sup.company.replace(/,/g, " ");
-        const invoiceNum = inv.invoiceNumber.replace(/,/g, " ");
-        const warehouseName = (inv.warehouse || "").replace(/,/g, " ");
+      reportSuppliers.forEach((sup) => {
+        const supInvoices = invoices.filter((i) => {
+          const matchesSupplier = i.supplierId === sup.id;
+          const date =
+            (reportDateType === "issue_date" ? i.issueDate : i.dueDate) ||
+            "2026-06-01";
+          const matchesRange = date >= reportStartDate && date <= reportEndDate;
+          const matchesWarehouse =
+            reportWarehouseFilter === "all" ||
+            i.warehouse === reportWarehouseFilter;
+          return matchesSupplier && matchesRange && matchesWarehouse;
+        });
 
-        csvContent += `"${name}","${company}","${invoiceNum}","${inv.issueDate || ""}","${inv.dueDate}","${warehouseName}",${inv.totalAmount},${inv.creditNoteAmount || 0},${payableAmount},"${statusText}"\n`;
+        if (supInvoices.length === 0) return;
+
+        const totalOriginal = supInvoices.reduce(
+          (sum, inv) => sum + inv.totalAmount,
+          0,
+        );
+        const totalCN = supInvoices.reduce(
+          (sum, inv) => sum + (inv.creditNoteAmount || 0),
+          0,
+        );
+        const totalNet = supInvoices.reduce(
+          (sum, inv) =>
+            sum + (inv.totalAmount - (inv.creditNoteAmount || 0)),
+          0,
+        );
+
+        const paidCount = supInvoices.filter((i) =>
+          getFullPaymentStatus(i).includes("تم السداد"),
+        ).length;
+
+        let overallStatusText = "";
+        if (paidCount === supInvoices.length) {
+          overallStatusText = "مسددة بالكامل";
+        } else if (paidCount > 0) {
+          overallStatusText = `مسدد جزئياً (${paidCount}/${supInvoices.length})`;
+        } else {
+          overallStatusText = "غير مسددة";
+        }
+
+        const nameField = `${sup.name} (${sup.company})`.replace(/,/g, " ");
+
+        csvContent += `"${nameField}",${supInvoices.length},${totalOriginal},${totalCN},${totalNet},"${overallStatusText}"\n`;
       });
-    });
+    } else {
+      // Detailed Excel format (row-by-row invoice details)
+      csvContent +=
+        "المورد,الشركة,رقم الفاتورة,تاريخ الإضافة,تاريخ الاستحقاق,المخزن المستلم,قيمة الفاتورة الأصلية,خصم الإشعارات الدائنة,صافي المطلوب سداده,حالة السداد\n";
+
+      reportSuppliers.forEach((sup) => {
+        const supInvoices = invoices.filter((i) => {
+          const matchesSupplier = i.supplierId === sup.id;
+          const date =
+            (reportDateType === "issue_date" ? i.issueDate : i.dueDate) ||
+            "2026-06-01";
+          const matchesRange = date >= reportStartDate && date <= reportEndDate;
+          const matchesWarehouse =
+            reportWarehouseFilter === "all" ||
+            i.warehouse === reportWarehouseFilter;
+          return matchesSupplier && matchesRange && matchesWarehouse;
+        });
+
+        supInvoices.forEach((inv) => {
+          const payableAmount =
+            Math.round((inv.totalAmount - (inv.creditNoteAmount || 0)) * 100) /
+            100;
+          const statusText = getFullPaymentStatus(inv);
+          const name = sup.name.replace(/,/g, " ");
+          const company = sup.company.replace(/,/g, " ");
+          const invoiceNum = inv.invoiceNumber.replace(/,/g, " ");
+          const warehouseName = (inv.warehouse || "").replace(/,/g, " ");
+
+          csvContent += `"${name}","${company}","${invoiceNum}","${inv.issueDate || ""}","${inv.dueDate}","${warehouseName}",${inv.totalAmount},${inv.creditNoteAmount || 0},${payableAmount},"${statusText}"\n`;
+        });
+      });
+    }
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
+    
+    const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
     link.setAttribute(
       "download",
-      `تقرير_الموردين_${reportStartDate}_إلى_${reportEndDate}.csv`,
+      `تقرير_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.csv`,
     );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast("تم تصدير تقرير Excel (CSV) بنجاح.");
+    showToast(`تم تصدير تقرير Excel (${filePrefix}) بنجاح.`);
   };
 
   // Filtered lists
@@ -2592,7 +2649,7 @@ export default function MawridDashboard() {
       </AnimatePresence>
 
       {/* Corporate Arabic Header */}
-      <header className="no-print bg-[#1e293b] border-b border-slate-700 sticky top-0 z-40 px-6 py-4 shadow-lg">
+      <header className="no-print bg-[#1e293b] border-b border-slate-700 sticky top-0 z-40 px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-slate-900/30 px-3 py-1.5 rounded-2xl border border-slate-700/50 flex items-center justify-center">
@@ -4059,56 +4116,55 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
-              {/* Settlement Sandbox Visual Simulator Console */}
-              <div className="bg-[#111827] text-slate-305 text-slate-300 p-6 rounded-2xl border border-slate-700 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-2 left-3 text-[10px] font-mono text-slate-500">
-                  Mawrid RTGS Core Engine v3.1
-                </div>
-
-                <h3 className="text-emerald-400 font-bold text-sm mb-4 border-b border-slate-850 border-slate-805 border-slate-800 pb-2 flex items-center gap-2">
-                  <Activity className="w-4.5 h-4.5 animate-pulse text-emerald-400" />
-                  أداة إدارة التسوية الذكية للمدفوعات اللحظية
-                </h3>
-
-                {isSettlingProcess ? (
-                  <div className="space-y-4 py-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-200 font-semibold mb-1 block">
-                        جاري تشغيل تسوية المعاملة... {settlementProgress}%
-                      </span>
-                      <RefreshCw className="w-4.5 h-4.5 text-emerald-400 animate-spin" />
-                    </div>
-                    {/* Console Logger box */}
-                    <div className="bg-[#0f172a] rounded-xl p-4 border border-slate-800 h-40 overflow-y-auto space-y-1.5 font-mono text-[11px] leading-relaxed">
-                      {settlementLogs.map((log, idx) => (
-                        <div
-                          key={idx}
-                          className="text-emerald-400 flex items-start gap-1"
-                        >
-                          <span className="text-slate-600 shrink-0">
-                            [{idx + 1}]
-                          </span>
-                          <span>{log}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-emerald-500/50 to-emerald-400 h-full transition-all duration-300"
-                        style={{ width: `${settlementProgress}%` }}
-                      ></div>
-                    </div>
+              <div className="bg-[#111827] text-slate-300 p-6 rounded-2xl border border-slate-700 shadow-2xl relative overflow-hidden mt-6">
+                  <div className="absolute top-2 left-3 text-[10px] font-mono text-slate-500">
+                    Mawrid RTGS Core Engine v3.1
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <p className="text-xs text-slate-400">
-                      يمكنك تحديد أي فاتورة غير مسددة من القائمة وسدادها
-                      تلقائياً بضغطة زر. يقوم المحرك بالاتصال اللحظي بـ APIs
-                      البنك المُرتبط وتطوير العمليات ماليًا.
-                    </p>
 
-                    <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-4">
-                      <h4 className="text-xs font-bold text-slate-300 border-b border-slate-800 pb-2 mb-3">
+                  <h3 className="text-emerald-400 font-bold text-sm mb-4 border-b border-slate-800 pb-2 flex items-center gap-2">
+                    <Activity className="w-4.5 h-4.5 animate-pulse text-emerald-400" />
+                    أداة إدارة التسوية الذكية للمدفوعات اللحظية
+                  </h3>
+
+                  {isSettlingProcess ? (
+                    <div className="space-y-4 py-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-200 font-semibold mb-1 block">
+                          جاري تشغيل تسوية المعاملة... {settlementProgress}%
+                        </span>
+                        <RefreshCw className="w-4.5 h-4.5 text-emerald-400 animate-spin" />
+                      </div>
+                      {/* Console Logger box */}
+                      <div className="bg-[#0f172a] rounded-xl p-4 border border-slate-800 h-40 overflow-y-auto space-y-1.5 font-mono text-[11px] leading-relaxed">
+                        {settlementLogs.map((log, idx) => (
+                          <div
+                            key={idx}
+                            className="text-emerald-400 flex items-start gap-1"
+                          >
+                            <span className="text-slate-600 shrink-0">
+                              [{idx + 1}]
+                            </span>
+                            <span>{log}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full transition-all duration-300"
+                          style={{ width: `${settlementProgress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-xs text-slate-400">
+                        يمكنك تحديد أي فاتورة غير مسددة من القائمة وسدادها
+                        تلقائياً بضغطة زر. يقوم المحرك بالاتصال اللحظي بـ APIs
+                        البنك المُرتبط وتطوير العمليات ماليًا.
+                      </p>
+
+                      <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-4">
+                        <h4 className="text-xs font-bold text-slate-300 border-b border-slate-800 pb-2 mb-3">
                         اختر الفاتورة المستهدفة للتصفية الفورية:
                       </h4>
 
@@ -4128,7 +4184,7 @@ export default function MawridDashboard() {
                               return (
                                 <div
                                   key={inv.id}
-                                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-[#151f32] rounded-lg border border-slate-700 hover:bg-[#1c2c48] justify-between gap-4"
+                                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-[#151f32] rounded-lg border border-slate-700 hover:bg-[#1c2c48] gap-4"
                                 >
                                   <div className="text-xs">
                                     <div className="flex items-center gap-2">
@@ -4380,7 +4436,7 @@ export default function MawridDashboard() {
                       التقرير المالي المعزز لحسابات الموردين وفواتير الشراء
                     </p>
                     <p className="text-xs text-slate-500 font-mono mt-1">
-                      تاريخ استخراج التقرير: 2026-06-07
+                      تاريخ استخراج التقرير: {new Date().toISOString().split("T")[0]}
                     </p>
                   </div>
                   <div className="text-left flex flex-col items-end">

@@ -32,10 +32,19 @@ html, body {
 
 /* Print CSS optimized for high-quality corporate Arabic PDF */
 @media print {
-  body {
-    background: white;
-    color: black;
-    font-size: 11pt;
+  @page {
+    size: A4 portrait;
+    margin: 1cm 1.2cm;
+  }
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10pt !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .no-print {
     display: none !important;
@@ -43,10 +52,47 @@ html, body {
   .print-only {
     display: block !important;
   }
-  .print-card {
-    border: 1px solid #e2e8f0 !important;
+  .printable-report-sheet {
+    border: none !important;
     box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    margin-top: 15px !important;
+  }
+  tr {
+    page-break-inside: avoid !important;
+  }
+  th {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    border: 1px solid #94a3b8 !important;
+    padding: 8px 10px !important;
+    font-size: 8.5pt !important;
+    text-align: right !important;
+  }
+  td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 8px 10px !important;
+    font-size: 8.5pt !important;
+    color: #1e293b !important;
     background: transparent !important;
-    page-break-inside: avoid;
+  }
+  /* Ensure status badges printed are readable */
+  .printable-report-sheet span {
+    border: 1px solid #94a3b8 !important;
+    font-weight: bold !important;
+    color: #000000 !important;
+    background: #f8fafc !important;
   }
 }
