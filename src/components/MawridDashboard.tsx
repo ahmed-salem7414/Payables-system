@@ -193,6 +193,7 @@ export default function MawridDashboard() {
   const [reportViewType, setReportViewType] = useState<"detailed" | "summary">(
     "detailed",
   );
+  const [activeReportPage, setActiveReportPage] = useState<number>(0);
 
   // Attachment upload states
   const [invoiceAttachment, setInvoiceAttachment] = useState<{
@@ -635,6 +636,18 @@ export default function MawridDashboard() {
   useEffect(() => {
     localStorage.setItem("mawrid_credit_notes", JSON.stringify(creditNotes));
   }, [creditNotes]);
+
+  // Reset active report page back to 0 when report parameters change
+  useEffect(() => {
+    setActiveReportPage(0);
+  }, [
+    selectedReportSupplierId,
+    reportWarehouseFilter,
+    reportStartDate,
+    reportEndDate,
+    reportDateType,
+    reportViewType,
+  ]);
 
   // Generate Payment Alerts based on system time and invoice due dates
   useEffect(() => {
@@ -4117,54 +4130,54 @@ export default function MawridDashboard() {
               </div>
 
               <div className="bg-[#111827] text-slate-300 p-6 rounded-2xl border border-slate-700 shadow-2xl relative overflow-hidden mt-6">
-                  <div className="absolute top-2 left-3 text-[10px] font-mono text-slate-500">
-                    Mawrid RTGS Core Engine v3.1
-                  </div>
+                <div className="absolute top-2 left-3 text-[10px] font-mono text-slate-500">
+                  Mawrid RTGS Core Engine v3.1
+                </div>
 
-                  <h3 className="text-emerald-400 font-bold text-sm mb-4 border-b border-slate-800 pb-2 flex items-center gap-2">
-                    <Activity className="w-4.5 h-4.5 animate-pulse text-emerald-400" />
-                    أداة إدارة التسوية الذكية للمدفوعات اللحظية
-                  </h3>
+                <h3 className="text-emerald-400 font-bold text-sm mb-4 border-b border-slate-800 pb-2 flex items-center gap-2">
+                  <Activity className="w-4.5 h-4.5 animate-pulse text-emerald-400" />
+                  أداة إدارة التسوية الذكية للمدفوعات اللحظية
+                </h3>
 
-                  {isSettlingProcess ? (
-                    <div className="space-y-4 py-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-200 font-semibold mb-1 block">
-                          جاري تشغيل تسوية المعاملة... {settlementProgress}%
-                        </span>
-                        <RefreshCw className="w-4.5 h-4.5 text-emerald-400 animate-spin" />
-                      </div>
-                      {/* Console Logger box */}
-                      <div className="bg-[#0f172a] rounded-xl p-4 border border-slate-800 h-40 overflow-y-auto space-y-1.5 font-mono text-[11px] leading-relaxed">
-                        {settlementLogs.map((log, idx) => (
-                          <div
-                            key={idx}
-                            className="text-emerald-400 flex items-start gap-1"
-                          >
-                            <span className="text-slate-600 shrink-0">
-                              [{idx + 1}]
-                            </span>
-                            <span>{log}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                        <div
-                          className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full transition-all duration-300"
-                          style={{ width: `${settlementProgress}%` }}
-                        ></div>
-                      </div>
+                {isSettlingProcess ? (
+                  <div className="space-y-4 py-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-200 font-semibold mb-1 block">
+                        جاري تشغيل تسوية المعاملة... {settlementProgress}%
+                      </span>
+                      <RefreshCw className="w-4.5 h-4.5 text-emerald-400 animate-spin" />
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <p className="text-xs text-slate-400">
-                        يمكنك تحديد أي فاتورة غير مسددة من القائمة وسدادها
-                        تلقائياً بضغطة زر. يقوم المحرك بالاتصال اللحظي بـ APIs
-                        البنك المُرتبط وتطوير العمليات ماليًا.
-                      </p>
+                    {/* Console Logger box */}
+                    <div className="bg-[#0f172a] rounded-xl p-4 border border-slate-800 h-40 overflow-y-auto space-y-1.5 font-mono text-[11px] leading-relaxed">
+                      {settlementLogs.map((log, idx) => (
+                        <div
+                          key={idx}
+                          className="text-emerald-400 flex items-start gap-1"
+                        >
+                          <span className="text-slate-600 shrink-0">
+                            [{idx + 1}]
+                          </span>
+                          <span>{log}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full transition-all duration-300"
+                        style={{ width: `${settlementProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-xs text-slate-400">
+                      يمكنك تحديد أي فاتورة غير مسددة من القائمة وسدادها
+                      تلقائياً بضغطة زر. يقوم المحرك بالاتصال اللحظي بـ APIs
+                      البنك المُرتبط وتطوير العمليات ماليًا.
+                    </p>
 
-                      <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-4">
-                        <h4 className="text-xs font-bold text-slate-300 border-b border-slate-800 pb-2 mb-3">
+                    <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-4">
+                      <h4 className="text-xs font-bold text-slate-300 border-b border-slate-800 pb-2 mb-3">
                         اختر الفاتورة المستهدفة للتصفية الفورية:
                       </h4>
 
@@ -4255,612 +4268,540 @@ export default function MawridDashboard() {
                     كملفات PDF للأرشيف
                   </p>
                 </div>
-
                 <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                  <select
-                    value={selectedReportSupplierId}
-                    onChange={(e) =>
-                      setSelectedReportSupplierId(e.target.value)
-                    }
-                    className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer"
-                  >
-                    <option value="all">
-                      📁 جميع الموردين (الحساب الإجمالي)
-                    </option>
-                    {suppliers.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        👤 كشف: {s.name} ({s.company})
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={reportWarehouseFilter}
-                    onChange={(e) => setReportWarehouseFilter(e.target.value)}
-                    className="bg-[#0f172a] text-amber-400 border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer"
-                  >
-                    <option value="all">📦 جميع المخازن (كل المستودعات)</option>
-                    {warehouses.map((wh) => (
-                      <option key={wh} value={wh}>
-                        📦 مخزن: {wh}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={reportDateType}
-                    onChange={(e) => setReportDateType(e.target.value as any)}
-                    className="bg-[#0f172a] text-[#38bdf8] border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer"
-                  >
-                    <option value="issue_date">📅 حسب تاريخ الإضافة</option>
-                    <option value="due_date">📅 حسب تاريخ الاستحقاق</option>
-                  </select>
-
-                  <select
-                    value={reportViewType}
-                    onChange={(e) => setReportViewType(e.target.value as any)}
-                    className="bg-[#0f172a] text-[#a78bfa] border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer"
-                  >
-                    <option value="detailed">
-                      📋 كشف تفصيلي (فاتورة فاتورة)
-                    </option>
-                    <option value="summary">
-                      📊 كشف إجمالي (إجمالي فواتير الفترة)
-                    </option>
-                  </select>
-
-                  {/* Calendar Range Filter */}
-                  <div className="flex items-center gap-1.5 bg-[#0f172a] border border-slate-700 px-3 py-1.5 rounded-xl text-xs text-white">
-                    <span className="text-slate-400 font-bold shrink-0 text-[11px]">
-                      من:
-                    </span>
-                    <input
-                      type="date"
-                      value={reportStartDate}
-                      onChange={(e) => setReportStartDate(e.target.value)}
-                      className="bg-transparent text-[#34d399] tracking-tight font-mono font-bold focus:outline-none cursor-pointer [color-scheme:dark]"
-                    />
+                  {/* Supplier Select */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-slate-400 font-bold font-sans">المورد:</label>
+                    <select
+                      value={selectedReportSupplierId}
+                      onChange={(e) => {
+                        setSelectedReportSupplierId(e.target.value);
+                        setActiveReportPage(0);
+                      }}
+                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans"
+                    >
+                      <option value="all">📁 جميع الموردين (الحساب الإجمالي)</option>
+                      {suppliers.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          👤 كشف: {s.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  <div className="flex items-center gap-1.5 bg-[#0f172a] border border-slate-700 px-3 py-1.5 rounded-xl text-xs text-white">
-                    <span className="text-slate-400 font-bold shrink-0 text-[11px]">
-                      إلى:
-                    </span>
-                    <input
-                      type="date"
-                      value={reportEndDate}
-                      onChange={(e) => setReportEndDate(e.target.value)}
-                      className="bg-transparent text-[#34d399] tracking-tight font-mono font-bold focus:outline-none cursor-pointer [color-scheme:dark]"
-                    />
+                  {/* Warehouse Select */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-slate-400 font-bold font-sans">المستودع:</label>
+                    <select
+                      value={reportWarehouseFilter}
+                      onChange={(e) => {
+                        setReportWarehouseFilter(e.target.value);
+                        setActiveReportPage(0);
+                      }}
+                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans"
+                    >
+                      <option value="all">🏭 كافة المخازن (المستودعات)</option>
+                      <option value="المخزن الرئيسي">المخزن الرئيسي</option>
+                      <option value="مخزن التجمع">مخزن التجمع</option>
+                      <option value="مخزن الدقي">مخزن الدقي</option>
+                    </select>
                   </div>
 
-                  <button
-                    onClick={handlePrintReport}
-                    className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-colors"
-                  >
-                    <Printer className="w-4 h-4" />
-                    <span>تصدير تقرير PDF</span>
-                  </button>
+                  {/* Report View Type Select */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-slate-400 font-bold font-sans">نوع العرض:</label>
+                    <select
+                      value={reportViewType}
+                      onChange={(e) => {
+                        setReportViewType(e.target.value as "detailed" | "summary");
+                        setActiveReportPage(0);
+                      }}
+                      className="bg-[#0f172a] text-amber-400 border border-slate-700 text-xs px-3 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 font-bold cursor-pointer font-sans"
+                    >
+                      <option value="summary">📊 تقرير إجمالي (ملخص الأرصدة)</option>
+                      <option value="detailed">📝 تقرير تفصيلي (فواتير الحركة)</option>
+                    </select>
+                  </div>
 
+                  {/* Excel Export Button */}
                   <button
+                    type="button"
                     onClick={handleExportReportToExcel}
-                    className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-500 active:bg-teal-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-colors"
+                    className="self-end bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 font-sans shadow-md"
                   >
-                    <FileSpreadsheet className="w-4 h-4" />
-                    <span>تصدير Excel</span>
+                    <span>📊</span> تصدير إلى Excel
                   </button>
-                </div>
-              </div>
 
-              {/* Interactive Visual Analytics Charts (no-print) */}
-              <div className="no-print grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Chart 1: Purchases vs Payments Comparison */}
-                <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-lg flex flex-col justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-white mb-1">
-                      📊 أداء المشتريات الشهرية مقابل المبالغ المسددة
-                    </h4>
-                    <p className="text-[11px] text-slate-400 mb-4 font-sans leading-relaxed">
-                      مقارنة بصرية واضحة بين إجمالي قيمة المشتريات المضافة ومبالغ السداد والتسوية الفعلية لكل شهر مالي.
-                    </p>
-                  </div>
-                  <div className="h-64 w-full text-xs font-sans">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={getMonthlyFinancialsData()}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                        <XAxis dataKey="name" stroke="#94a3b8" />
-                        <YAxis stroke="#94a3b8" tickFormatter={(v) => `${v / 1000}k`} />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
-                          formatter={(value) => [`${fAmt(Number(value))} ج.م`]}
-                        />
-                        <Legend />
-                        <Bar name="إجمالي المشتريات" dataKey="إجمالي المشتريات" fill="#0284c7" radius={[4, 4, 0, 0]} />
-                        <Bar name="إجمالي المسدد" dataKey="إجمالي المسدد" fill="#10b981" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Chart 2: Category Distribution Pie Chart */}
-                <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-lg flex flex-col justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-white mb-1">
-                      🍕 توزيع قيمة المشتريات حسب تصنيف الموردين
-                    </h4>
-                    <p className="text-[11px] text-slate-400 mb-4 font-sans leading-relaxed">
-                      رؤية بصرية لتوزيع السيولة والموازين المالية على تخصصات الموردين المعتمدين في النظام.
-                    </p>
-                  </div>
-                  <div className="h-64 w-full text-xs font-sans flex items-center justify-center">
-                    {getPortfolioDistributionData().length === 0 ? (
-                      <span className="text-slate-500 italic">لا توجد بيانات كافية للرسم البياني</span>
-                    ) : (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={getPortfolioDistributionData()}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={50}
-                            outerRadius={80}
-                            paddingAngle={4}
-                            dataKey="value"
-                            nameKey="name"
-                          >
-                            {getPortfolioDistributionData().map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.fill} />
-                            ))}
-                          </Pie>
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
-                            formatter={(value) => [`${fAmt(Number(value))} ج.م`]}
-                          />
-                          <Legend wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    )}
-                  </div>
+                  {/* Print Button */}
+                  <button
+                    type="button"
+                    onClick={handlePrintReport}
+                    className="self-end bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4 py-2 rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 font-sans shadow-md"
+                  >
+                    <span>🖨️</span> طباعة التقرير / PDF
+                  </button>
                 </div>
               </div>
 
               {/* PRINT-ONLY OFFICIAL DIRECT Arabic REPORT (Will print layout exceptionally) */}
-              <div className="bg-white rounded-3xl border border-slate-300 p-8 shadow-sm space-y-6 printable-report-sheet max-w-4xl mx-auto text-slate-900">
-                {/* Printed Header Banner */}
-                <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
-                  <div>
-                    <h2 className="text-lg font-black text-slate-950">
-                      مؤسسة مرسال - Mersal Foundation
-                    </h2>
-                    <p className="text-xs text-slate-500 font-medium">
-                      التقرير المالي المعزز لحسابات الموردين وفواتير الشراء
-                    </p>
-                    <p className="text-xs text-slate-500 font-mono mt-1">
-                      تاريخ استخراج التقرير: {new Date().toISOString().split("T")[0]}
-                    </p>
-                  </div>
-                  <div className="text-left flex flex-col items-end">
-                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-center">
-                      <MersalLogo
-                        width={100}
-                        height={100}
-                        isDarkBackground={false}
-                        className="h-12 w-auto"
-                      />
-                    </div>
-                    <span className="text-xs font-bold text-slate-950 block mt-1">
-                      مؤسسة مرسال - Mersal Foundation
-                    </span>
-                  </div>
-                </div>
+              {(() => {
+                const chunkArray = <T,>(arr: T[], size: number): T[][] => {
+                  const chunks: T[][] = [];
+                  for (let i = 0; i < arr.length; i += size) {
+                    chunks.push(arr.slice(i, i + size));
+                  }
+                  return chunks;
+                };
 
-                {/* Report specs indicators */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border border-slate-200 rounded-xl p-4 bg-slate-50">
-                  <div className="text-center font-bold">
-                    <span className="text-slate-500 text-xs font-medium block">
-                      الفترة المحاسبية والمورد
-                    </span>
-                    <strong className="text-xs text-slate-800 font-bold block mt-1 leading-snug">
-                      التقرير: من {reportStartDate} إلى {reportEndDate}
-                      {selectedReportSupplierId !== "all"
-                        ? ` | مورد: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`
-                        : " | كشف مجمع للموردين"}
-                      {reportWarehouseFilter !== "all"
-                        ? ` | مخزن: ${reportWarehouseFilter}`
-                        : " | كافة المخازن"}
-                    </strong>
-                  </div>
-                  <div className="text-center border-y border-slate-200 sm:border-y-0 sm:border-x py-2.5 sm:py-0">
-                    <span className="text-slate-500 text-xs font-medium block">
-                      إجمالي التعاملات الصافية بالفترة
-                    </span>
-                    <strong className="text-sm text-slate-950 font-black block mt-1">
-                      {fAmt(getSelectedReportFinancials().total)} ج.م
-                    </strong>
-                  </div>
-                  <div className="text-center">
-                    <span className="text-slate-500 text-xs font-medium block">
-                      المديونية غير المسواة المتبقية
-                    </span>
-                    <strong className="text-sm text-red-650 font-black block mt-1">
-                      {fAmt(getSelectedReportFinancials().pending)} ج.م
-                    </strong>
-                  </div>
-                </div>
+                const getReportSummaryItems = () => {
+                  const targetSuppliers =
+                    selectedReportSupplierId === "all"
+                      ? suppliers
+                      : suppliers.filter((s) => s.id === selectedReportSupplierId);
 
-                {/* Ledger Listing inside the PDF */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-150 pb-2 no-print">
-                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-widest border-r-2 border-emerald-600 pr-2">
-                      {selectedReportSupplierId === "all"
-                        ? "تفاصيل أرصدة الموردين والفواتير النشطة"
-                        : `كشف حساب المورد التفصيلي: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`}
-                    </h4>
-                    {selectedReportSupplierId !== "all" && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedReportSupplierId("all")}
-                        className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors no-print"
-                      >
-                        عرض كافة الموردين
-                      </button>
+                  const items: Array<{
+                    supplier: any;
+                    supInvoices: Invoice[];
+                    totalOriginal: number;
+                    totalCN: number;
+                    totalNet: number;
+                    overallStatusText: string;
+                    badgeClass: string;
+                  }> = [];
+
+                  targetSuppliers.forEach((sup) => {
+                    const supInvoices = invoices.filter((i) => {
+                      const matchesSupplier = i.supplierId === sup.id;
+                      const date =
+                        (reportDateType === "issue_date" ? i.issueDate : i.dueDate) ||
+                        "2026-06-01";
+                      const matchesRange = date >= reportStartDate && date <= reportEndDate;
+                      const matchesWarehouse =
+                        reportWarehouseFilter === "all" ||
+                        i.warehouse === reportWarehouseFilter;
+                      return matchesSupplier && matchesRange && matchesWarehouse;
+                    });
+
+                    if (supInvoices.length === 0) return;
+
+                    const totalOriginal = supInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+                    const totalCN = supInvoices.reduce((sum, inv) => sum + (inv.creditNoteAmount || 0), 0);
+                    const totalNet = supInvoices.reduce((sum, inv) => sum + (inv.totalAmount - (inv.creditNoteAmount || 0)), 0);
+
+                    const paidCount = supInvoices.filter((i) => getFullPaymentStatus(i).includes("تم السداد")).length;
+
+                    let overallStatusText = "";
+                    let badgeClass = "";
+                    if (paidCount === supInvoices.length) {
+                      overallStatusText = "مسددة بالكامل";
+                      badgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-200";
+                    } else if (paidCount > 0) {
+                      overallStatusText = `مسدد جزئياً (${paidCount}/${supInvoices.length})`;
+                      badgeClass = "bg-amber-100 text-amber-800 border border-amber-200";
+                    } else {
+                      overallStatusText = "غير مسددة";
+                      badgeClass = "bg-rose-100 text-rose-800 border border-rose-250";
+                    }
+
+                    items.push({
+                      supplier: sup,
+                      supInvoices,
+                      totalOriginal,
+                      totalCN,
+                      totalNet,
+                      overallStatusText,
+                      badgeClass,
+                    });
+                  });
+
+                  return items;
+                };
+
+                const getReportDetailedItems = () => {
+                  const targetSuppliers =
+                    selectedReportSupplierId === "all"
+                      ? suppliers
+                      : suppliers.filter((s) => s.id === selectedReportSupplierId);
+
+                  const items: Array<{
+                    supplier: any;
+                    invoice: Invoice;
+                    payableAmount: number;
+                  }> = [];
+
+                  targetSuppliers.forEach((sup) => {
+                    const supInvoices = invoices.filter((i) => {
+                      const matchesSupplier = i.supplierId === sup.id;
+                      const date =
+                        (reportDateType === "issue_date" ? i.issueDate : i.dueDate) ||
+                        "2026-06-01";
+                      const matchesRange = date >= reportStartDate && date <= reportEndDate;
+                      const matchesWarehouse =
+                        reportWarehouseFilter === "all" ||
+                        i.warehouse === reportWarehouseFilter;
+                      return matchesSupplier && matchesRange && matchesWarehouse;
+                    });
+
+                    supInvoices.forEach((inv) => {
+                      items.push({
+                        supplier: sup,
+                        invoice: inv,
+                        payableAmount: inv.totalAmount - (inv.creditNoteAmount || 0),
+                      });
+                    });
+                  });
+
+                  return items;
+                };
+
+                // Flat list of items to display
+                const rawReportItems: any[] = reportViewType === "summary" ? getReportSummaryItems() : getReportDetailedItems();
+                const reportPages = chunkArray(rawReportItems, 5);
+                const reportPagesToRender = reportPages.length > 0 ? reportPages : [[]];
+
+                return (
+                  <div className="space-y-6">
+                    {/* Screen Pagination Controls */}
+                    {reportPagesToRender.length > 1 && (
+                      <div className="no-print flex items-center justify-between bg-[#1e293b] border border-slate-700/60 rounded-2xl p-4 max-w-4xl mx-auto mb-4 text-white">
+                        <button
+                          type="button"
+                          disabled={activeReportPage === 0}
+                          onClick={() => setActiveReportPage((prev) => Math.max(0, prev - 1))}
+                          className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer select-none transition-colors"
+                        >
+                          <span>&larr;</span> الصفحة السابقة
+                        </button>
+
+                        <span className="text-xs font-semibold font-sans text-slate-300">
+                          معاينة الصفحة {activeReportPage + 1} من أصل {reportPagesToRender.length}
+                        </span>
+
+                        <button
+                          type="button"
+                          disabled={activeReportPage === reportPagesToRender.length - 1}
+                          onClick={() => setActiveReportPage((prev) => Math.min(reportPagesToRender.length - 1, prev + 1))}
+                          className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer select-none transition-colors"
+                        >
+                          الصفحة التالية <span>&rarr;</span>
+                        </button>
+                      </div>
                     )}
-                  </div>
 
-                  <div className="overflow-x-auto w-full max-w-full no-scrollbar">
-                    <table className="w-full text-[11px] text-right border border-slate-200 min-w-[700px]">
-                      <thead>
-                        {/* Repeatable print-only section title header */}
-                        <tr className="print-only-tr bg-slate-100 border-b-2 border-slate-300">
-                          <th
-                            colSpan={reportViewType === "summary" ? 6 : 8}
-                            className="py-3 px-3 text-right bg-slate-50 border border-slate-350"
-                          >
-                            <div className="flex items-center justify-between text-slate-950 font-bold">
-                              <span className="text-xs border-r-2 border-emerald-600 pr-2.5 font-bold">
+                    {/* Rendering Pages */}
+                    {reportPagesToRender.map((pageItems, pageIdx) => {
+                      const isPageActive = pageIdx === activeReportPage;
+                      const hasItems = pageItems.length > 0;
+
+                      return (
+                        <div
+                          key={pageIdx}
+                          className={`bg-white rounded-3xl border border-slate-300 p-8 shadow-sm space-y-6 printable-report-sheet max-w-4xl mx-auto text-slate-900 printable-report-page ${
+                            isPageActive ? "active-preview-page" : "hidden-on-screen"
+                          }`}
+                        >
+                          {/* Printed Header Banner */}
+                          <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
+                            <div>
+                              <h2 className="text-lg font-black text-slate-950 font-sans">
+                                مؤسسة مرسال - Mersal Foundation
+                              </h2>
+                              <p className="text-xs text-slate-500 font-medium font-sans">
+                                التقرير المالي المعزز لحسابات الموردين وفواتير الشراء
+                              </p>
+                              <p className="text-xs text-slate-500 font-mono mt-1">
+                                تاريخ استخراج التقرير: {new Date().toISOString().split("T")[0]}
+                              </p>
+                            </div>
+                            <div className="text-left flex flex-col items-end">
+                              <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-center">
+                                <MersalLogo
+                                  width={100}
+                                  height={100}
+                                  isDarkBackground={false}
+                                  className="h-12 w-auto"
+                                />
+                              </div>
+                              <span className="text-xs font-bold text-slate-950 block mt-1 font-sans">
+                                مؤسسة مرسال - Mersal Foundation
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Report specs indicators (ONLY ON FIRST PAGE: pageIdx === 0) */}
+                          {pageIdx === 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border border-slate-200 rounded-xl p-4 bg-slate-50">
+                              <div className="text-center font-bold">
+                                <span className="text-slate-500 text-xs font-medium block font-sans">
+                                  الفترة المحاسبية والمورد
+                                </span>
+                                <strong className="text-xs text-slate-800 font-bold block mt-1 leading-snug font-sans">
+                                  التقرير: من {reportStartDate} إلى {reportEndDate}
+                                  {selectedReportSupplierId !== "all"
+                                    ? ` | مورد: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`
+                                    : " | كشف مجمع للموردين"}
+                                  {reportWarehouseFilter !== "all"
+                                    ? ` | مخزن: ${reportWarehouseFilter}`
+                                    : " | كافة المخازن"}
+                                </strong>
+                              </div>
+                              <div className="text-center border-y border-slate-200 sm:border-y-0 sm:border-x py-2.5 sm:py-0">
+                                <span className="text-slate-500 text-xs font-medium block font-sans">
+                                  إجمالي التعاملات الصافية بالفترة
+                                </span>
+                                <strong className="text-sm text-slate-950 font-black block mt-1 font-mono">
+                                  {fAmt(getSelectedReportFinancials().total)} ج.م
+                                </strong>
+                              </div>
+                              <div className="text-center">
+                                <span className="text-slate-500 text-xs font-medium block font-sans">
+                                  المديونية غير المسواة المتبقية
+                                </span>
+                                <strong className="text-sm text-red-650 font-black block mt-1 font-mono">
+                                  {fAmt(getSelectedReportFinancials().pending)} ج.م
+                                </strong>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Ledger Listing inside the PDF */}
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between border-b border-slate-150 pb-2 no-print">
+                              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-widest border-r-2 border-emerald-600 pr-2 font-sans">
                                 {selectedReportSupplierId === "all"
                                   ? "تفاصيل أرصدة الموردين والفواتير النشطة"
                                   : `كشف حساب المورد التفصيلي: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`}
-                              </span>
-                              <span className="text-[10px] text-slate-500 font-mono font-medium">
-                                مؤسسة مرسال - Mersal Foundation (تابع التقرير المالي المعتمد)
-                              </span>
+                              </h4>
+                              {selectedReportSupplierId !== "all" && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedReportSupplierId("all")}
+                                  className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-colors no-print font-sans"
+                                >
+                                  عرض كافة الموردين
+                                </button>
+                              )}
                             </div>
-                          </th>
-                        </tr>
-                        {reportViewType === "summary" ? (
-                          <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
-                            <th className="py-2.5 px-3 text-right">
-                              المورد والشركة
-                            </th>
-                            <th className="py-2.5 px-3 text-center">
-                              عدد الفواتير بالفترة
-                            </th>
-                            <th className="py-2.5 px-3 text-left">
-                              إجمالي الفواتير الأصلية
-                            </th>
-                            <th className="py-2.5 px-3 text-left">
-                              إجمالي الخصومات الدائنة
-                            </th>
-                            <th className="py-2.5 px-3 text-left font-bold">
-                              إجمالي صافي المطلوب سداده
-                            </th>
-                            <th className="py-2.5 px-3 text-center">
-                              حالة السداد الإجمالية
-                            </th>
-                          </tr>
-                        ) : (
-                          <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
-                            <th className="py-2.5 px-3 text-right">
-                              المورد والشركة
-                            </th>
-                            <th className="py-2.5 px-3 text-right">
-                              رقم الفاتورة
-                            </th>
-                            <th className="py-2.5 px-3 text-right font-semibold">
-                              تاريخ الإضافة
-                            </th>
-                            <th className="py-2.5 px-3 text-right font-semibold">
-                              تاريخ الاستحقاق
-                            </th>
-                            <th className="py-2.5 px-3 text-left font-semibold">
-                              قيمة الفاتورة الأصلية
-                            </th>
-                            <th className="py-2.5 px-3 text-left font-semibold">
-                              خصم الإشعار الدائن
-                            </th>
-                            <th className="py-2.5 px-3 text-left font-bold">
-                              صافي المطلوب سداده
-                            </th>
-                            <th className="py-2.5 px-3 text-center">
-                              حالة السداد والتحصيل
-                            </th>
-                          </tr>
-                        )}
-                      </thead>
-                      <tbody>
-                        {(() => {
-                          const filteredSuppliers =
-                            selectedReportSupplierId === "all"
-                              ? suppliers
-                              : suppliers.filter(
-                                  (s) => s.id === selectedReportSupplierId,
-                                );
 
-                          let anyInvoicesFound = false;
-
-                          if (reportViewType === "summary") {
-                            return (
-                              <>
-                                {filteredSuppliers.map((sup) => {
-                                  const supInvoices = invoices.filter((i) => {
-                                    const matchesSupplier =
-                                      i.supplierId === sup.id;
-                                    const date =
-                                      (reportDateType === "issue_date"
-                                        ? i.issueDate
-                                        : i.dueDate) || "2026-06-01";
-                                    const matchesRange =
-                                      date >= reportStartDate &&
-                                      date <= reportEndDate;
-                                    const matchesWarehouse =
-                                      reportWarehouseFilter === "all" ||
-                                      i.warehouse === reportWarehouseFilter;
-                                    return (
-                                      matchesSupplier &&
-                                      matchesRange &&
-                                      matchesWarehouse
-                                    );
-                                  });
-                                  if (supInvoices.length === 0) return null;
-                                  anyInvoicesFound = true;
-
-                                  const totalOriginal = supInvoices.reduce(
-                                    (sum, inv) => sum + inv.totalAmount,
-                                    0,
-                                  );
-                                  const totalCN = supInvoices.reduce(
-                                    (sum, inv) =>
-                                      sum + (inv.creditNoteAmount || 0),
-                                    0,
-                                  );
-                                  const totalNet = supInvoices.reduce(
-                                    (sum, inv) =>
-                                      sum +
-                                      (inv.totalAmount -
-                                        (inv.creditNoteAmount || 0)),
-                                    0,
-                                  );
-
-                                  const paidCount = supInvoices.filter((i) =>
-                                    getFullPaymentStatus(i).includes(
-                                      "تم السداد",
-                                    ),
-                                  ).length;
-                                  let overallStatusText = "";
-                                  let badgeClass = "";
-                                  if (paidCount === supInvoices.length) {
-                                    overallStatusText = "مسددة بالكامل";
-                                    badgeClass =
-                                      "bg-emerald-100 text-emerald-800 border border-emerald-200";
-                                  } else if (paidCount > 0) {
-                                    overallStatusText = `مسدد جزئياً (${paidCount}/${supInvoices.length})`;
-                                    badgeClass =
-                                      "bg-amber-100 text-amber-800 border border-amber-200";
-                                  } else {
-                                    overallStatusText = "غير مسددة";
-                                    badgeClass =
-                                      "bg-rose-100 text-rose-800 border border-rose-200";
-                                  }
-
-                                  return (
-                                    <tr
-                                      key={sup.id}
-                                      className="border-b border-slate-200 hover:bg-slate-50/50"
+                            <div className="overflow-x-auto w-full max-w-full no-scrollbar">
+                              <table className="w-full text-[11px] text-right border border-slate-200 min-w-[700px]">
+                                <thead>
+                                  {/* Repeatable print-only section title header */}
+                                  <tr className="print-only-tr bg-slate-100 border-b-2 border-slate-300">
+                                    <th
+                                      colSpan={reportViewType === "summary" ? 6 : 8}
+                                      className="py-3 px-3 text-right bg-slate-50 border border-slate-350"
                                     >
-                                      <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
-                                        <div className="font-bold text-slate-900">
-                                          {sup.name}
-                                        </div>
-                                        <div className="text-[10px] text-slate-500 font-normal">
-                                          {sup.company}
-                                        </div>
-                                      </td>
-                                      <td className="py-2.5 px-3 font-mono font-bold text-center text-slate-700">
-                                        {supInvoices.length} فواتير
-                                      </td>
-                                      <td className="py-2.5 px-3 font-mono text-left font-medium">
-                                        {fAmt(totalOriginal)} ج.م
-                                      </td>
-                                      <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-left">
-                                        {totalCN > 0
-                                          ? `-${fAmt(totalCN)} ج.م`
-                                          : "0.0 ج.م"}
-                                      </td>
-                                      <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">
-                                        {fAmt(totalNet)} ج.م
-                                      </td>
-                                      <td className="py-2.5 px-3 text-center">
-                                        <span
-                                          className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${badgeClass}`}
-                                        >
-                                          {overallStatusText}
+                                      <div className="flex items-center justify-between text-slate-950 font-bold">
+                                        <span className="text-xs border-r-2 border-emerald-600 pr-2.5 font-bold font-sans">
+                                          {selectedReportSupplierId === "all"
+                                            ? "تفاصيل أرصدة الموردين والفواتير النشطة"
+                                            : `كشف حساب المورد التفصيلي: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`}
                                         </span>
+                                        <span className="text-[10px] text-slate-500 font-mono font-medium select-none">
+                                          مؤسسة مرسال - Mersal Foundation (تابع التقرير المالي المعتمد) - صفحة {pageIdx + 1}
+                                        </span>
+                                      </div>
+                                    </th>
+                                  </tr>
+                                  {reportViewType === "summary" ? (
+                                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold font-sans">
+                                      <th className="py-2.5 px-3 text-right">
+                                        المورد
+                                      </th>
+                                      <th className="py-2.5 px-3 text-center">
+                                        عدد الفواتير بالفترة
+                                      </th>
+                                      <th className="py-2.5 px-3 text-left">
+                                        إجمالي الفواتير الأصلية
+                                      </th>
+                                      <th className="py-2.5 px-3 text-left">
+                                        إجمالي الخصومات الدائنة
+                                      </th>
+                                      <th className="py-2.5 px-3 text-left font-bold">
+                                        إجمالي صافي المطلوب سداده
+                                      </th>
+                                      <th className="py-2.5 px-3 text-center">
+                                        حالة السداد الإجمالية
+                                      </th>
+                                    </tr>
+                                  ) : (
+                                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold font-sans">
+                                      <th className="py-2.5 px-3 text-right">
+                                        المورد
+                                      </th>
+                                      <th className="py-2.5 px-3 text-right">
+                                        رقم الفاتورة
+                                      </th>
+                                      <th className="py-2.5 px-3 text-right font-semibold">
+                                        تاريخ الإضافة
+                                      </th>
+                                      <th className="py-2.5 px-3 text-right font-semibold">
+                                        تاريخ الاستحقاق
+                                      </th>
+                                      <th className="py-2.5 px-3 text-left font-semibold">
+                                        قيمة الفاتورة الأصلية
+                                      </th>
+                                      <th className="py-2.5 px-3 text-left font-semibold">
+                                        خصم الإشعار الدائن
+                                      </th>
+                                      <th className="py-2.5 px-3 text-left font-bold">
+                                        صافي المطلوب سداده
+                                      </th>
+                                      <th className="py-2.5 px-3 text-center">
+                                        حالة السداد والتحصيل
+                                      </th>
+                                    </tr>
+                                  )}
+                                </thead>
+                                <tbody>
+                                  {!hasItems ? (
+                                    <tr>
+                                      <td
+                                        colSpan={reportViewType === "summary" ? 6 : 8}
+                                        className="py-12 text-center text-slate-400 italic font-sans"
+                                      >
+                                        لا توجد بيانات مسجلة للفترة المحددة أو المورد المختار.
                                       </td>
                                     </tr>
-                                  );
-                                })}
-                                {!anyInvoicesFound && (
-                                  <tr>
-                                    <td
-                                      colSpan={6}
-                                      className="py-6 text-center text-slate-400 italic"
-                                    >
-                                      لا توجد فواتير مسجلة للفترة المحددة أو
-                                      المورد المختار.
-                                    </td>
-                                  </tr>
-                                )}
-                              </>
-                            );
-                          }
+                                  ) : reportViewType === "summary" ? (
+                                    (pageItems as any as Array<{
+                                      supplier: any;
+                                      supInvoices: Invoice[];
+                                      totalOriginal: number;
+                                      totalCN: number;
+                                      totalNet: number;
+                                      overallStatusText: string;
+                                      badgeClass: string;
+                                    }>).map((item) => (
+                                      <tr
+                                        key={item.supplier.id}
+                                        className="border-b border-slate-200 hover:bg-slate-50/50"
+                                      >
+                                        <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
+                                          <div className="font-bold text-slate-950 text-xs">
+                                            {item.supplier.name}
+                                          </div>
+                                        </td>
+                                        <td className="py-2.5 px-3 font-mono font-bold text-center text-slate-700">
+                                          {item.supInvoices.length} فواتير
+                                        </td>
+                                        <td className="py-2.5 px-3 font-mono text-left font-medium">
+                                          {fAmt(item.totalOriginal)} ج.م
+                                        </td>
+                                        <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-left">
+                                          {item.totalCN > 0
+                                            ? `-${fAmt(item.totalCN)} ج.م`
+                                            : "0.0 ج.م"}
+                                        </td>
+                                        <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">
+                                          {fAmt(item.totalNet)} ج.م
+                                        </td>
+                                        <td className="py-2.5 px-3 text-center">
+                                          <span
+                                            className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${item.badgeClass}`}
+                                          >
+                                            {item.overallStatusText}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    ))
+                                  ) : (
+                                    (pageItems as any as Array<{
+                                      supplier: any;
+                                      invoice: Invoice;
+                                      payableAmount: number;
+                                    }>).map((item) => {
+                                      const statusText = getFullPaymentStatus(item.invoice);
+                                      let badgeClass = "bg-slate-100 text-slate-800 border border-slate-200";
+                                      if (statusText === "تم السداد نقداً") {
+                                        badgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-200";
+                                      } else if (statusText === "تم السداد بتحويل بنكي") {
+                                        badgeClass = "bg-sky-100 text-sky-800 border border-sky-200";
+                                      } else if (statusText === "تم السداد بفوري" || statusText === "تم السداد بشيك") {
+                                        badgeClass = "bg-indigo-100 text-indigo-800 border border-indigo-200";
+                                      } else if (statusText === "تم السداد") {
+                                        badgeClass = "bg-emerald-100 text-emerald-800 border border-emerald-250";
+                                      } else if (statusText === "لم يتم السداد (متجاوزة الاستحقاق)") {
+                                        badgeClass = "bg-rose-100 text-rose-800 border border-rose-200 font-bold";
+                                      } else if (statusText === "مستحقة للدفع") {
+                                        badgeClass = "bg-amber-100 text-amber-800 border border-amber-200";
+                                      }
 
-                          return (
-                            <>
-                              {filteredSuppliers.map((sup) => {
-                                const supInvoices = invoices.filter((i) => {
-                                  const matchesSupplier =
-                                    i.supplierId === sup.id;
-                                  const date =
-                                    (reportDateType === "issue_date"
-                                      ? i.issueDate
-                                      : i.dueDate) || "2026-06-01";
-                                  const matchesRange =
-                                    date >= reportStartDate &&
-                                    date <= reportEndDate;
-                                  const matchesWarehouse =
-                                    reportWarehouseFilter === "all" ||
-                                    i.warehouse === reportWarehouseFilter;
-                                  return (
-                                    matchesSupplier &&
-                                    matchesRange &&
-                                    matchesWarehouse
-                                  );
-                                });
-                                if (supInvoices.length > 0) {
-                                  anyInvoicesFound = true;
-                                }
-
-                                return supInvoices.map((inv, idx) => {
-                                  const payableAmount =
-                                    inv.totalAmount -
-                                    (inv.creditNoteAmount || 0);
-                                  return (
-                                    <tr
-                                      key={inv.id}
-                                      className="border-b border-slate-200 hover:bg-slate-50/50"
-                                    >
-                                      <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
-                                        <div className="font-bold text-slate-950">
-                                          {sup.name}
-                                        </div>
-                                        <div className="text-[10px] text-slate-500 font-normal">
-                                          {sup.company}
-                                        </div>
-                                      </td>
-                                      <td className="py-2.5 px-3 font-mono font-bold text-sky-800">
-                                        {inv.invoiceNumber}
-                                      </td>
-                                      <td className="py-2.5 px-3 font-mono text-slate-600">
-                                        {inv.issueDate || "2026-06-01"}
-                                      </td>
-                                      <td className="py-2.5 px-3 font-mono text-slate-500">
-                                        {inv.dueDate}
-                                      </td>
-                                      <td className="py-2.5 px-3 font-mono text-left font-medium">
-                                        {fAmt(inv.totalAmount)} ج.م
-                                      </td>
-                                      <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-left">
-                                        {inv.creditNoteAmount &&
-                                        inv.creditNoteAmount > 0
-                                          ? `-${fAmt(inv.creditNoteAmount)} ج.م`
-                                          : "0.0 ج.م"}
-                                      </td>
-                                      <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">
-                                        {fAmt(payableAmount)} ج.م
-                                      </td>
-                                      <td className="py-2.5 px-3 text-center">
-                                        {(() => {
-                                          const statusText =
-                                            getFullPaymentStatus(inv);
-                                          let badgeClass =
-                                            "bg-slate-100 text-slate-800 border border-slate-200";
-                                          if (
-                                            statusText === "تم السداد نقداً"
-                                          ) {
-                                            badgeClass =
-                                              "bg-emerald-100 text-emerald-800 border border-emerald-200";
-                                          } else if (
-                                            statusText ===
-                                            "تم السداد بتحويل بنكي"
-                                          ) {
-                                            badgeClass =
-                                              "bg-sky-100 text-sky-800 border border-sky-200";
-                                          } else if (
-                                            statusText === "تم السداد بفوري" ||
-                                            statusText === "تم السداد بشيك"
-                                          ) {
-                                            badgeClass =
-                                              "bg-indigo-100 text-indigo-800 border border-indigo-200";
-                                          } else if (
-                                            statusText === "تم السداد"
-                                          ) {
-                                            badgeClass =
-                                              "bg-emerald-100 text-emerald-800 border border-emerald-250";
-                                          } else if (
-                                            statusText ===
-                                            "لم يتم السداد (متجاوزة الاستحقاق)"
-                                          ) {
-                                            badgeClass =
-                                              "bg-rose-100 text-rose-800 border border-rose-200 font-bold";
-                                          } else if (
-                                            statusText === "مستحقة للدفع"
-                                          ) {
-                                            badgeClass =
-                                              "bg-amber-100 text-amber-800 border border-amber-200";
-                                          }
-                                          return (
+                                      return (
+                                        <tr
+                                          key={item.invoice.id}
+                                          className="border-b border-slate-200 hover:bg-slate-50/50"
+                                        >
+                                          <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
+                                            <div className="font-bold text-slate-950 text-xs">
+                                              {item.supplier.name}
+                                            </div>
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono font-bold text-sky-800">
+                                            {item.invoice.invoiceNumber}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono text-slate-600">
+                                            {item.invoice.issueDate || "2026-06-01"}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono text-slate-500">
+                                            {item.invoice.dueDate}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono text-left font-medium">
+                                            {fAmt(item.invoice.totalAmount)} ج.م
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-left">
+                                            {item.invoice.creditNoteAmount && item.invoice.creditNoteAmount > 0
+                                              ? `-${fAmt(item.invoice.creditNoteAmount)} ج.م`
+                                              : "0.0 ج.م"}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">
+                                            {fAmt(item.payableAmount)} ج.م
+                                          </td>
+                                          <td className="py-2.5 px-3 text-center">
                                             <span
                                               className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${badgeClass}`}
                                             >
                                               {statusText}
                                             </span>
-                                          );
-                                        })()}
-                                      </td>
-                                    </tr>
-                                  );
-                                });
-                              })}
-                              {!anyInvoicesFound && (
-                                <tr>
-                                  <td
-                                    colSpan={8}
-                                    className="py-6 text-center text-slate-400 italic"
-                                  >
-                                    لا توجد فواتير مسجلة للفترة المحددة أو
-                                    المورد المختار.
-                                  </td>
-                                </tr>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
 
-                {/* Legal terms stamp bottom screen */}
-                <div className="flex items-end justify-between border-t border-slate-200 pt-6 mt-12 text-xs">
-                  <div>
-                    <p className="font-semibold text-slate-800">
-                      توقيع الإدارة المالية والمحاسبة
-                    </p>
-                    <div className="h-10 w-32 border-b border-slate-300 border-dashed mt-2"></div>
+                          {/* Legal terms stamp bottom screen */}
+                          <div className="flex items-end justify-between border-t border-slate-200 pt-6 mt-12 text-xs">
+                            <div>
+                              <p className="font-semibold text-slate-800 font-sans">
+                                توقيع الإدارة المالية والمحاسبة
+                              </p>
+                              <div className="h-10 w-32 border-b border-slate-300 border-dashed mt-2"></div>
+                            </div>
+                            <div className="text-left font-mono text-[9px] text-slate-400 select-none">
+                              صفحة {pageIdx + 1} من {reportPagesToRender.length}
+                            </div>
+                            <div className="text-left">
+                              <p className="font-semibold text-slate-800 font-sans">
+                                خاتم وتوثيق المؤسسة
+                              </p>
+                              <div className="w-16 h-16 rounded-full border-2 border-emerald-600/30 flex items-center justify-center text-[10px] text-emerald-600 border-dashed mt-2 select-none mx-auto leading-tight font-sans">
+                                تم تصديره
+                                <br />
+                                إلكترونياً
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="text-left">
-                    <p className="font-semibold text-slate-800">
-                      خاتم وتوثيق المؤسسة
-                    </p>
-                    <div className="w-16 h-16 rounded-full border-2 border-emerald-600/30 flex items-center justify-center text-[10px] text-emerald-600 border-dashed mt-2 select-none mx-auto leading-tight">
-                      تم تصديره
-                      <br />
-                      إلكترونياً
-                    </div>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
             </motion.div>
           )}
           {/* VIEW: BACKUPS TIMELINE */}

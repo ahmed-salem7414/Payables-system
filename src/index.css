@@ -35,6 +35,15 @@ html, body {
   display: none !important;
 }
 
+@media screen {
+  .printable-report-page {
+    display: none !important;
+  }
+  .printable-report-page.active-preview-page {
+    display: block !important;
+  }
+}
+
 @media print {
   @page {
     size: A4 portrait;
@@ -74,6 +83,23 @@ html, body {
     width: 100% !important;
     background: #ffffff !important;
     color: #0f172a !important;
+  }
+  .printable-report-page {
+    display: block !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 0 1.5cm 0 !important; /* spacing during debugging, but collapses to page break in printed mode */
+    max-width: 100% !important;
+    width: 100% !important;
+    background: #ffffff !important;
+  }
+  .printable-report-page:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    margin-bottom: 0 !important;
   }
   table {
     width: 100% !important;
