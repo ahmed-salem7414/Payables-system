@@ -2303,7 +2303,74 @@ export default function MawridDashboard() {
 
   // Printable layout window trigger (foolproof clean RTL Arabic PDF/Print setup)
   const handlePrintReport = () => {
-    window.print();
+    // 1. Hook the window beforeprint to ensure 100% zoom and reset any shifts
+    window.onbeforeprint = () => {
+      document.body.style.zoom = "100%";
+    };
+
+    const html2pdf = (window as any).html2pdf;
+    const element = document.getElementById("printable-report-content");
+
+    if (html2pdf && element) {
+      // Find all pages inside printable-report-content
+      const pages = element.querySelectorAll(".printable-report-page");
+      const savedClasses: Array<{ element: Element; className: string }> = [];
+
+      // Temporarily expand all pages so they are all fully displayed and styled for html2pdf
+      pages.forEach((p) => {
+        savedClasses.push({ element: p, className: p.className });
+        p.classList.remove("hidden-on-screen");
+        p.classList.add("active-preview-page");
+      });
+
+      const opt = {
+        margin: 0, // No extra margin because pages already have 15mm padding in CSS matching exactly
+        filename: `تقرير_مؤسسة_مرسال_المصنف_${new Date().toISOString().split("T")[0]}.pdf`,
+        image: {
+          type: 'jpeg',
+          quality: 1.0
+        },
+        html2canvas: {
+          scale: 4, // High definition scaling as recommended for flawless lines and Arabic text readability
+          letterRendering: true,
+          useCORS: true,
+          scrollX: 0,
+          scrollY: 0
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait'
+        },
+        pagebreak: {
+          mode: ['avoid-all', 'css', 'legacy']
+        }
+      };
+
+      // Execute pdf rendering
+      html2pdf()
+        .set(opt)
+        .from(element)
+        .save()
+        .then(() => {
+          // Restore exact screen pagination classes
+          savedClasses.forEach(({ element, className }) => {
+            element.className = className;
+          });
+        })
+        .catch((err: any) => {
+          console.error("Error generating PDF via html2pdf:", err);
+          // Restore classes on error first
+          savedClasses.forEach(({ element, className }) => {
+            element.className = className;
+          });
+          // Fallback to standard window print
+          window.print();
+        });
+    } else {
+      // Fallback
+      window.print();
+    }
   };
 
   // Full payment status text helper
@@ -4538,17 +4605,18 @@ export default function MawridDashboard() {
                     )}
 
                     {/* Rendering Pages */}
-                    {reportPagesToRender.map((pageItems, pageIdx) => {
-                      const isPageActive = pageIdx === activeReportPage;
-                      const hasItems = pageItems.length > 0;
+                    <div id="printable-report-content" className="space-y-6">
+                      {reportPagesToRender.map((pageItems, pageIdx) => {
+                        const isPageActive = pageIdx === activeReportPage;
+                        const hasItems = pageItems.length > 0;
 
-                      return (
-                        <div
-                          key={pageIdx}
-                          className={`bg-white rounded-3xl border border-slate-300 p-8 shadow-sm space-y-6 printable-report-sheet max-w-4xl mx-auto text-slate-900 printable-report-page ${
-                            isPageActive ? "active-preview-page" : "hidden-on-screen"
-                          }`}
-                        >
+                        return (
+                          <div
+                            key={pageIdx}
+                            className={`bg-white rounded-3xl border border-slate-300 p-8 shadow-sm space-y-6 printable-report-sheet max-w-4xl mx-auto text-slate-900 printable-report-page ${
+                              isPageActive ? "active-preview-page" : "hidden-on-screen"
+                            }`}
+                          >
                           {/* Printed Header Banner */}
                           <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
                             <div>
@@ -4848,6 +4916,7 @@ export default function MawridDashboard() {
                         </div>
                       );
                     })}
+                    </div>
                   </div>
                 );
               })()}

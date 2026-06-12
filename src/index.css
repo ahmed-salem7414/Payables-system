@@ -46,8 +46,8 @@ html, body {
 
 @media print {
   @page {
-    size: auto;
-    margin: 1cm 1.2cm;
+    size: A4 portrait;
+    margin: 0;
   }
   
   /* Force exact colors and backgrounds on all printed elements */
@@ -55,12 +55,16 @@ html, body {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+    box-sizing: border-box !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
   }
 
   html, body {
     background: #ffffff !important;
     color: #0f172a !important;
-    width: 100% !important;
+    width: 210mm !important;
+    height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
   }
@@ -82,21 +86,24 @@ html, body {
     background: #ffffff !important;
     color: #0f172a !important;
     
-    /* Retain 100% of the gorgeous display layout, including borders, gaps, margins, paddings, and shadow */
-    width: 896px !important; /* Matches exactly 100% of screen's max-w-4xl width to keep columns and text flow perfect */
-    max-width: 100% !important;
+    /* Standard Real A4 Size Container with high fidelity */
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    padding: 15mm !important;
+    margin: 0 auto !important;
     box-sizing: border-box !important;
+    position: relative !important;
+    overflow: hidden !important;
     
     border: 1px solid #cbd5e1 !important;
     border-radius: 1.5rem !important; /* rounded-3xl */
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
-    padding: 2rem !important; /* p-8 */
-    margin: 0 auto 1.5cm auto !important;
+    box-shadow: none !important; /* Remove screen shadow in actual print */
   }
   .printable-report-page:last-child {
     page-break-after: avoid !important;
     break-after: avoid !important;
-    margin-bottom: 0 !important;
   }
   table {
     width: 100% !important;
