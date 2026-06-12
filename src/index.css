@@ -75,26 +75,30 @@ html, body {
     display: table-row !important;
   }
   .printable-report-sheet {
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
     max-width: 100% !important;
     width: 100% !important;
     background: #ffffff !important;
     color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 1.5rem !important; /* rounded-3xl */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+    padding: 2rem !important; /* p-8 */
+    margin: 0 0 1.5cm 0 !important;
   }
   .printable-report-page {
     display: block !important;
     page-break-after: always !important;
     break-after: page !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 0 1.5cm 0 !important; /* spacing during debugging, but collapses to page break in printed mode */
+    background: #ffffff !important;
+    color: #0f172a !important;
     max-width: 100% !important;
     width: 100% !important;
-    background: #ffffff !important;
+    /* Retain 100% of the gorgeous display layout, including borders, gaps, margins, paddings, and shadow */
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 1.5rem !important; /* rounded-3xl */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+    padding: 2rem !important; /* p-8 */
+    margin: 0 0 1.5cm 0 !important;
   }
   .printable-report-page:last-child {
     page-break-after: avoid !important;
@@ -115,19 +119,12 @@ html, body {
     page-break-inside: avoid !important;
   }
   th {
-    background-color: #f8fafc !important; /* matches tailwind light background */
-    color: #0f172a !important;
-    font-weight: 700 !important;
     border: 1px solid #cbd5e1 !important;
-    padding: 8px 10px !important;
-    font-size: 8.5pt !important;
-    text-align: right !important;
+    /* Do not force override font size, color and padding, allowing Tailwind's beautiful screen values to work 100% */
   }
   td {
     border: 1px solid #e2e8f0 !important;
-    padding: 8px 10px !important;
-    font-size: 8.5pt !important;
-    color: #1e293b !important;
+    /* Do not force override font size, color and padding, allowing Tailwind's beautiful screen values to work 100% */
   }
   /* Retain original badge color themes with a subtle print border if needed */
   .printable-report-sheet .rounded-full {
