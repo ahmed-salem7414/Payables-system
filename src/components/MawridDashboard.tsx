@@ -4490,7 +4490,7 @@ export default function MawridDashboard() {
 
                 {/* Ledger Listing inside the PDF */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-150 pb-2">
+                  <div className="flex items-center justify-between border-b border-slate-150 pb-2 no-print">
                     <h4 className="text-xs font-bold text-slate-900 uppercase tracking-widest border-r-2 border-emerald-600 pr-2">
                       {selectedReportSupplierId === "all"
                         ? "تفاصيل أرصدة الموردين والفواتير النشطة"
@@ -4510,6 +4510,24 @@ export default function MawridDashboard() {
                   <div className="overflow-x-auto w-full max-w-full no-scrollbar">
                     <table className="w-full text-[11px] text-right border border-slate-200 min-w-[700px]">
                       <thead>
+                        {/* Repeatable print-only section title header */}
+                        <tr className="print-only-tr bg-slate-100 border-b-2 border-slate-300">
+                          <th
+                            colSpan={reportViewType === "summary" ? 6 : 8}
+                            className="py-3 px-3 text-right bg-slate-50 border border-slate-350"
+                          >
+                            <div className="flex items-center justify-between text-slate-950 font-bold">
+                              <span className="text-xs border-r-2 border-emerald-600 pr-2.5 font-bold">
+                                {selectedReportSupplierId === "all"
+                                  ? "تفاصيل أرصدة الموردين والفواتير النشطة"
+                                  : `كشف حساب المورد التفصيلي: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`}
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-mono font-medium">
+                                مؤسسة مرسال - Mersal Foundation (تابع التقرير المالي المعتمد)
+                              </span>
+                            </div>
+                          </th>
+                        </tr>
                         {reportViewType === "summary" ? (
                           <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
                             <th className="py-2.5 px-3 text-right">
