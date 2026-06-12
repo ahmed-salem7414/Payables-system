@@ -194,6 +194,7 @@ export default function MawridDashboard() {
     "detailed",
   );
   const [activeReportPage, setActiveReportPage] = useState<number>(0);
+  const [reportOrientation, setReportOrientation] = useState<"portrait" | "landscape">("portrait");
 
   // Attachment upload states
   const [invoiceAttachment, setInvoiceAttachment] = useState<{
@@ -4257,9 +4258,19 @@ export default function MawridDashboard() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6 animate-fade-in"
             >
+              {/* Dynamic Page Orientation Style Injector for A4 PDF */}
+              <style dangerouslySetInnerHTML={{ __html: `
+                @media print {
+                  @page {
+                    size: A4 ${reportOrientation} !important;
+                    margin: 1cm 1.2cm !important;
+                  }
+                }
+              `}} />
+
               {/* Unified High-Density Single Line Control Panel for reports/portfolio */}
               <div className="no-print bg-[#1e293b]/95 p-4 rounded-xl border border-slate-700/80 shadow-2xl">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-9 gap-3 items-end">
                   {/* 1. Supplier Select */}
                   <div className="flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
@@ -4372,7 +4383,24 @@ export default function MawridDashboard() {
                     </select>
                   </div>
 
-                  {/* 7. Excel Export Button */}
+                  {/* 7. Design/Orientation PDF Option */}
+                  <div className="flex flex-col gap-1 w-full">
+                    <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
+                      <span>📐</span> مقاس اتجاه A4:
+                    </label>
+                    <select
+                      value={reportOrientation}
+                      onChange={(e) => {
+                        setReportOrientation(e.target.value as "portrait" | "landscape");
+                      }}
+                      className="bg-[#0f172a] text-pink-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-pink-500 font-bold cursor-pointer font-sans w-full"
+                    >
+                      <option value="portrait">🗼 طولي (A4 Portrait)</option>
+                      <option value="landscape">🌅 عرضي (A4 Landscape)</option>
+                    </select>
+                  </div>
+
+                  {/* 8. Excel Export Button */}
                   <button
                     type="button"
                     onClick={handleExportReportToExcel}
@@ -4381,7 +4409,7 @@ export default function MawridDashboard() {
                     <span>📊</span> تصدير Excel
                   </button>
 
-                  {/* 8. PDF Export Button */}
+                  {/* 9. PDF Export Button */}
                   <button
                     type="button"
                     onClick={handlePrintReport}
