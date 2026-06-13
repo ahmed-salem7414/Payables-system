@@ -57,6 +57,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
+import html2pdf from "html2pdf.js";
 
 import {
   Supplier,
@@ -482,108 +483,49 @@ export default function MawridDashboard() {
   const [firebaseStatus, setFirebaseStatus] = useState<
     "connecting" | "success" | "fallback" | "error"
   >("connecting");
+  const [dbError, setDbError] = useState<string | null>(null);
 
-  // Load initial store from custom project "payable-system" via client-side Firebase (with local filesystem fallback) on mount
+  // Load initial store from server backend, which persists to PostgreSQL and has local backup file fallback
   useEffect(() => {
     const initializeDataSystem = async () => {
-      let isLoadedFromFirebase = false;
       try {
         setFirebaseStatus("connecting");
-        // Test direct client write probe to user's custom "payable-system"
-        const isClientFirebaseHealthy = await testConnection();
+        const res = await fetch("/api/get-store");
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            if (Array.isArray(data.suppliers)) setSuppliers(data.suppliers);
+            if (Array.isArray(data.invoices)) setInvoices(data.invoices);
+            if (Array.isArray(data.payments)) setPayments(data.payments);
+            if (Array.isArray(data.backups)) setBackups(data.backups);
+            if (Array.isArray(data.supplierCategories))
+              setSupplierCategories(data.supplierCategories);
+            if (Array.isArray(data.warehouses))
+              setWarehouses(data.warehouses);
+            if (Array.isArray(data.linkedBanks))
+              setLinkedBanks(data.linkedBanks);
+            if (typeof data.safeBalance === "number")
+              setSafeBalance(data.safeBalance);
+            if (Array.isArray(data.creditNotes))
+              setCreditNotes(data.creditNotes);
 
-        if (isClientFirebaseHealthy) {
-          console.log(
-            "🔥 Successfully connected to user's payable-system Firestore database directly on client pre-flight check.",
-          );
-          // Load complete store from client-side Firestore
-          const firestoreData = await loadFromUserFirestore();
-
-          if (
-            firestoreData &&
-            ((Array.isArray(firestoreData.suppliers) &&
-              firestoreData.suppliers.length > 0) ||
-              (Array.isArray(firestoreData.invoices) &&
-                firestoreData.invoices.length > 0) ||
-              (Array.isArray(firestoreData.supplierCategories) &&
-                firestoreData.supplierCategories.length > 0))
-          ) {
-            console.log(
-              "🔥 Found direct Firestore data in payable-system. Charging active dashboard state.",
-            );
-            if (Array.isArray(firestoreData.suppliers))
-              setSuppliers(firestoreData.suppliers);
-            if (Array.isArray(firestoreData.invoices))
-              setInvoices(firestoreData.invoices);
-            if (Array.isArray(firestoreData.payments))
-              setPayments(firestoreData.payments);
-            if (Array.isArray(firestoreData.backups))
-              setBackups(firestoreData.backups);
-            if (Array.isArray(firestoreData.supplierCategories))
-              setSupplierCategories(firestoreData.supplierCategories);
-            if (Array.isArray(firestoreData.warehouses))
-              setWarehouses(firestoreData.warehouses);
-            if (Array.isArray(firestoreData.linkedBanks))
-              setLinkedBanks(firestoreData.linkedBanks);
-            if (typeof firestoreData.safeBalance === "number")
-              setSafeBalance(firestoreData.safeBalance);
-            if (Array.isArray(firestoreData.creditNotes))
-              setCreditNotes(firestoreData.creditNotes);
-
-            setFirebaseStatus("success");
-            isLoadedFromFirebase = true;
-          } else {
-            console.log(
-              "ℹ️ Direct custom Firestore project is currently empty. Reconciling with local server file cache fallback...",
-            );
-          }
-        } else {
-          setFirebaseStatus("fallback");
-        }
-      } catch (err) {
-        console.warn(
-          "⚠️ Custom Firestore direct load failed or permission restricted, using server local backup fallback:",
-          err,
-        );
-        setFirebaseStatus("error");
-      }
-
-      // Local Fallback: If not loaded from custom Firestore, load local backup cache from Cloud Run server disk
-      if (!isLoadedFromFirebase) {
-        try {
-          const res = await fetch("/api/get-store");
-          if (res.ok) {
-            const data = await res.json();
-            if (data) {
-              if (Array.isArray(data.suppliers)) setSuppliers(data.suppliers);
-              if (Array.isArray(data.invoices)) setInvoices(data.invoices);
-              if (Array.isArray(data.payments)) setPayments(data.payments);
-              if (Array.isArray(data.backups)) setBackups(data.backups);
-              if (Array.isArray(data.supplierCategories))
-                setSupplierCategories(data.supplierCategories);
-              if (Array.isArray(data.warehouses))
-                setWarehouses(data.warehouses);
-              if (Array.isArray(data.linkedBanks))
-                setLinkedBanks(data.linkedBanks);
-              if (typeof data.safeBalance === "number")
-                setSafeBalance(data.safeBalance);
-              if (Array.isArray(data.creditNotes))
-                setCreditNotes(data.creditNotes);
-
-              if (data.postgresActive) {
-                setFirebaseStatus("success");
-              } else {
-                setFirebaseStatus("fallback");
-              }
+            if (data.postgresActive) {
+              setFirebaseStatus("success");
+              setDbError(null);
+            } else {
+              setFirebaseStatus("fallback");
+              setDbError(data.postgresError || "قاعدة اتصال محلية نشطة");
             }
           }
-        } catch (serverErr) {
-          console.error("Failed to load local backup from server:", serverErr);
+        } else {
           setFirebaseStatus("error");
-        } finally {
-          setIsDataLoaded(true);
+          setDbError("Server returned status " + res.status);
         }
-      } else {
+      } catch (serverErr: any) {
+        console.error("Failed to load local backup from server:", serverErr);
+        setFirebaseStatus("error");
+        setDbError(serverErr?.message || String(serverErr));
+      } finally {
         setIsDataLoaded(true);
       }
     };
@@ -619,15 +561,19 @@ export default function MawridDashboard() {
           const resData = await res.json();
           if (resData && resData.postgresActive) {
             setFirebaseStatus("success");
+            setDbError(null);
           } else {
             setFirebaseStatus("fallback");
+            setDbError(resData?.postgresError || "قاعدة اتصال محلية نشطة");
           }
         } else {
           setFirebaseStatus("error");
+          setDbError("حدث خطأ أثناء حفظ نسخة احتياطية من البيانات على خادم التطبيق المحلي.");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to save state update to server:", err);
         setFirebaseStatus("error");
+        setDbError(err?.message || String(err));
       }
     };
 
@@ -2470,126 +2416,79 @@ export default function MawridDashboard() {
     showToast(`تم تصدير تقرير Excel (${filePrefix}) بنجاح.`);
   };
 
-  // Export report to high-fidelity PDF using server-side Puppeteer
+  // Export report to high-fidelity PDF using sanitized client-side html2pdf.js
   const handleExportReportToPDF = async () => {
     const element = document.getElementById("printable-report-content");
     if (!element) return;
 
-    try {
-      showToast("جاري إعداد وتحميل ملف الـ PDF عبر الخادم... يرجى الانتظار.");
+    // Keep backup of styles and original classes to restore after PDF generation
+    const savedClasses: Array<{ element: Element; className: string }> = [];
+    const originalStyleTexts: Array<{ element: HTMLStyleElement; content: string }> = [];
 
-      // 1. Temporarily apply printing classes to get correct layout on screen
+    try {
+      showToast("جاري تصدير تقرير PDF فائق الدقة محلياً في المتصفح... يرجى الانتظار.");
+
+      // 1. Temporarily backup and sanitize all styles to prevent html2canvas color parsing crashes on "oklab" / "oklch"
+      const styleElements = Array.from(document.querySelectorAll("style"));
+      styleElements.forEach((style) => {
+        originalStyleTexts.push({ element: style, content: style.innerHTML });
+        let text = style.innerHTML;
+        if (text.includes("oklab") || text.includes("oklch")) {
+          // Replace color space functions with a parseable fallback color function
+          text = text.replace(/oklab\(([^)]+)\)/gi, "rgb(120, 120, 120)");
+          text = text.replace(/oklch\(([^)]+)\)/gi, "rgba(100, 116, 139, 0.5)");
+          style.innerHTML = text;
+        }
+      });
+
+      // 2. Temporarily apply printing classes to get correct layout on screen
       document.body.classList.add("generating-pdf");
       element.classList.add("generating-pdf");
 
-      // 2. Temporarily show all hidden pages
+      // 3. Temporarily show all hidden pages
       const pages = element.querySelectorAll(".printable-report-page");
-      const savedClasses: Array<{ element: Element; className: string }> = [];
-
       pages.forEach((p) => {
         savedClasses.push({ element: p, className: p.className });
         p.classList.remove("hidden-on-screen");
         p.classList.add("active-preview-page");
       });
 
-      // 3. Collect all system stylesheets & style tags to fully recreate styles in Puppeteer
-      const styleElements = Array.from(document.querySelectorAll("style"));
-      const stylesHtml = styleElements.map((el) => el.outerHTML).join("\n");
+      // 4. Set html2pdf options
+      const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
+      const filename = `تقرير_مؤسسة_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.pdf`;
 
-      const linkElements = Array.from(document.querySelectorAll("link[rel='stylesheet']")) as HTMLLinkElement[];
-      const linksHtml = linkElements
-        .map((link) => {
-          if (link.href && link.href.startsWith(process.env.APP_URL || window.location.origin)) {
-            return `<link rel="stylesheet" href="${link.href}">`;
-          }
-          if (link.href && link.href.startsWith("/")) {
-            return `<link rel="stylesheet" href="${window.location.origin}${link.href}">`;
-          }
-          return link.outerHTML;
-        })
-        .join("\n");
+      const opt = {
+        margin: [0, 0, 0, 0] as [number, number, number, number],
+        filename,
+        image: { type: "jpeg" as const, quality: 0.98 },
+        html2canvas: {
+          scale: 2.2, // Higher density for pixel perfect sharpness
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          scrollX: 0,
+          scrollY: 0
+        },
+        jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "portrait" as const }
+      };
 
-      const reportContentHtml = element.innerHTML;
+      // 5. Execute PDF Generation
+      await html2pdf().from(element).set(opt).save();
 
-      // 4. Restore actual page state on client screen immediately
+      showToast("تم تنزيل تقرير PDF بنجاح فائق الدقة.");
+    } catch (err: any) {
+      console.error("PDF generation client-side error:", err);
+      showToast(`حدث خطأ أثناء تصدير ملف PDF: ${err.message || err}`);
+    } finally {
+      // 6. Restore original styles and page states ALWAYS
+      originalStyleTexts.forEach(({ element, content }) => {
+        element.innerHTML = content;
+      });
       savedClasses.forEach(({ element, className }) => {
         element.className = className;
       });
       document.body.classList.remove("generating-pdf");
       element.classList.remove("generating-pdf");
-
-      // 5. Build high-fidelity full HTML container for Puppeteer rendering
-      const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
-      const filename = `تقرير_مؤسسة_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.pdf`;
-
-      // Since we use A4 portrait layout physically in index.css:
-      // width: 210mm, height: 297mm
-      const fullHtml = `
-<!DOCTYPE html>
-<html dir="rtl" class="generating-pdf">
-<head>
-  <meta charset="utf-8">
-  <title>${filename}</title>
-  ${linksHtml}
-  ${stylesHtml}
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-    body {
-      font-family: 'Cairo', 'Inter', sans-serif !important;
-      background: #ffffff !important;
-      background-color: #ffffff !important;
-      color: #0f172a !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    @page {
-      size: A4 portrait !important;
-      margin: 0 !important;
-    }
-  </style>
-</head>
-<body class="generating-pdf">
-  <div id="printable-report-content">
-    ${reportContentHtml}
-  </div>
-</body>
-</html>
-      `;
-
-      // 6. Post layout payload to backend Puppeteer endpoint
-      const response = await fetch("/api/export-pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          html: fullHtml,
-          filename,
-          landscape: false, // Portrait orientation is requested & structured in index.css
-        }),
-      });
-
-      if (!response.ok) {
-        const errJson = await response.json();
-        throw new Error(errJson.details || errJson.error || "Server-side PDF generation failed");
-      }
-
-      const pdfBlob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(pdfBlob);
-      const downloadLink = document.createElement("a");
-      downloadLink.href = downloadUrl;
-      downloadLink.download = filename;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      window.URL.revokeObjectURL(downloadUrl);
-
-      showToast("تم تحميل تقرير PDF بنجاح فائق الدقة.");
-    } catch (err: any) {
-      console.error("PDF generation error with Puppeteer:", err);
-      showToast(`حدث خطأ أثناء تصدير ملف PDF: ${err.message || err}`);
     }
   };
 
@@ -2851,25 +2750,32 @@ export default function MawridDashboard() {
 
           <div className="flex items-center gap-4 self-end md:self-auto">
             {/* PostgreSQL Live Status Badge */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700/50 bg-slate-900/30">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  firebaseStatus === "success"
-                    ? "bg-emerald-400 animate-pulse"
-                    : firebaseStatus === "connecting"
-                      ? "bg-amber-400 animate-pulse"
-                      : firebaseStatus === "fallback"
-                        ? "bg-emerald-400"
-                        : "bg-rose-500 animate-bounce"
-                }`}
-              />
-              <span className="text-xs text-slate-300 font-medium">
-                {firebaseStatus === "success" && "متصل بـ PostgreSQL (Neon)"}
-                {firebaseStatus === "connecting" &&
-                  "جاري الاتصال بـ PostgreSQL..."}
-                {firebaseStatus === "fallback" && "قاعدة اتصال محلية نشطة"}
-                {firebaseStatus === "error" && "خطأ في اتصال PostgreSQL"}
-              </span>
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700/50 bg-slate-900/30">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    firebaseStatus === "success"
+                      ? "bg-emerald-400 animate-pulse"
+                      : firebaseStatus === "connecting"
+                        ? "bg-amber-400 animate-pulse"
+                        : firebaseStatus === "fallback"
+                          ? "bg-amber-400"
+                          : "bg-rose-500 animate-bounce"
+                  }`}
+                />
+                <span className="text-xs text-slate-300 font-medium">
+                  {firebaseStatus === "success" && "متصل بـ PostgreSQL (Neon)"}
+                  {firebaseStatus === "connecting" &&
+                    "جاري الاتصال بـ PostgreSQL..."}
+                  {firebaseStatus === "fallback" && "قاعدة اتصال محلية نشطة"}
+                  {firebaseStatus === "error" && "خطأ في اتصال PostgreSQL"}
+                </span>
+              </div>
+              {dbError && (firebaseStatus === "error" || firebaseStatus === "fallback") && (
+                <span className="text-[10px] text-rose-400 text-right max-w-[210px] truncate block font-mono" title={dbError}>
+                  {dbError}
+                </span>
+              )}
             </div>
 
             {/* System notifications feed triggers */}
@@ -5077,26 +4983,10 @@ export default function MawridDashboard() {
                             </div>
 
                             {/* Legal terms stamp bottom screen */}
-                            <div className="flex items-end justify-between border-t border-slate-200 pt-5 mt-auto text-xs w-full">
-                              <div className="text-right">
-                                <p className="font-semibold text-slate-800 font-sans">
-                                  توقيع الإدارة المالية والمحاسبة
-                                </p>
-                                <div className="h-8 w-32 border-b border-slate-300 border-dashed mt-2"></div>
-                              </div>
-                              <div className="text-center font-mono text-[9px] text-slate-400 select-none pb-2">
+                            <div className="flex items-center justify-center border-t border-slate-200 pt-3 mt-auto text-xs w-full">
+                              <div className="text-center font-mono text-[10px] text-slate-400 select-none">
                                 صفحة {pageIdx + 1} من{" "}
                                 {reportPagesToRender.length}
-                              </div>
-                              <div className="text-left flex flex-col items-center">
-                                <p className="font-semibold text-slate-800 font-sans text-center">
-                                  خاتم وتوثيق المؤسسة
-                                </p>
-                                <div className="w-14 h-14 rounded-full border border-emerald-600/30 flex items-center justify-center text-[9px] text-emerald-600 border-dashed mt-1 leading-tight font-sans text-center">
-                                  تم تصديره
-                                  <br />
-                                  إلكترونياً
-                                </div>
                               </div>
                             </div>
                           </div>

@@ -20,23 +20,41 @@ const STORE_FILE = path.join(process.cwd(), "data_store.json");
 // Initialize PostgreSQL client pool to persist store permanently
 let dbPool: pg.Pool | null = null;
 let isPostgresActive = false;
+let lastPostgresError: string | null = null;
 
 try {
-  const connectionString = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_Bm3sWhS7QRjE@ep-polished-firefly-atulc8ab.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require";
+  let connectionString = (process.env.DATABASE_URL || "").trim();
+  if (!connectionString || connectionString.includes("MY_DATABASE_URL")) {
+    connectionString = "postgresql://neondb_owner:npg_Bm3sWhS7QRjE@ep-polished-firefly-atulc8ab.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require";
+  }
+  
   dbPool = new pg.Pool({
     connectionString,
     ssl: {
       rejectUnauthorized: false
-    }
+    },
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
   });
+
+  dbPool.on("error", (err) => {
+    console.error("🐘 Unexpected error on idle client:", err);
+    lastPostgresError = err?.message || String(err);
+  });
+
   console.log("🐘 PostgreSQL Pool successfully created.");
-} catch (error) {
+} catch (error: any) {
   console.error("❌ Failed to initialize PostgreSQL Pool:", error);
+  lastPostgresError = error?.message || String(error);
 }
 
 // Check connection and ensure table exists
 async function initializePostgres() {
-  if (!dbPool) return;
+  if (!dbPool) {
+    lastPostgresError = "PostgreSQL Pool is uninitialized or config is bad.";
+    return;
+  }
   try {
     const probe = await dbPool.query("SELECT NOW()");
     console.log("✅ Successfully reached PostgreSQL database:", probe.rows[0]);
@@ -51,8 +69,10 @@ async function initializePostgres() {
     `);
     console.log("✅ verified table structure in PostgreSQL 'system_store'.");
     isPostgresActive = true;
-  } catch (error) {
+    lastPostgresError = null;
+  } catch (error: any) {
     console.error("⚠️ Failed to verify or run query against PostgreSQL. Sticking to server cache file:", error);
+    lastPostgresError = error?.message || String(error);
     isPostgresActive = false;
   }
 }
@@ -151,8 +171,12 @@ app.get("/api/get-store", (req, res) => {
     if (fs.existsSync(STORE_FILE)) {
       const dataStr = fs.readFileSync(STORE_FILE, "utf-8");
       const data = JSON.parse(dataStr);
-      // Append database status
-      return res.json({ ...data, postgresActive: isPostgresActive });
+      // Append database status and connection error
+      return res.json({ 
+        ...data, 
+        postgresActive: isPostgresActive,
+        postgresError: lastPostgresError 
+      });
     }
     return res.status(404).json({ message: "No stored data exists yet." });
   } catch (error: any) {
@@ -176,7 +200,8 @@ app.post("/api/save-store", async (req, res) => {
     return res.json({ 
       success: true, 
       message: "Data saved successfully on server and persisted to PostgreSQL.",
-      postgresActive: isPostgresActive
+      postgresActive: isPostgresActive,
+      postgresError: lastPostgresError
     });
   } catch (error: any) {
     console.error("Error writing data store file:", error);
