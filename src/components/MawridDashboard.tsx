@@ -2826,56 +2826,27 @@ export default function MawridDashboard() {
           </div>
 
           <div className="flex items-center gap-4 self-end md:self-auto no-print">
-            {/* PostgreSQL Diagnostics & Reset Module */}
+            {/* System Diagnostics & Reset Module */}
             <div className="flex items-center gap-2 bg-[#1e293b]/65 p-1.5 rounded-2xl border border-slate-700/60 shadow-inner">
-              {/* PostgreSQL Live Status Badge */}
+              {/* Local Storage Live Status Badge */}
               <div className="flex flex-col items-start gap-0.5 px-2 py-0.5">
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      firebaseStatus === "success"
-                        ? "bg-emerald-400 animate-pulse"
-                        : firebaseStatus === "connecting"
-                          ? "bg-amber-400 animate-pulse"
-                          : firebaseStatus === "fallback"
-                            ? "bg-amber-400"
-                            : "bg-rose-500 animate-bounce"
-                    }`}
-                  />
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 " />
                   <span className="text-[11px] text-slate-200 font-semibold font-sans">
-                    {firebaseStatus === "success" && "قاعدة Neon متصلة"}
-                    {firebaseStatus === "connecting" && "جاري الاتصال بـ Neon..."}
-                    {firebaseStatus === "fallback" && "قاعدة اتصال محلية نشطة"}
-                    {firebaseStatus === "error" && "انقطع اتصال Neon"}
+                    الوضع المحلي نشط ومستقر
                   </span>
                 </div>
-                {dbError ? (
-                  <span className="text-[9px] text-rose-450 max-w-[120px] truncate font-mono block" title={dbError}>
-                    {dbError}
-                  </span>
-                ) : (
-                  <span className="text-[9px] text-teal-400 font-sans block leading-none">مزامنة مشتريات فورية</span>
-                )}
+                <span className="text-[9px] text-teal-400 font-sans block leading-none">مزامنة فائقة السرعة</span>
               </div>
 
-              {/* Action Buttons to Reconnect and Reset */}
+              {/* Action Buttons to Reset */}
               <div className="flex items-center gap-1 border-r border-slate-700/60 pr-1.5 mr-0.5">
                 <button
                   type="button"
-                  onClick={handleReconnectDb}
-                  disabled={isReconnectingDb || isResettingDb}
-                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-400 hover:text-teal-350 transition-all disabled:opacity-50 cursor-pointer shadow-xs relative group"
-                  title="إعادة الاتصال وفحص سلامة المزامنة"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isReconnectingDb ? "animate-spin" : ""}`} />
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => setShowResetConfirmModal(true)}
-                  disabled={isReconnectingDb || isResettingDb}
+                  disabled={isResettingDb}
                   className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-rose-400 hover:text-rose-350 border border-slate-700/30 hover:border-rose-500/20 transition-all disabled:opacity-50 cursor-pointer shadow-xs relative group"
-                  title="مسح كافة البيانات والتهيئة كأول مرة"
+                  title="تصفير كافة البيانات ومسح الفواتير بالكامل"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
