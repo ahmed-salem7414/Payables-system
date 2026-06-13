@@ -6,6 +6,15 @@ import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import pg from "pg";
 
+// robust global exception & promise rejection catch handlers to prevent the server process from crashing 
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("🚨 Unhandled Rejection at promise:", promise, "reason:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("🚨 Uncaught Exception thrown:", err);
+});
+
 // Load environment variables
 dotenv.config();
 
@@ -42,12 +51,19 @@ async function createPoolAndConnect(forceRecreate = false) {
     }
     
     if (connectionString) {
-      // Sanitize connection string: remove 'channel_binding' option or other unsupported options for pure JS pg driver
-      connectionString = connectionString
-        .replace(/[&?]channel_binding=[^&]+/gi, "")
-        .replace(/\?&/, "?")
-        .replace(/\?$/, "");
-      console.log("🐘 Sanitized PostgreSQL Connection String for pure JS pg driver client.");
+      try {
+        const parsedUrl = new URL(connectionString);
+        parsedUrl.searchParams.delete("channel_binding");
+        connectionString = parsedUrl.toString();
+        console.log("🐘 Sanitized PostgreSQL Connection String using standard URL search parameters.");
+      } catch (e) {
+        // Fallback to simple replace in case of weird local formats
+        connectionString = connectionString
+          .replace(/[&?]channel_binding=[^&]+/gi, "")
+          .replace(/\?&/, "?")
+          .replace(/\?$/, "");
+        console.log("🐘 Sanitized PostgreSQL Connection String using regex fallback.");
+      }
     }
     
     dbPool = new pg.Pool({
