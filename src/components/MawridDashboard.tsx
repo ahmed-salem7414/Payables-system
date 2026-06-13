@@ -2536,7 +2536,7 @@ export default function MawridDashboard() {
           scrollX: 0,
           scrollY: 0
         },
-        jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "portrait" as const }
+        jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "landscape" as const }
       };
 
       // 5. Execute PDF Generation via global window object

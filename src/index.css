@@ -35,7 +35,7 @@ html, body {
   display: none !important;
 }
 
-/* Real-world high-fidelity page design applicable to both screen preview and print */
+/* Real-world high-fidelity page design applicable to screen preview */
 .printable-report-page {
   width: 100% !important;
   max-width: 80rem !important; /* 7xl wide container to stay parallel with other site elements */
@@ -70,9 +70,9 @@ html, body {
   }
 }
 
-@media print, .generating-pdf {
+@media print {
   @page {
-    size: A4 portrait !important;
+    size: A4 landscape !important;
     margin: 0 !important;
   }
   
@@ -92,15 +92,16 @@ html, body {
     color: #0f172a !important;
     margin: 0 !important;
     padding: 0 !important;
-    width: 210mm !important;
+    width: 297mm !important;
     height: auto !important;
     box-shadow: none !important;
   }
 
   /* Reset outer wrapper to prevent any spacing leaks or offsets during generation */
   #printable-report-content {
-    margin: 0 !important;
+    margin: 0 auto !important;
     padding: 0 !important;
+    width: 297mm !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
     box-shadow: none !important;
@@ -139,7 +140,7 @@ html, body {
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important; /* Keep tables at the top of the page in print */
-    gap: 1.5rem !important;
+    gap: 1rem !important;
     page-break-after: always !important;
     break-after: page !important;
     page-break-inside: avoid !important;
@@ -153,12 +154,12 @@ html, body {
     background: #ffffff !important;
     background-color: #ffffff !important;
     
-    /* Strict physical dimensions per sheet matching standard portrait A4 */
-    width: 210mm !important;
-    height: 297mm !important;
-    min-height: 297mm !important;
-    max-height: 297mm !important;
-    padding: 15mm !important;
+    /* Strict physical dimensions per sheet matching standard landscape A4 */
+    width: 297mm !important;
+    height: 210mm !important;
+    min-height: 210mm !important;
+    max-height: 210mm !important;
+    padding: 12mm !important;
   }
   
   .printable-report-page:last-child {
@@ -190,4 +191,68 @@ html, body {
   .printable-report-sheet .rounded-full, .printable-report-page .rounded-full {
     border: 1px solid currentColor !important;
   }
+}
+
+/* Custom overlay styles for HTML2PDF generation module */
+.generating-pdf #printable-report-content {
+  margin: 0 auto !important;
+  padding: 0 !important;
+  width: 297mm !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+.generating-pdf #printable-report-content > * {
+  margin: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+.generating-pdf .no-print {
+  display: none !important;
+}
+.generating-pdf .print-only {
+  display: block !important;
+}
+.generating-pdf .print-only-tr {
+  display: table-row !important;
+}
+.generating-pdf .printable-report-sheet, .generating-pdf .printable-report-page {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  gap: 1rem !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  
+  /* Strict physical dimensions per sheet matching standard landscape A4 */
+  width: 297mm !important;
+  height: 210mm !important;
+  min-height: 210mm !important;
+  max-height: 210mm !important;
+  padding: 12mm !important;
+}
+.generating-pdf table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: auto !important;
+  border-collapse: collapse !important;
+  margin-top: 15px !important;
+}
+.generating-pdf th {
+  border: 1px solid #cbd5e1 !important;
+}
+.generating-pdf td {
+  border: 1px solid #e2e8f0 !important;
+}
+.generating-pdf .printable-report-sheet .rounded-full, .generating-pdf .printable-report-page .rounded-full {
+  border: 1px solid currentColor !important;
 }
