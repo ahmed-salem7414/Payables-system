@@ -57,7 +57,6 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import html2pdf from "html2pdf.js";
 
 import {
   Supplier,
@@ -2472,13 +2471,23 @@ export default function MawridDashboard() {
         jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "portrait" as const }
       };
 
-      // 5. Execute PDF Generation
-      await html2pdf().from(element).set(opt).save();
+      // 5. Execute PDF Generation via global window object
+      const html2pdfFunc = (window as any).html2pdf;
+      if (!html2pdfFunc) {
+        throw new Error("مكتبة تصدير الـ PDF من شبكة CDN لم يتم تحميلها بشكل كامل بعد.");
+      }
+
+      await html2pdfFunc().from(element).set(opt).save();
 
       showToast("تم تنزيل تقرير PDF بنجاح فائق الدقة.");
     } catch (err: any) {
       console.error("PDF generation client-side error:", err);
-      showToast(`حدث خطأ أثناء تصدير ملف PDF: ${err.message || err}`);
+      showToast("الرجاء الانتظار... واجه المصدّر التلقائي تعقيداً في التنسيقات الحديثة. جاري فتح نافذة طباعة المتصفح لحفظ الملف كـ PDF يدويًا بدقة كاملة.");
+      
+      // Automatic backup print dialog trigger
+      setTimeout(() => {
+        window.print();
+      }, 800);
     } finally {
       // 6. Restore original styles and page states ALWAYS
       originalStyleTexts.forEach(({ element, content }) => {

@@ -94,7 +94,7 @@ async function loadFromPostgres(): Promise<any> {
 
 // Bulk saves store state to PostgreSQL
 async function saveToPostgres(data: any) {
-  if (!dbPool || !isPostgresActive || !data) return;
+  if (!dbPool || !data) return;
   try {
     const dataStr = JSON.stringify(data);
     await dbPool.query(`
@@ -104,9 +104,12 @@ async function saveToPostgres(data: any) {
       DO UPDATE SET data = $1, updated_at = CURRENT_TIMESTAMP
     `, [dataStr]);
     console.log("🐘 Successfully synchronized all local changes to permanent PostgreSQL.");
-  } catch (error) {
+    isPostgresActive = true;
+    lastPostgresError = null;
+  } catch (error: any) {
     console.error("❌ Failed to synchronize changes to PostgreSQL:", error);
-    throw error;
+    isPostgresActive = false;
+    lastPostgresError = error?.message || String(error);
   }
 }
 
@@ -189,23 +192,21 @@ app.get("/api/get-store", (req, res) => {
 app.post("/api/save-store", async (req, res) => {
   try {
     const data = req.body;
-    // Save to local cache instantly
+    // Save to local cache instantly (reliable container disk backup)
     fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2), "utf-8");
     
-    // Save to permanent PostgreSQL
-    if (isPostgresActive) {
-      await saveToPostgres(data);
-    }
+    // Always attempt to save to permanent PostgreSQL (it is internally safe and non-blocking)
+    await saveToPostgres(data);
     
     return res.json({ 
       success: true, 
-      message: "Data saved successfully on server and persisted to PostgreSQL.",
+      message: "Data saved successfully on local server and attempted PostgreSQL synchronization.",
       postgresActive: isPostgresActive,
       postgresError: lastPostgresError
     });
   } catch (error: any) {
-    console.error("Error writing data store file:", error);
-    return res.status(500).json({ error: "Failed to persist storage in PostgreSQL database." });
+    console.error("Critical error in save-store endpoint:", error);
+    return res.status(500).json({ error: "Failed to persist storage locally on server." });
   }
 });
 
