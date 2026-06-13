@@ -2467,51 +2467,6 @@ export default function MawridDashboard() {
       });
     }
 
-    // Export report to PDF using html2pdf
-const handleExportReportToPDF = async () => {
-  const element = document.getElementById("printable-report-content");
-  if (!element) return;
-
-  try {
-    showToast("جاري تصدير تقرير PDF... يرجى الانتظار.", "info");
-    
-    const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
-    const filename = `تقرير_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.pdf`;
-    
-    // خيارات PDF
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename: filename,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true, 
-        letterRendering: true,
-        logging: false
-      },
-      jsPDF: { 
-        unit: 'mm', 
-        format: 'a4', 
-        orientation: reportOrientation 
-      }
-    };
-    
-    // استخدام html2pdf إذا كانت المكتبة محملة
-    if (typeof (window as any).html2pdf !== 'undefined') {
-      await (window as any).html2pdf().set(opt).from(element).save();
-      showToast("تم تصدير PDF بنجاح!", "success");
-    } else {
-      // بديل: استخدام الطباعة إذا لم تكن المكتبة محملة
-      showToast("جاري فتح نافذة الطباعة... يمكنك حفظ الملف كـ PDF من هناك.", "info");
-      setTimeout(() => window.print(), 500);
-    }
-  } catch (err) {
-    console.error("PDF Export Error:", err);
-    showToast("حدث خطأ في تصدير PDF، سيتم فتح نافذة الطباعة.", "error");
-    setTimeout(() => window.print(), 500);
-  }
-};
-
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -4576,36 +4531,6 @@ const handleExportReportToPDF = async () => {
                   >
                     <span>📊</span> تصدير Excel
                   </button>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 items-end"></div>
-                  {/* 7. Excel Export Button */}
-<button
-  type="button"
-  onClick={handleExportReportToExcel}
-  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
->
-  <span>📊</span> تصدير Excel
-</button>
-
-{/* 8. PDF Export Button */}
-<button
-  type="button"
-  onClick={handleExportReportToPDF}
-  className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
->
-  <span>📄</span> تصدير PDF
-</button>
-
-{/* 9. Orientation Toggle Button */}
-<button
-  type="button"
-  onClick={() => setReportOrientation(prev => prev === "portrait" ? "landscape" : "portrait")}
-  className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md w-full"
->
-  <span>{reportOrientation === "portrait" ? "📄" : "📏"}</span>
-  {reportOrientation === "portrait" ? "رأسي" : "أفقي"}
-</button>
-
                 </div>
               </div>
 
