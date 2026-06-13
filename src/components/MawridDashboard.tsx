@@ -484,6 +484,74 @@ export default function MawridDashboard() {
   >("connecting");
   const [dbError, setDbError] = useState<string | null>(null);
 
+  const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
+  const [isReconnectingDb, setIsReconnectingDb] = useState(false);
+  const [isResettingDb, setIsResettingDb] = useState(false);
+
+  const handleReconnectDb = async () => {
+    if (isReconnectingDb) return;
+    setIsReconnectingDb(true);
+    setFirebaseStatus("connecting");
+    showToast("جاري إعادة تشغيل قنوات الاتصال والتحقق من سلامة الجداول...", "info");
+    try {
+      const res = await fetch("/api/reconnect-db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        setFirebaseStatus("success");
+        setDbError(null);
+        showToast(data.message || "تم إعادة الاتصال بـ PostgreSQL بنجاح!", "success");
+      } else {
+        setFirebaseStatus("error");
+        setDbError(data.postgresError || "فشل الاتصال");
+        showToast(data.message || "فشلت عملية الاتصال بقاعدة البيانات", "error");
+      }
+    } catch (err: any) {
+      setFirebaseStatus("error");
+      setDbError(err?.message || String(err));
+      showToast("فشل الاتصال: " + (err?.message || String(err)), "error");
+    } finally {
+      setIsReconnectingDb(false);
+    }
+  };
+
+  const handleResetDbFromScratch = async () => {
+    if (isResettingDb) return;
+    setIsResettingDb(true);
+    showToast("جاري تصفير قاعدة بيانات الموردين وإعادة تهيئة الجداول كأول مرة...", "info");
+    try {
+      const res = await fetch("/api/reset-db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        setFirebaseStatus("success");
+        setDbError(null);
+        showToast("تمت إعادة ضبط وحذف كل البيانات وإعادة التهيئة كأول مرة بنجاح! جاري تنشيط النظام...", "success");
+        // Clear react states first to avoid state dump overwrite while reloading
+        setSuppliers([]);
+        setInvoices([]);
+        setPayments([]);
+        setBackups([]);
+        setCreditNotes([]);
+        setSafeBalance(0);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      } else {
+        showToast(data.message || "فشل تصفير قاعدة البيانات", "error");
+      }
+    } catch (err: any) {
+      showToast("فشلت عملية إعادة التهيئة: " + (err?.message || String(err)), "error");
+    } finally {
+      setIsResettingDb(false);
+      setShowResetConfirmModal(false);
+    }
+  };
+
   // Load initial store from server backend, which persists to PostgreSQL and has local backup file fallback
   useEffect(() => {
     const initializeDataSystem = async () => {
@@ -2757,34 +2825,61 @@ export default function MawridDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 self-end md:self-auto">
-            {/* PostgreSQL Live Status Badge */}
-            <div className="flex flex-col items-end gap-1">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700/50 bg-slate-900/30">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    firebaseStatus === "success"
-                      ? "bg-emerald-400 animate-pulse"
-                      : firebaseStatus === "connecting"
-                        ? "bg-amber-400 animate-pulse"
-                        : firebaseStatus === "fallback"
-                          ? "bg-amber-400"
-                          : "bg-rose-500 animate-bounce"
-                  }`}
-                />
-                <span className="text-xs text-slate-300 font-medium">
-                  {firebaseStatus === "success" && "متصل بـ PostgreSQL (Neon)"}
-                  {firebaseStatus === "connecting" &&
-                    "جاري الاتصال بـ PostgreSQL..."}
-                  {firebaseStatus === "fallback" && "قاعدة اتصال محلية نشطة"}
-                  {firebaseStatus === "error" && "خطأ في اتصال PostgreSQL"}
-                </span>
+          <div className="flex items-center gap-4 self-end md:self-auto no-print">
+            {/* PostgreSQL Diagnostics & Reset Module */}
+            <div className="flex items-center gap-2 bg-[#1e293b]/65 p-1.5 rounded-2xl border border-slate-700/60 shadow-inner">
+              {/* PostgreSQL Live Status Badge */}
+              <div className="flex flex-col items-start gap-0.5 px-2 py-0.5">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      firebaseStatus === "success"
+                        ? "bg-emerald-400 animate-pulse"
+                        : firebaseStatus === "connecting"
+                          ? "bg-amber-400 animate-pulse"
+                          : firebaseStatus === "fallback"
+                            ? "bg-amber-400"
+                            : "bg-rose-500 animate-bounce"
+                    }`}
+                  />
+                  <span className="text-[11px] text-slate-200 font-semibold font-sans">
+                    {firebaseStatus === "success" && "قاعدة Neon متصلة"}
+                    {firebaseStatus === "connecting" && "جاري الاتصال بـ Neon..."}
+                    {firebaseStatus === "fallback" && "قاعدة اتصال محلية نشطة"}
+                    {firebaseStatus === "error" && "انقطع اتصال Neon"}
+                  </span>
+                </div>
+                {dbError ? (
+                  <span className="text-[9px] text-rose-450 max-w-[120px] truncate font-mono block" title={dbError}>
+                    {dbError}
+                  </span>
+                ) : (
+                  <span className="text-[9px] text-teal-400 font-sans block leading-none">مزامنة مشتريات فورية</span>
+                )}
               </div>
-              {dbError && (firebaseStatus === "error" || firebaseStatus === "fallback") && (
-                <span className="text-[10px] text-rose-400 text-right max-w-[210px] truncate block font-mono" title={dbError}>
-                  {dbError}
-                </span>
-              )}
+
+              {/* Action Buttons to Reconnect and Reset */}
+              <div className="flex items-center gap-1 border-r border-slate-700/60 pr-1.5 mr-0.5">
+                <button
+                  type="button"
+                  onClick={handleReconnectDb}
+                  disabled={isReconnectingDb || isResettingDb}
+                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-400 hover:text-teal-350 transition-all disabled:opacity-50 cursor-pointer shadow-xs relative group"
+                  title="إعادة الاتصال وفحص سلامة المزامنة"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isReconnectingDb ? "animate-spin" : ""}`} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowResetConfirmModal(true)}
+                  disabled={isReconnectingDb || isResettingDb}
+                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-rose-400 hover:text-rose-350 border border-slate-700/30 hover:border-rose-500/20 transition-all disabled:opacity-50 cursor-pointer shadow-xs relative group"
+                  title="مسح كافة البيانات والتهيئة كأول مرة"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
             {/* System notifications feed triggers */}
@@ -8094,6 +8189,67 @@ export default function MawridDashboard() {
                   <span>تحميل الملف النشط</span>
                 </a>
               </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: RESET DATABASE CONFIRMATION */}
+      {showResetConfirmModal && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans dir-rtl">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-[#1e293b] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-700 text-right text-white space-y-6"
+          >
+            <div className="flex items-center gap-3 border-b border-slate-700 pb-3">
+              <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <AlertTriangle className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">تأكيد إعادة ضبط النظام بالكامل</h3>
+                <p className="text-xs text-rose-400 font-semibold">إجراء تصفير مالي حساس ومباشر</p>
+              </div>
+            </div>
+
+            <p className="text-xs leading-relaxed text-slate-300">
+              أنت على وشك القيام بـ <strong className="text-rose-400">مسح وتصفير كافة الحسابات بالكامل من قاعدة بياناتك ومزامنتها من أول وجديد كأول مرة</strong>.
+              <br /><br />
+              هذا الإجراء سيقوم بـ:
+              <span className="block mt-2 space-y-1.5 pr-2 text-slate-400 text-[11px]">
+                <span className="block">• تدمير الجداول النشطة وإعادة بنائها من الصفر.</span>
+                <span className="block">• حذف كافة الفواتير، الموردين، المدفوعات، المعاملات، والمرفقات نهائياً.</span>
+                <span className="block">• استرجاع إعدادات المصنع الافتراضية مع الكتالوجات الرسمية.</span>
+              </span>
+            </p>
+
+            <div className="flex items-center gap-2 pt-3 border-t border-slate-700/60">
+              <button
+                type="button"
+                disabled={isResettingDb}
+                onClick={() => setShowResetConfirmModal(false)}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2.5 rounded-xl cursor-pointer text-xs text-center transition"
+              >
+                تراجع وإلغاء
+              </button>
+              <button
+                type="button"
+                disabled={isResettingDb}
+                onClick={handleResetDbFromScratch}
+                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2.5 rounded-xl cursor-pointer text-xs text-center transition flex items-center justify-center gap-1.5 shadow-lg shadow-rose-900/20"
+              >
+                {isResettingDb ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>جاري التصفير...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>تأكيد التصفير والتهيئة</span>
+                  </>
+                )}
+              </button>
             </div>
           </motion.div>
         </div>

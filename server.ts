@@ -22,49 +22,67 @@ let dbPool: pg.Pool | null = null;
 let isPostgresActive = false;
 let lastPostgresError: string | null = null;
 
-try {
-  let connectionString = (process.env.DATABASE_URL || "").trim();
-  if (!connectionString || connectionString.includes("MY_DATABASE_URL")) {
-    connectionString = "postgresql://neondb_owner:npg_Bm3sWhS7QRjE@ep-polished-firefly-atulc8ab-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
-  }
-  
-  if (connectionString) {
-    // Sanitize connection string: remove 'channel_binding' option or other unsupported options for pure JS pg driver
-    connectionString = connectionString
-      .replace(/[&?]channel_binding=[^&]+/gi, "")
-      .replace(/\?&/, "?")
-      .replace(/\?$/, "");
-    console.log("🐘 Sanitized PostgreSQL Connection String for pure JS pg driver client.");
-  }
-  
-  dbPool = new pg.Pool({
-    connectionString,
-    ssl: {
-      rejectUnauthorized: false
-    },
-    max: 10,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
-  });
+async function createPoolAndConnect(forceRecreate = false) {
+  if (dbPool && !forceRecreate) return;
 
-  dbPool.on("error", (err) => {
-    console.error("🐘 Unexpected error on idle client:", err);
-    lastPostgresError = err?.message || String(err);
-    if (err?.message && (err.message.includes("closed") || err.message.includes("terminate") || err.message.includes("connection"))) {
-      isPostgresActive = false;
+  if (dbPool) {
+    try {
+      console.log("🐘 Tearing down existing PostgreSQL Pool connection...");
+      await dbPool.end();
+    } catch (e) {
+      console.error("🐘 Error ending existing pool:", e);
     }
-  });
+    dbPool = null;
+  }
 
-  console.log("🐘 PostgreSQL Pool successfully created.");
-} catch (error: any) {
-  console.error("❌ Failed to initialize PostgreSQL Pool:", error);
-  lastPostgresError = error?.message || String(error);
+  try {
+    let connectionString = (process.env.DATABASE_URL || "").trim();
+    if (!connectionString || connectionString.includes("MY_DATABASE_URL")) {
+      connectionString = "postgresql://neondb_owner:npg_Bm3sWhS7QRjE@ep-polished-firefly-atulc8ab-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+    }
+    
+    if (connectionString) {
+      // Sanitize connection string: remove 'channel_binding' option or other unsupported options for pure JS pg driver
+      connectionString = connectionString
+        .replace(/[&?]channel_binding=[^&]+/gi, "")
+        .replace(/\?&/, "?")
+        .replace(/\?$/, "");
+      console.log("🐘 Sanitized PostgreSQL Connection String for pure JS pg driver client.");
+    }
+    
+    dbPool = new pg.Pool({
+      connectionString,
+      ssl: {
+        rejectUnauthorized: false
+      },
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+    });
+
+    dbPool.on("error", (err) => {
+      console.error("🐘 Unexpected error on idle client:", err);
+      lastPostgresError = err?.message || String(err);
+      if (err?.message && (err.message.includes("closed") || err.message.includes("terminate") || err.message.includes("connection"))) {
+        isPostgresActive = false;
+      }
+    });
+
+    console.log("🐘 PostgreSQL Pool successfully created.");
+  } catch (error: any) {
+    console.error("❌ Failed to initialize PostgreSQL Pool:", error);
+    lastPostgresError = error?.message || String(error);
+    isPostgresActive = false;
+  }
 }
 
 // Check connection and ensure table exists
-async function initializePostgres() {
+async function initializePostgres(forceRecreate = false) {
+  await createPoolAndConnect(forceRecreate);
+
   if (!dbPool) {
     lastPostgresError = "PostgreSQL Pool is uninitialized or config is bad.";
+    isPostgresActive = false;
     return;
   }
   try {
@@ -239,7 +257,7 @@ app.post("/api/save-store", async (req, res) => {
 app.post("/api/reconnect-db", async (req, res) => {
   try {
     console.log("🔄 Client-requested database reconnection check...");
-    await initializePostgres();
+    await initializePostgres(true); // Force recreation on user-requested reconnect
     return res.json({
       success: isPostgresActive,
       postgresActive: isPostgresActive,
@@ -255,6 +273,74 @@ app.post("/api/reconnect-db", async (req, res) => {
       postgresActive: false,
       postgresError: err?.message || String(err),
       message: "فشل الاتصال: " + (err?.message || String(err))
+    });
+  }
+});
+
+// API endpoint to completely reset the connection and clear/reinitialize the database back to clean defaults
+app.post("/api/reset-db", async (req, res) => {
+  try {
+    console.log("🚨 Client-requested full database and connection reset ('إعادة ضبط كأول مرة')...");
+    
+    // 1. Force recreate the connection pool completely from scratch
+    await initializePostgres(true);
+    
+    const pristineState = {
+      suppliers: [],
+      invoices: [],
+      payments: [],
+      backups: [],
+      supplierCategories: ["مواد خام", "خدمات", "أجهزة ومعدات", "مستلزمات مكتبية"],
+      warehouses: ["المستودع الرئيسي", "مخزن أكتوبر", "مستودع الإسكندرية"],
+      linkedBanks: [],
+      safeBalance: 0,
+      creditNotes: []
+    };
+
+    // Save pristine file locally
+    fs.writeFileSync(STORE_FILE, JSON.stringify(pristineState, null, 2), "utf-8");
+
+    if (dbPool && isPostgresActive) {
+      // 2. Drop the existing table and recreate it
+      console.log("🧹 Dropping and recreating database tables in PostgreSQL...");
+      await dbPool.query("DROP TABLE IF EXISTS system_store CASCADE");
+      await dbPool.query(`
+        CREATE TABLE system_store (
+          id VARCHAR(50) PRIMARY KEY,
+          data TEXT,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      // 3. Save pristine state back to database
+      const dataStr = JSON.stringify(pristineState);
+      await dbPool.query(`
+        INSERT INTO system_store (id, data, updated_at)
+        VALUES ('main_store', $1, CURRENT_TIMESTAMP)
+      `, [dataStr]);
+      
+      return res.json({
+        success: true,
+        postgresActive: true,
+        postgresError: null,
+        message: "تمت إعادة موازنة وضبط الاتصال بقاعدة البيانات بشكل كامل وصفرنا البيانات كأنك تستخدم الفواتير لأول مرة!"
+      });
+    } else {
+      console.warn("⚠️ Pool failed to reach PostgreSQL during reset. Resetting local file store only.");
+      return res.json({
+        success: false,
+        postgresActive: false,
+        postgresError: lastPostgresError || "قاعدة البيانات غير متصلة",
+        message: "تم إعادة ضبط الخادم المحلي، ولكن تعذر الاتصال بـ PostgreSQL لإعادة التهيئة وجدول الموردين."
+      });
+    }
+  } catch (err: any) {
+    console.error("❌ Critical error during database reset api call:", err);
+    return res.status(500).json({
+      success: false,
+      postgresActive: false,
+      postgresError: err?.message || String(err),
+      message: "فشلت عملية إعادة التهيئة: " + (err?.message || String(err))
     });
   }
 });
