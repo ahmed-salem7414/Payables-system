@@ -4406,7 +4406,7 @@ export default function MawridDashboard() {
             >
               {/* Unified High-Density Single Line Control Panel for reports/portfolio */}
               <div className="no-print bg-[#1e293b]/95 p-4 rounded-xl border border-slate-700/80 shadow-2xl">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
                   {/* 1. Supplier Select */}
                   <div className="flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
@@ -4522,15 +4522,47 @@ export default function MawridDashboard() {
                       <option value="detailed">📝 تقرير تفصيلي</option>
                     </select>
                   </div>
+                </div>
 
-                  {/* 7. Excel Export Button */}
-                  <button
-                    type="button"
-                    onClick={handleExportReportToExcel}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
-                  >
-                    <span>📊</span> تصدير Excel
-                  </button>
+                {/* Highly structured Export Actions with premium accents & color themes */}
+                <div className="mt-4 pt-4 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="text-[11px] text-slate-400 font-medium font-sans flex items-center gap-2">
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span>خيارات استخراج وحفظ التقارير بطرق مختلفة للمشاركة البريدية والطباعة والتحليل المالي.</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 w-full md:w-auto shrink-0">
+                    {/* 1. Excel Export Button */}
+                    <button
+                      type="button"
+                      onClick={handleExportReportToExcel}
+                      className="bg-emerald-600/95 hover:bg-emerald-500 text-white font-bold text-[11px] h-[40px] px-3.5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0"
+                    >
+                      <span>📊</span> Excel (.csv)
+                    </button>
+
+                    {/* 2. PDF Export Button */}
+                    <button
+                      type="button"
+                      onClick={handleExportReportToPDF}
+                      className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] h-[40px] px-3.5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0"
+                    >
+                      <FileText className="w-3.5 h-3.5 shrink-0" />
+                      تنزيل PDF
+                    </button>
+
+                    {/* 3. Direct Print Button */}
+                    <button
+                      type="button"
+                      onClick={handlePrintReport}
+                      className="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-100 font-bold text-[11px] h-[40px] px-3.5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-slate-350 shrink-0" />
+                      طباعة مباشرة
+                    </button>
+                  </div>
                 </div>
               </div>
 
