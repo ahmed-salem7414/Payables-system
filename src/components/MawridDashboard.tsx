@@ -1345,8 +1345,8 @@ export default function MawridDashboard() {
     e.preventDefault();
     if (!checkPermission("create")) return;
 
-    if (!newInvoice.supplierId || !newInvoice.invoiceNumber) {
-      showToast("يرجى اختيار المورد وتحديد رقم الفاتورة.", "error");
+    if (!newInvoice.supplierId) {
+      showToast("يرجى اختيار المورد المرتبط.", "error");
       return;
     }
 
@@ -1355,16 +1355,12 @@ export default function MawridDashboard() {
       return;
     }
 
-    // Verify duplicate invoice numbers
-    const isDuplicate = invoices.some(
-      (i) => i.invoiceNumber === newInvoice.invoiceNumber,
-    );
-    if (isDuplicate) {
-      showToast(
-        `الفاتورة رقم ${newInvoice.invoiceNumber} مسجلة مسبقاً بالنظام.`,
-        "error",
-      );
-      return;
+    // Generate unique invoice number automatically (since input field is removed)
+    let generatedInvoiceNum = "";
+    let isDuplicate = true;
+    while (isDuplicate) {
+      generatedInvoiceNum = `FT-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+      isDuplicate = invoices.some((i) => i.invoiceNumber === generatedInvoiceNum);
     }
 
     // Construct the items array representing base amount and discounts
@@ -1406,7 +1402,7 @@ export default function MawridDashboard() {
 
     const createdInvoice: Invoice = {
       id: "inv-" + Date.now(),
-      invoiceNumber: newInvoice.invoiceNumber,
+      invoiceNumber: generatedInvoiceNum,
       supplierId: newInvoice.supplierId,
       issueDate: newInvoice.issueDate || new Date().toISOString().split("T")[0],
       dueDate:
@@ -2468,85 +2464,9 @@ export default function MawridDashboard() {
     showToast(`تم تصدير تقرير Excel (${filePrefix}) بنجاح.`);
   };
 
-  // Export report to high-fidelity PDF with exact same visual pages count
-  const handleExportReportToPDF = () => {
-    const html2pdf = (window as any).html2pdf;
-    const element = document.getElementById("printable-report-content");
-
-    if (!html2pdf) {
-      showToast("عذراً، لم يتم تحميل مكتبة تصدير PDF بعد. يرجى المحاولة مرة أخرى.");
-      return;
-    }
-
-    if (!element) return;
-
-    // 1. Add PDF generation classes to the parent wrapper
-    const parentContainer = element.parentElement;
-    const savedParentClassName = parentContainer ? parentContainer.className : "";
-    
-    if (parentContainer) {
-      parentContainer.classList.add("generating-pdf");
-      parentContainer.classList.add(reportOrientation === "portrait" ? "portrait-layout" : "landscape-layout");
-    }
-
-    // 2. Temporarily show all hidden pages
-    const pages = element.querySelectorAll(".printable-report-page");
-    const savedClasses: Array<{ element: Element; className: string }> = [];
-
-    pages.forEach((p) => {
-      savedClasses.push({ element: p, className: p.className });
-      p.classList.remove("hidden-on-screen");
-      p.classList.add("active-preview-page");
-    });
-
-    const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
-    const opt = {
-      margin: 0,
-      filename: `تقرير_مؤسسة_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2.2, // Crystal clear scaling for Arabic fonts
-        letterRendering: true,
-        useCORS: true,
-        scrollX: 0,
-        scrollY: 0,
-      },
-      jsPDF: {
-        unit: "mm",
-        format: "a4",
-        orientation: reportOrientation,
-      },
-      pagebreak: {
-        mode: ["avoid-all", "css", "legacy"],
-      },
-    };
-
-    showToast("جاري إعداد وتحميل ملف الـ PDF... يرجى الانتظار.");
-
-    html2pdf()
-      .set(opt)
-      .from(element)
-      .save()
-      .then(() => {
-        // Restore pages state
-        savedClasses.forEach(({ element, className }) => {
-          element.className = className;
-        });
-        if (parentContainer) {
-          parentContainer.className = savedParentClassName;
-        }
-        showToast("تم تحميل تقرير PDF بنجاح.");
-      })
-      .catch((err: any) => {
-        console.error("PDF generation error:", err);
-        savedClasses.forEach(({ element, className }) => {
-          element.className = className;
-        });
-        if (parentContainer) {
-          parentContainer.className = savedParentClassName;
-        }
-        showToast("حدث خطأ أثناء تصدير ملف PDF.");
-      });
+  // Print report natively
+  const handlePrintReport = () => {
+    window.print();
   };
 
   // Filtered lists
@@ -4376,7 +4296,7 @@ export default function MawridDashboard() {
             >
               {/* Unified High-Density Single Line Control Panel for reports/portfolio */}
               <div className="no-print bg-[#1e293b]/95 p-4 rounded-xl border border-slate-700/80 shadow-2xl">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-3 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 items-end">
                   {/* 1. Supplier Select */}
                   <div className="flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
@@ -4493,26 +4413,7 @@ export default function MawridDashboard() {
                     </select>
                   </div>
 
-                  {/* 7. Orientation Type Select */}
-                  <div className="flex flex-col gap-1 w-full">
-                    <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
-                      <span>📐</span> الاتجاه (A4-PDF):
-                    </label>
-                    <select
-                      value={reportOrientation}
-                      onChange={(e) => {
-                        setReportOrientation(
-                          e.target.value as "portrait" | "landscape",
-                        );
-                      }}
-                      className="bg-[#0f172a] text-pink-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-pink-500 font-bold cursor-pointer font-sans w-full h-[42px]"
-                    >
-                      <option value="portrait">📐 طولي (Portrait)</option>
-                      <option value="landscape">📐 عرضي (Landscape)</option>
-                    </select>
-                  </div>
-
-                  {/* 8. Excel Export Button */}
+                  {/* 7. Excel Export Button */}
                   <button
                     type="button"
                     onClick={handleExportReportToExcel}
@@ -4521,13 +4422,13 @@ export default function MawridDashboard() {
                     <span>📊</span> تصدير Excel
                   </button>
 
-                  {/* 9. PDF Export Button */}
+                  {/* 8. Print Report Button */}
                   <button
                     type="button"
-                    onClick={handleExportReportToPDF}
+                    onClick={handlePrintReport}
                     className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
                   >
-                    <span>🖨️</span> تصدير PDF
+                    <span>🖨️</span> طباعة التقرير
                   </button>
                 </div>
               </div>
@@ -5047,26 +4948,10 @@ export default function MawridDashboard() {
                             </div>
 
                             {/* Legal terms stamp bottom screen */}
-                            <div className="flex items-end justify-between border-t border-slate-200 pt-6 mt-12 text-xs">
-                              <div>
-                                <p className="font-semibold text-slate-800 font-sans">
-                                  توقيع الإدارة المالية والمحاسبة
-                                </p>
-                                <div className="h-10 w-32 border-b border-slate-300 border-dashed mt-2"></div>
-                              </div>
-                              <div className="text-left font-mono text-[9px] text-slate-400 select-none">
+                            <div className="flex items-center justify-center border-t border-slate-200 pt-4 mt-auto text-xs">
+                              <div className="font-mono text-[9px] text-slate-400 select-none">
                                 صفحة {pageIdx + 1} من{" "}
                                 {reportPagesToRender.length}
-                              </div>
-                              <div className="text-left">
-                                <p className="font-semibold text-slate-800 font-sans">
-                                  خاتم وتوثيق المؤسسة
-                                </p>
-                                <div className="w-16 h-16 rounded-full border-2 border-emerald-600/30 flex items-center justify-center text-[10px] text-emerald-600 border-dashed mt-2 select-none mx-auto leading-tight font-sans">
-                                  تم تصديره
-                                  <br />
-                                  إلكترونياً
-                                </div>
                               </div>
                             </div>
                           </div>
@@ -5989,25 +5874,6 @@ export default function MawridDashboard() {
                         </option>
                       ))}
                     </select>
-                  </div>
-
-                  <div>
-                    <label className="text-slate-500 block mb-1 font-bold">
-                      رقم الفاتورة الصادر *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="FT-2026-X"
-                      value={newInvoice.invoiceNumber}
-                      onChange={(e) =>
-                        setNewInvoice({
-                          ...newInvoice,
-                          invoiceNumber: e.target.value,
-                        })
-                      }
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-black"
-                    />
                   </div>
 
                   <div>
