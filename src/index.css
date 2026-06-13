@@ -233,12 +233,28 @@ html, body {
   background: #ffffff !important;
   background-color: #ffffff !important;
   
+  /* Page break controls for html2pdf script */
+  page-break-before: always !important;
+  page-break-after: always !important;
+  break-before: page !important;
+  break-after: page !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  
   /* Strict physical dimensions per sheet matching standard landscape A4 */
   width: 297mm !important;
   height: 210mm !important;
   min-height: 210mm !important;
   max-height: 210mm !important;
   padding: 12mm !important;
+}
+.generating-pdf .printable-report-page:first-child {
+  page-break-before: avoid !important;
+  break-before: avoid !important;
+}
+.generating-pdf .printable-report-page:last-child {
+  page-break-after: avoid !important;
+  break-after: avoid !important;
 }
 .generating-pdf table {
   width: 100% !important;

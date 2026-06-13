@@ -198,6 +198,8 @@ export default function MawridDashboard() {
     "detailed",
   );
   const [activeReportPage, setActiveReportPage] = useState<number>(0);
+  const [isExportingPDF, setIsExportingPDF] = useState<boolean>(false);
+  const [pdfPagesCount, setPdfPagesCount] = useState<number>(1);
   const [reportOrientation, setReportOrientation] = useState<"portrait" | "landscape">(
     "portrait",
   );
@@ -2488,85 +2490,89 @@ export default function MawridDashboard() {
     const element = document.getElementById("printable-report-content");
     if (!element) return;
 
-    // Keep backup of styles and original classes to restore after PDF generation
-    const savedClasses: Array<{ element: Element; className: string }> = [];
-    const originalStyleTexts: Array<{ element: HTMLStyleElement; content: string }> = [];
+    // Detect number of pages from preview report pages
+    const pages = element.querySelectorAll(".printable-report-page");
+    const pageCount = pages.length || 1;
+    setPdfPagesCount(pageCount);
+    setIsExportingPDF(true); // Trigger beautiful full-screen loading modal immediately
 
-    try {
-      showToast("جاري تصدير تقرير PDF فائق الدقة محلياً في المتصفح... يرجى الانتظار.");
+    // Execute PDF Generation asynchronously to allow the DOM to render the loading layout first
+    setTimeout(async () => {
+      const savedClasses: Array<{ element: Element; className: string }> = [];
+      const originalStyleTexts: Array<{ element: HTMLStyleElement; content: string }> = [];
 
-      // 1. Temporarily backup and sanitize all styles to prevent html2canvas color parsing crashes on "oklab" / "oklch"
-      const styleElements = Array.from(document.querySelectorAll("style"));
-      styleElements.forEach((style) => {
-        originalStyleTexts.push({ element: style, content: style.innerHTML });
-        let text = style.innerHTML;
-        if (text.includes("oklab") || text.includes("oklch")) {
-          // Replace color space functions with a parseable fallback color function
-          text = text.replace(/oklab\(([^)]+)\)/gi, "rgb(120, 120, 120)");
-          text = text.replace(/oklch\(([^)]+)\)/gi, "rgba(100, 116, 139, 0.5)");
-          style.innerHTML = text;
+      try {
+        // 1. Temporarily backup and sanitize styles containing oklab/oklch selectively to prevent style-change browser freeze
+        const styleElements = Array.from(document.querySelectorAll("style"));
+        styleElements.forEach((style) => {
+          const text = style.innerHTML;
+          if (text && (text.includes("oklab") || text.includes("oklch"))) {
+            originalStyleTexts.push({ element: style, content: text });
+            const cleanedText = text
+              .replace(/oklab\(([^)]+)\)/gi, "rgb(120, 120, 120)")
+              .replace(/oklch\(([^)]+)\)/gi, "rgba(100, 116, 139, 0.5)");
+            style.innerHTML = cleanedText;
+          }
+        });
+
+        // 2. Temporarily apply printing classes to get correct layout dimensions (A4 Landscape)
+        document.body.classList.add("generating-pdf");
+        element.classList.add("generating-pdf");
+
+        // 3. Temporarily show all hidden pages so html2pdf can capture them together
+        pages.forEach((p) => {
+          savedClasses.push({ element: p, className: p.className });
+          p.classList.remove("hidden-on-screen");
+          p.classList.add("active-preview-page");
+        });
+
+        // 4. Set html2pdf options matching the precise pagination, scaling and layout rules
+        const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
+        const filename = `تقرير_مؤسسة_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.pdf`;
+
+        const opt = {
+          margin: [0, 0, 0, 0] as [number, number, number, number],
+          filename,
+          image: { type: "jpeg" as const, quality: 0.95 },
+          html2canvas: {
+            scale: 1.6, // Optimize scale to 1.6 for gorgeous high-fidelity but 3x faster rendering than 2.2
+            useCORS: true,
+            letterRendering: true,
+            logging: false,
+            scrollX: 0,
+            scrollY: 0
+          },
+          jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "landscape" as const },
+          pagebreak: { mode: ["css", "legacy"] } // Respect CSS page break styles
+        };
+
+        // 5. Execute PDF Generation via global html2pdf module
+        const html2pdfFunc = (window as any).html2pdf;
+        if (!html2pdfFunc) {
+          throw new Error("مكتبة تصدير الـ PDF لم يتم تحميلها بشكل كامل بعد.");
         }
-      });
 
-      // 2. Temporarily apply printing classes to get correct layout on screen
-      document.body.classList.add("generating-pdf");
-      element.classList.add("generating-pdf");
-
-      // 3. Temporarily show all hidden pages
-      const pages = element.querySelectorAll(".printable-report-page");
-      pages.forEach((p) => {
-        savedClasses.push({ element: p, className: p.className });
-        p.classList.remove("hidden-on-screen");
-        p.classList.add("active-preview-page");
-      });
-
-      // 4. Set html2pdf options
-      const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
-      const filename = `تقرير_مؤسسة_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.pdf`;
-
-      const opt = {
-        margin: [0, 0, 0, 0] as [number, number, number, number],
-        filename,
-        image: { type: "jpeg" as const, quality: 0.98 },
-        html2canvas: {
-          scale: 2.2, // Higher density for pixel perfect sharpness
-          useCORS: true,
-          letterRendering: true,
-          logging: false,
-          scrollX: 0,
-          scrollY: 0
-        },
-        jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "landscape" as const }
-      };
-
-      // 5. Execute PDF Generation via global window object
-      const html2pdfFunc = (window as any).html2pdf;
-      if (!html2pdfFunc) {
-        throw new Error("مكتبة تصدير الـ PDF من شبكة CDN لم يتم تحميلها بشكل كامل بعد.");
+        await html2pdfFunc().from(element).set(opt).save();
+        showToast("تم تنزيل تقرير PDF بنجاح فائق الدقة.");
+      } catch (err: any) {
+        console.error("PDF generation client-side error:", err);
+        showToast("واجه مخرّج الـ PDF تعقيداً في التنسيقات الفائقة. جاري طباعة المتصفح لحفظ التقرير يدوياً.");
+        setTimeout(() => {
+          window.print();
+        }, 800);
+      } finally {
+        // 6. Restore original styles and page states ALWAYS
+        originalStyleTexts.forEach(({ element, content }) => {
+          element.innerHTML = content;
+        });
+        savedClasses.forEach(({ element, className }) => {
+          element.className = className;
+        });
+        document.body.classList.remove("generating-pdf");
+        element.classList.remove("generating-pdf");
+        setIsExportingPDF(false); // Remove elegant visual blocking overlay
       }
-
-      await html2pdfFunc().from(element).set(opt).save();
-
-      showToast("تم تنزيل تقرير PDF بنجاح فائق الدقة.");
-    } catch (err: any) {
-      console.error("PDF generation client-side error:", err);
-      showToast("الرجاء الانتظار... واجه المصدّر التلقائي تعقيداً في التنسيقات الحديثة. جاري فتح نافذة طباعة المتصفح لحفظ الملف كـ PDF يدويًا بدقة كاملة.");
-      
-      // Automatic backup print dialog trigger
-      setTimeout(() => {
-        window.print();
-      }, 800);
-    } finally {
-      // 6. Restore original styles and page states ALWAYS
-      originalStyleTexts.forEach(({ element, content }) => {
-        element.innerHTML = content;
-      });
-      savedClasses.forEach(({ element, className }) => {
-        element.className = className;
-      });
-      document.body.classList.remove("generating-pdf");
-      element.classList.remove("generating-pdf");
-    }
+    }, 150);
   };
 
   // Print report natively
@@ -8253,6 +8259,52 @@ export default function MawridDashboard() {
                   </>
                 )}
               </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: PDF GENERATION LOADER */}
+      {isExportingPDF && (
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center z-[9999] p-6 text-center animate-fade-in no-print" style={{ direction: 'rtl' }}>
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-[#1e293b] border border-slate-700 rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col items-center gap-6"
+          >
+            {/* Animated landscape document icon or loading spinner */}
+            <div className="relative w-20 h-20 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-20 w-20 border-t-2 border-b-2 border-emerald-500 absolute"></div>
+              <Printer className="w-8 h-8 text-emerald-400 animate-pulse" />
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-white font-sans">
+                جاري تصدير تقرير PDF فائق الدقة...
+              </h3>
+              <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                الرجاء الانتظار قليلاً. يقوم النظام حاليًا باستخراج وتنسيق {pdfPagesCount} {pdfPagesCount > 2 && pdfPagesCount < 11 ? "صفحات" : "صفحة"} بجودة عالية في المتصفح.
+              </p>
+            </div>
+
+            {/* Elegant details */}
+            <div className="w-full bg-slate-900/50 rounded-2xl p-4 border border-slate-755/50 space-y-1.5 text-right font-mono text-[10px] text-slate-400">
+              <div className="flex justify-between">
+                <span>أبعاد التقرير:</span>
+                <span className="text-emerald-400">A4 Landscape (297mm × 210mm)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>عدد الصفحات الكلي:</span>
+                <span className="text-emerald-400">{pdfPagesCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>محرك الرسم:</span>
+                <span className="text-emerald-400">html2pdf.js + Vector Engine</span>
+              </div>
+            </div>
+
+            <div className="text-[10px] text-slate-500 font-sans animate-pulse">
+              يرجى عدم إغلاق نافذة المتصفح أو الضغط على أي عنصر حتى ينتهي التنزيل التلقائي.
             </div>
           </motion.div>
         </div>
