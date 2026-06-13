@@ -2470,171 +2470,127 @@ export default function MawridDashboard() {
     showToast(`تم تصدير تقرير Excel (${filePrefix}) بنجاح.`);
   };
 
-  // Export report to high-fidelity PDF with exact same visual pages count
+  // Export report to high-fidelity PDF using server-side Puppeteer
   const handleExportReportToPDF = async () => {
-    const html2pdf = (window as any).html2pdf;
     const element = document.getElementById("printable-report-content");
-
-    if (!html2pdf) {
-      showToast("عذراً، لم يتم تحميل مكتبة تصدير PDF بعد. يرجى المحاولة مرة أخرى.");
-      return;
-    }
-
     if (!element) return;
 
-    // A function to clean oklch and oklab dynamically to avoid html2canvas crash
-    let restoreOklch: (() => void) | null = null;
     try {
-      const savedStyles: Array<{ element: HTMLElement; wasEnabled: boolean; originalText?: string }> = [];
-      const tempStyleElements: HTMLStyleElement[] = [];
+      showToast("جاري إعداد وتحميل ملف الـ PDF عبر الخادم... يرجى الانتظار.");
 
-      const cleanColors = (text: string) => {
-        // Clean oklch
-        let cleaned = text.replace(/oklch\(([^)]+)\)/g, (match, inner) => {
-          const parts = inner.trim().split(/\s+/);
-          const lStr = parts[0];
-          const l = parseFloat(lStr);
-          if (isNaN(l)) return `rgb(120, 120, 120)`;
-          const g = Math.max(0, Math.min(255, Math.round(l * 255)));
-          const slashIndex = parts.indexOf('/');
-          if (slashIndex !== -1 && parts[slashIndex + 1]) {
-            return `rgba(${g}, ${g}, ${g}, ${parts[slashIndex + 1]})`;
-          }
-          return `rgb(${g}, ${g}, ${g})`;
-        });
-        // Clean oklab
-        cleaned = cleaned.replace(/oklab\(([^)]+)\)/g, (match, inner) => {
-          const parts = inner.trim().split(/\s+/);
-          const lStr = parts[0];
-          const l = parseFloat(lStr);
-          if (isNaN(l)) return `rgb(120, 120, 120)`;
-          const g = Math.max(0, Math.min(255, Math.round(l * 255)));
-          const slashIndex = parts.indexOf('/');
-          if (slashIndex !== -1 && parts[slashIndex + 1]) {
-            return `rgba(${g}, ${g}, ${g}, ${parts[slashIndex + 1]})`;
-          }
-          return `rgb(${g}, ${g}, ${g})`;
-        });
-        return cleaned;
-      };
+      // 1. Temporarily apply printing classes to get correct layout on screen
+      document.body.classList.add("generating-pdf");
+      element.classList.add("generating-pdf");
 
-      // Process all inline <style> tags
-      const styleElements = Array.from(document.querySelectorAll("style"));
-      styleElements.forEach((el) => {
-        const text = el.textContent || "";
-        if (text.includes("oklch") || text.includes("oklab")) {
-          savedStyles.push({ element: el, wasEnabled: true, originalText: text });
-          el.textContent = cleanColors(text);
-        }
+      // 2. Temporarily show all hidden pages
+      const pages = element.querySelectorAll(".printable-report-page");
+      const savedClasses: Array<{ element: Element; className: string }> = [];
+
+      pages.forEach((p) => {
+        savedClasses.push({ element: p, className: p.className });
+        p.classList.remove("hidden-on-screen");
+        p.classList.add("active-preview-page");
       });
 
-      // Process all <link rel="stylesheet"> tags on the same origin
+      // 3. Collect all system stylesheets & style tags to fully recreate styles in Puppeteer
+      const styleElements = Array.from(document.querySelectorAll("style"));
+      const stylesHtml = styleElements.map((el) => el.outerHTML).join("\n");
+
       const linkElements = Array.from(document.querySelectorAll("link[rel='stylesheet']")) as HTMLLinkElement[];
-      for (const link of linkElements) {
-        if (link.href && link.href.startsWith(window.location.origin)) {
-          try {
-            const response = await fetch(link.href);
-            if (response.ok) {
-              const cssText = await response.text();
-              if (cssText.includes("oklch") || cssText.includes("oklab")) {
-                const cleanedCssText = cleanColors(cssText);
-
-                const tempStyle = document.createElement("style");
-                tempStyle.setAttribute("data-temp-clean-pdf", "true");
-                tempStyle.textContent = cleanedCssText;
-                document.head.appendChild(tempStyle);
-                tempStyleElements.push(tempStyle);
-
-                savedStyles.push({ element: link, wasEnabled: true });
-                link.disabled = true;
-              }
-            }
-          } catch (e) {
-            console.warn("Could not fetch or clean stylesheet:", link.href, e);
+      const linksHtml = linkElements
+        .map((link) => {
+          if (link.href && link.href.startsWith(process.env.APP_URL || window.location.origin)) {
+            return `<link rel="stylesheet" href="${link.href}">`;
           }
-        }
+          if (link.href && link.href.startsWith("/")) {
+            return `<link rel="stylesheet" href="${window.location.origin}${link.href}">`;
+          }
+          return link.outerHTML;
+        })
+        .join("\n");
+
+      const reportContentHtml = element.innerHTML;
+
+      // 4. Restore actual page state on client screen immediately
+      savedClasses.forEach(({ element, className }) => {
+        element.className = className;
+      });
+      document.body.classList.remove("generating-pdf");
+      element.classList.remove("generating-pdf");
+
+      // 5. Build high-fidelity full HTML container for Puppeteer rendering
+      const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
+      const filename = `تقرير_مؤسسة_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.pdf`;
+
+      // Since we use A4 portrait layout physically in index.css:
+      // width: 210mm, height: 297mm
+      const fullHtml = `
+<!DOCTYPE html>
+<html dir="rtl" class="generating-pdf">
+<head>
+  <meta charset="utf-8">
+  <title>${filename}</title>
+  ${linksHtml}
+  ${stylesHtml}
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    body {
+      font-family: 'Cairo', 'Inter', sans-serif !important;
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    @page {
+      size: A4 portrait !important;
+      margin: 0 !important;
+    }
+  </style>
+</head>
+<body class="generating-pdf">
+  <div id="printable-report-content">
+    ${reportContentHtml}
+  </div>
+</body>
+</html>
+      `;
+
+      // 6. Post layout payload to backend Puppeteer endpoint
+      const response = await fetch("/api/export-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          html: fullHtml,
+          filename,
+          landscape: false, // Portrait orientation is requested & structured in index.css
+        }),
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json();
+        throw new Error(errJson.details || errJson.error || "Server-side PDF generation failed");
       }
 
-      restoreOklch = () => {
-        savedStyles.forEach((item) => {
-          if (item.originalText !== undefined) {
-            item.element.textContent = item.originalText;
-          } else if (item.element instanceof HTMLLinkElement) {
-            item.element.disabled = false;
-          }
-        });
-        tempStyleElements.forEach((el) => {
-          if (el.parentNode) {
-            el.parentNode.removeChild(el);
-          }
-        });
-      };
-    } catch (err) {
-      console.warn("Failed to sanitize stylesheets for PDF, continuing anyway:", err);
+      const pdfBlob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(pdfBlob);
+      const downloadLink = document.createElement("a");
+      downloadLink.href = downloadUrl;
+      downloadLink.download = filename;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      showToast("تم تحميل تقرير PDF بنجاح فائق الدقة.");
+    } catch (err: any) {
+      console.error("PDF generation error with Puppeteer:", err);
+      showToast(`حدث خطأ أثناء تصدير ملف PDF: ${err.message || err}`);
     }
-
-    // 1. Add PDF generation classes to body and element so CSS rules apply everywhere
-    document.body.classList.add("generating-pdf");
-    element.classList.add("generating-pdf");
-
-    // 2. Temporarily show all hidden pages
-    const pages = element.querySelectorAll(".printable-report-page");
-    const savedClasses: Array<{ element: Element; className: string }> = [];
-
-    pages.forEach((p) => {
-      savedClasses.push({ element: p, className: p.className });
-      p.classList.remove("hidden-on-screen");
-      p.classList.add("active-preview-page");
-    });
-
-    const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
-    const opt = {
-      margin: 0,
-      filename: `تقرير_مؤسسة_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2.0, // Clean and crisp scaling for high-quality Arabic fonts
-        letterRendering: true,
-        useCORS: true,
-        scrollX: 0,
-        scrollY: 0,
-      },
-      jsPDF: {
-        unit: "mm",
-        format: "a4",
-        orientation: "portrait", // Uniform portrait layout as requested
-      },
-      pagebreak: {
-        mode: ["avoid-all", "css", "legacy"],
-      },
-    };
-
-    showToast("جاري إعداد وتحميل ملف الـ PDF... يرجى الانتظار.");
-
-    html2pdf()
-      .set(opt)
-      .from(element)
-      .save()
-      .then(() => {
-        // Restore pages state
-        savedClasses.forEach(({ element, className }) => {
-          element.className = className;
-        });
-        document.body.classList.remove("generating-pdf");
-        element.classList.remove("generating-pdf");
-        if (restoreOklch) restoreOklch();
-        showToast("تم تحميل تقرير PDF بنجاح.");
-      })
-      .catch((err: any) => {
-        console.error("PDF generation error:", err);
-        savedClasses.forEach(({ element, className }) => {
-          element.className = className;
-        });
-        document.body.classList.remove("generating-pdf");
-        element.classList.remove("generating-pdf");
-        if (restoreOklch) restoreOklch();
-        showToast("حدث خطأ أثناء تصدير ملف PDF.");
-      });
   };
 
   // Print report natively

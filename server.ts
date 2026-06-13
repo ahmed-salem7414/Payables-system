@@ -320,6 +320,74 @@ app.post("/api/reports/ai-summary", async (req, res) => {
   }
 });
 
+// High-fidelity PDF exporter via Puppeteer
+app.post("/api/export-pdf", async (req, res) => {
+  try {
+    const { html, filename, landscape = false } = req.body;
+    if (!html) {
+      return res.status(400).json({ error: "Missing HTML content" });
+    }
+
+    const puppeteer = await import("puppeteer");
+    console.log("📄 Starting Puppeteer PDF generation (landscape:", landscape, ")...");
+
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+      ]
+    });
+
+    const page = await browser.newPage();
+
+    // Set A4 viewport
+    const width = landscape ? 1123 : 794;
+    const height = landscape ? 794 : 1123;
+    await page.setViewport({
+      width,
+      height,
+      deviceScaleFactor: 1,
+    });
+
+    // Load full HTML content
+    await page.setContent(html, {
+      waitUntil: ["load", "networkidle0"] as any
+    });
+
+    // Generate high-fidelity A4 PDF with exact margins
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      landscape,
+      printBackground: true,
+      preferCSSPageSize: true,
+      margin: {
+        top: "0px",
+        bottom: "0px",
+        left: "0px",
+        right: "0px",
+      }
+    });
+
+    await browser.close();
+
+    console.log("✅ High-fidelity PDF successfully created. Size:", pdfBuffer.length);
+
+    res.contentType("application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(filename || 'report.pdf')}"`);
+    res.send(pdfBuffer);
+
+  } catch (error: any) {
+    console.error("❌ Failed to generate PDF via Puppeteer:", error);
+    res.status(500).json({
+      error: "Failed to generate PDF",
+      details: error?.message || String(error)
+    });
+  }
+});
+
 // Setup development or production build flows
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
