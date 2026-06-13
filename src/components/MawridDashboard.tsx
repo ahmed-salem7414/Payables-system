@@ -4466,13 +4466,13 @@ export default function MawridDashboard() {
                     <span>📊</span> تصدير Excel
                   </button>
 
-                  {/* 8. PDF Export Button */}
+                  {/* 8. Print/Save to PDF Button */}
                   <button
                     type="button"
-                    onClick={handleExportReportToPDF}
+                    onClick={handlePrintReport}
                     className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
                   >
-                    <span>📄</span> تصدير PDF
+                    <span>🖨️</span> طباعة / حفظ كـ PDF بدقة كاملة
                   </button>
                 </div>
               </div>

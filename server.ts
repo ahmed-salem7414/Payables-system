@@ -25,7 +25,7 @@ let lastPostgresError: string | null = null;
 try {
   let connectionString = (process.env.DATABASE_URL || "").trim();
   if (!connectionString || connectionString.includes("MY_DATABASE_URL")) {
-    connectionString = "postgresql://neondb_owner:npg_Bm3sWhS7QRjE@ep-polished-firefly-atulc8ab.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require";
+    connectionString = "postgresql://neondb_owner:npg_Bm3sWhS7QRjE@ep-polished-firefly-atulc8ab-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
   }
   
   dbPool = new pg.Pool({
