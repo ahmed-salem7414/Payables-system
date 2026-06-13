@@ -28,6 +28,15 @@ try {
     connectionString = "postgresql://neondb_owner:npg_Bm3sWhS7QRjE@ep-polished-firefly-atulc8ab-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
   }
   
+  if (connectionString) {
+    // Sanitize connection string: remove 'channel_binding' option or other unsupported options for pure JS pg driver
+    connectionString = connectionString
+      .replace(/[&?]channel_binding=[^&]+/gi, "")
+      .replace(/\?&/, "?")
+      .replace(/\?$/, "");
+    console.log("🐘 Sanitized PostgreSQL Connection String for pure JS pg driver client.");
+  }
+  
   dbPool = new pg.Pool({
     connectionString,
     ssl: {
@@ -41,6 +50,9 @@ try {
   dbPool.on("error", (err) => {
     console.error("🐘 Unexpected error on idle client:", err);
     lastPostgresError = err?.message || String(err);
+    if (err?.message && (err.message.includes("closed") || err.message.includes("terminate") || err.message.includes("connection"))) {
+      isPostgresActive = false;
+    }
   });
 
   console.log("🐘 PostgreSQL Pool successfully created.");
@@ -79,15 +91,23 @@ async function initializePostgres() {
 
 // Bulk loads complete store from PostgreSQL
 async function loadFromPostgres(): Promise<any> {
-  if (!dbPool || !isPostgresActive) return null;
+  if (!dbPool) return null;
+  if (!isPostgresActive) {
+    console.log("🐘 Attempting to reconnect to database for loading...");
+    await initializePostgres();
+  }
+  if (!isPostgresActive) return null;
+
   try {
     const res = await dbPool.query("SELECT data FROM system_store WHERE id = 'main_store'");
     if (res.rows.length > 0) {
       return JSON.parse(res.rows[0].data);
     }
     return null;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error loading data from PostgreSQL:", error);
+    isPostgresActive = false;
+    lastPostgresError = error?.message || String(error);
     return null;
   }
 }
@@ -95,6 +115,11 @@ async function loadFromPostgres(): Promise<any> {
 // Bulk saves store state to PostgreSQL
 async function saveToPostgres(data: any) {
   if (!dbPool || !data) return;
+  if (!isPostgresActive) {
+    console.log("🐘 Attempting to reconnect to database for saving...");
+    await initializePostgres();
+  }
+
   try {
     const dataStr = JSON.stringify(data);
     await dbPool.query(`
@@ -207,6 +232,30 @@ app.post("/api/save-store", async (req, res) => {
   } catch (error: any) {
     console.error("Critical error in save-store endpoint:", error);
     return res.status(500).json({ error: "Failed to persist storage locally on server." });
+  }
+});
+
+// API endpoint to manually request database reconnection and verify status
+app.post("/api/reconnect-db", async (req, res) => {
+  try {
+    console.log("🔄 Client-requested database reconnection check...");
+    await initializePostgres();
+    return res.json({
+      success: isPostgresActive,
+      postgresActive: isPostgresActive,
+      postgresError: lastPostgresError,
+      message: isPostgresActive 
+        ? "تم الاتصال بقاعدة البيانات بنجاح وتأصيل الجداول!" 
+        : `فشل الاتصال: ${lastPostgresError || "خطأ غير معروف"}`
+    });
+  } catch (err: any) {
+    console.error("Error in reconnect-db endpoint:", err);
+    return res.status(500).json({
+      success: false,
+      postgresActive: false,
+      postgresError: err?.message || String(err),
+      message: "فشل الاتصال: " + (err?.message || String(err))
+    });
   }
 });
 

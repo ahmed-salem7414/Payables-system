@@ -4340,7 +4340,7 @@ export default function MawridDashboard() {
             >
               {/* Unified High-Density Single Line Control Panel for reports/portfolio */}
               <div className="no-print bg-[#1e293b]/95 p-4 rounded-xl border border-slate-700/80 shadow-2xl">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 items-end">
                   {/* 1. Supplier Select */}
                   <div className="flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-400 font-bold font-sans flex items-center gap-1">
@@ -4464,15 +4464,6 @@ export default function MawridDashboard() {
                     className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
                   >
                     <span>📊</span> تصدير Excel
-                  </button>
-
-                  {/* 8. Print/Save to PDF Button */}
-                  <button
-                    type="button"
-                    onClick={handlePrintReport}
-                    className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
-                  >
-                    <span>🖨️</span> طباعة / حفظ كـ PDF بدقة كاملة
                   </button>
                 </div>
               </div>
