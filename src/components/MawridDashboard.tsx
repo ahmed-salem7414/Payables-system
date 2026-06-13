@@ -569,10 +569,17 @@ export default function MawridDashboard() {
                 setSafeBalance(data.safeBalance);
               if (Array.isArray(data.creditNotes))
                 setCreditNotes(data.creditNotes);
+
+              if (data.postgresActive) {
+                setFirebaseStatus("success");
+              } else {
+                setFirebaseStatus("fallback");
+              }
             }
           }
         } catch (serverErr) {
           console.error("Failed to load local backup from server:", serverErr);
+          setFirebaseStatus("error");
         } finally {
           setIsDataLoaded(true);
         }
@@ -584,7 +591,7 @@ export default function MawridDashboard() {
     initializeDataSystem();
   }, []);
 
-  // Synchronize entire system state to server filesystem storage and direct custom Firestore on state change
+  // Synchronize entire system state to server filesystem storage and PostgreSQL on state change
   useEffect(() => {
     if (!isDataLoaded) return;
 
@@ -601,26 +608,25 @@ export default function MawridDashboard() {
         creditNotes,
       };
 
-      // 1. Sync to server-side filesystem store for local caching & offline backup
+      // Sync to backend store linked to PostgreSQL & local cache file
       try {
-        await fetch("/api/save-store", {
+        const res = await fetch("/api/save-store", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(stateDump),
         });
+        if (res.ok) {
+          const resData = await res.json();
+          if (resData && resData.postgresActive) {
+            setFirebaseStatus("success");
+          } else {
+            setFirebaseStatus("fallback");
+          }
+        } else {
+          setFirebaseStatus("error");
+        }
       } catch (err) {
         console.error("Failed to save state update to server:", err);
-      }
-
-      // 2. Sync directly to user's custom Firestore instance on the client side
-      try {
-        await saveToUserFirestore(stateDump);
-        setFirebaseStatus("success");
-      } catch (err) {
-        console.warn(
-          "⚠️ Direct client-side Firestore synchronization failed:",
-          err,
-        );
         setFirebaseStatus("error");
       }
     };
@@ -2464,6 +2470,173 @@ export default function MawridDashboard() {
     showToast(`تم تصدير تقرير Excel (${filePrefix}) بنجاح.`);
   };
 
+  // Export report to high-fidelity PDF with exact same visual pages count
+  const handleExportReportToPDF = async () => {
+    const html2pdf = (window as any).html2pdf;
+    const element = document.getElementById("printable-report-content");
+
+    if (!html2pdf) {
+      showToast("عذراً، لم يتم تحميل مكتبة تصدير PDF بعد. يرجى المحاولة مرة أخرى.");
+      return;
+    }
+
+    if (!element) return;
+
+    // A function to clean oklch and oklab dynamically to avoid html2canvas crash
+    let restoreOklch: (() => void) | null = null;
+    try {
+      const savedStyles: Array<{ element: HTMLElement; wasEnabled: boolean; originalText?: string }> = [];
+      const tempStyleElements: HTMLStyleElement[] = [];
+
+      const cleanColors = (text: string) => {
+        // Clean oklch
+        let cleaned = text.replace(/oklch\(([^)]+)\)/g, (match, inner) => {
+          const parts = inner.trim().split(/\s+/);
+          const lStr = parts[0];
+          const l = parseFloat(lStr);
+          if (isNaN(l)) return `rgb(120, 120, 120)`;
+          const g = Math.max(0, Math.min(255, Math.round(l * 255)));
+          const slashIndex = parts.indexOf('/');
+          if (slashIndex !== -1 && parts[slashIndex + 1]) {
+            return `rgba(${g}, ${g}, ${g}, ${parts[slashIndex + 1]})`;
+          }
+          return `rgb(${g}, ${g}, ${g})`;
+        });
+        // Clean oklab
+        cleaned = cleaned.replace(/oklab\(([^)]+)\)/g, (match, inner) => {
+          const parts = inner.trim().split(/\s+/);
+          const lStr = parts[0];
+          const l = parseFloat(lStr);
+          if (isNaN(l)) return `rgb(120, 120, 120)`;
+          const g = Math.max(0, Math.min(255, Math.round(l * 255)));
+          const slashIndex = parts.indexOf('/');
+          if (slashIndex !== -1 && parts[slashIndex + 1]) {
+            return `rgba(${g}, ${g}, ${g}, ${parts[slashIndex + 1]})`;
+          }
+          return `rgb(${g}, ${g}, ${g})`;
+        });
+        return cleaned;
+      };
+
+      // Process all inline <style> tags
+      const styleElements = Array.from(document.querySelectorAll("style"));
+      styleElements.forEach((el) => {
+        const text = el.textContent || "";
+        if (text.includes("oklch") || text.includes("oklab")) {
+          savedStyles.push({ element: el, wasEnabled: true, originalText: text });
+          el.textContent = cleanColors(text);
+        }
+      });
+
+      // Process all <link rel="stylesheet"> tags on the same origin
+      const linkElements = Array.from(document.querySelectorAll("link[rel='stylesheet']")) as HTMLLinkElement[];
+      for (const link of linkElements) {
+        if (link.href && link.href.startsWith(window.location.origin)) {
+          try {
+            const response = await fetch(link.href);
+            if (response.ok) {
+              const cssText = await response.text();
+              if (cssText.includes("oklch") || cssText.includes("oklab")) {
+                const cleanedCssText = cleanColors(cssText);
+
+                const tempStyle = document.createElement("style");
+                tempStyle.setAttribute("data-temp-clean-pdf", "true");
+                tempStyle.textContent = cleanedCssText;
+                document.head.appendChild(tempStyle);
+                tempStyleElements.push(tempStyle);
+
+                savedStyles.push({ element: link, wasEnabled: true });
+                link.disabled = true;
+              }
+            }
+          } catch (e) {
+            console.warn("Could not fetch or clean stylesheet:", link.href, e);
+          }
+        }
+      }
+
+      restoreOklch = () => {
+        savedStyles.forEach((item) => {
+          if (item.originalText !== undefined) {
+            item.element.textContent = item.originalText;
+          } else if (item.element instanceof HTMLLinkElement) {
+            item.element.disabled = false;
+          }
+        });
+        tempStyleElements.forEach((el) => {
+          if (el.parentNode) {
+            el.parentNode.removeChild(el);
+          }
+        });
+      };
+    } catch (err) {
+      console.warn("Failed to sanitize stylesheets for PDF, continuing anyway:", err);
+    }
+
+    // 1. Add PDF generation classes to body and element so CSS rules apply everywhere
+    document.body.classList.add("generating-pdf");
+    element.classList.add("generating-pdf");
+
+    // 2. Temporarily show all hidden pages
+    const pages = element.querySelectorAll(".printable-report-page");
+    const savedClasses: Array<{ element: Element; className: string }> = [];
+
+    pages.forEach((p) => {
+      savedClasses.push({ element: p, className: p.className });
+      p.classList.remove("hidden-on-screen");
+      p.classList.add("active-preview-page");
+    });
+
+    const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
+    const opt = {
+      margin: 0,
+      filename: `تقرير_مؤسسة_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: {
+        scale: 2.0, // Clean and crisp scaling for high-quality Arabic fonts
+        letterRendering: true,
+        useCORS: true,
+        scrollX: 0,
+        scrollY: 0,
+      },
+      jsPDF: {
+        unit: "mm",
+        format: "a4",
+        orientation: "portrait", // Uniform portrait layout as requested
+      },
+      pagebreak: {
+        mode: ["avoid-all", "css", "legacy"],
+      },
+    };
+
+    showToast("جاري إعداد وتحميل ملف الـ PDF... يرجى الانتظار.");
+
+    html2pdf()
+      .set(opt)
+      .from(element)
+      .save()
+      .then(() => {
+        // Restore pages state
+        savedClasses.forEach(({ element, className }) => {
+          element.className = className;
+        });
+        document.body.classList.remove("generating-pdf");
+        element.classList.remove("generating-pdf");
+        if (restoreOklch) restoreOklch();
+        showToast("تم تحميل تقرير PDF بنجاح.");
+      })
+      .catch((err: any) => {
+        console.error("PDF generation error:", err);
+        savedClasses.forEach(({ element, className }) => {
+          element.className = className;
+        });
+        document.body.classList.remove("generating-pdf");
+        element.classList.remove("generating-pdf");
+        if (restoreOklch) restoreOklch();
+        showToast("حدث خطأ أثناء تصدير ملف PDF.");
+      });
+  };
+
   // Print report natively
   const handlePrintReport = () => {
     window.print();
@@ -2721,7 +2894,7 @@ export default function MawridDashboard() {
           </div>
 
           <div className="flex items-center gap-4 self-end md:self-auto">
-            {/* Firebase Live Status Badge */}
+            {/* PostgreSQL Live Status Badge */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700/50 bg-slate-900/30">
               <span
                 className={`w-2 h-2 rounded-full ${
@@ -2735,11 +2908,11 @@ export default function MawridDashboard() {
                 }`}
               />
               <span className="text-xs text-slate-300 font-medium">
-                {firebaseStatus === "success" && "متصل بـ Firebase"}
+                {firebaseStatus === "success" && "متصل بـ PostgreSQL (Neon)"}
                 {firebaseStatus === "connecting" &&
-                  "جاري الاتصال بقاعدة البيانات..."}
+                  "جاري الاتصال بـ PostgreSQL..."}
                 {firebaseStatus === "fallback" && "قاعدة اتصال محلية نشطة"}
-                {firebaseStatus === "error" && "خطأ في اتصال الـ Firebase"}
+                {firebaseStatus === "error" && "خطأ في اتصال PostgreSQL"}
               </span>
             </div>
 
@@ -4422,13 +4595,13 @@ export default function MawridDashboard() {
                     <span>📊</span> تصدير Excel
                   </button>
 
-                  {/* 8. Print Report Button */}
+                  {/* 8. PDF Export Button */}
                   <button
                     type="button"
-                    onClick={handlePrintReport}
-                    className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
+                    onClick={handleExportReportToPDF}
+                    className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs h-[42px] rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 font-sans shadow-md hover:-translate-y-0.5 active:translate-y-0 w-full"
                   >
-                    <span>🖨️</span> طباعة التقرير
+                    <span>📄</span> تصدير PDF
                   </button>
                 </div>
               </div>
@@ -4948,10 +5121,26 @@ export default function MawridDashboard() {
                             </div>
 
                             {/* Legal terms stamp bottom screen */}
-                            <div className="flex items-center justify-center border-t border-slate-200 pt-4 mt-auto text-xs">
-                              <div className="font-mono text-[9px] text-slate-400 select-none">
+                            <div className="flex items-end justify-between border-t border-slate-200 pt-5 mt-auto text-xs w-full">
+                              <div className="text-right">
+                                <p className="font-semibold text-slate-800 font-sans">
+                                  توقيع الإدارة المالية والمحاسبة
+                                </p>
+                                <div className="h-8 w-32 border-b border-slate-300 border-dashed mt-2"></div>
+                              </div>
+                              <div className="text-center font-mono text-[9px] text-slate-400 select-none pb-2">
                                 صفحة {pageIdx + 1} من{" "}
                                 {reportPagesToRender.length}
+                              </div>
+                              <div className="text-left flex flex-col items-center">
+                                <p className="font-semibold text-slate-800 font-sans text-center">
+                                  خاتم وتوثيق المؤسسة
+                                </p>
+                                <div className="w-14 h-14 rounded-full border border-emerald-600/30 flex items-center justify-center text-[9px] text-emerald-600 border-dashed mt-1 leading-tight font-sans text-center">
+                                  تم تصديره
+                                  <br />
+                                  إلكترونياً
+                                </div>
                               </div>
                             </div>
                           </div>

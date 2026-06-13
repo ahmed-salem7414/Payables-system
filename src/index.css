@@ -92,11 +92,31 @@ html, body {
     color: #0f172a !important;
     margin: 0 !important;
     padding: 0 !important;
-    width: 100% !important;
+    width: 210mm !important;
     height: auto !important;
+    box-shadow: none !important;
   }
 
-  /* Force transparent background on all layout wrapper divs to prevent background bleed */
+  /* Reset outer wrapper to prevent any spacing leaks or offsets during generation */
+  #printable-report-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Defeat space-y margins between pages */
+  #printable-report-content > * {
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Force transparent background on all non-report elements to prevent bleed */
   div:not(.printable-report-page):not(.printable-report-sheet) {
     background-color: transparent !important;
     background: transparent !important;
@@ -124,12 +144,14 @@ html, body {
     break-after: page !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     
     /* Strict physical dimensions per sheet matching standard portrait A4 */
     width: 210mm !important;

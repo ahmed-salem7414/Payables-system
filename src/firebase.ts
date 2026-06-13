@@ -52,19 +52,8 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 // Validate connection to Firestore on initialization
 export async function testConnection(): Promise<boolean> {
-  const pathForWrite = "system_connections";
-  try {
-    const testDocRef = doc(db, pathForWrite, "probe");
-    await setDoc(testDocRef, { 
-      lastConnectedAt: new Date().toISOString(),
-      projectId: firebaseConfig.projectId
-    }, { merge: true });
-    console.log("⚡ Firebase client-side connection validated successfully to project:", firebaseConfig.projectId);
-    return true;
-  } catch (error: any) {
-    console.warn("⚠️ Client-side direct write failed:", error?.message);
-    return false;
-  }
+  // Direct client-side Firebase is disabled since we are migrating to PostgreSQL in the backend
+  return false;
 }
 
 // Retrieve complete store from Firestore

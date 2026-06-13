@@ -4,8 +4,7 @@ import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
-import { initializeApp } from "firebase-admin/app";
-import { initializeFirestore } from "firebase-admin/firestore";
+import pg from "pg";
 
 // Load environment variables
 dotenv.config();
@@ -18,183 +17,111 @@ app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
 const STORE_FILE = path.join(process.cwd(), "data_store.json");
 
-// Initialize Firebase Admin dynamically to persist store permanently
-let fdb: any = null;
+// Initialize PostgreSQL client pool to persist store permanently
+let dbPool: pg.Pool | null = null;
+let isPostgresActive = false;
 
 try {
-  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
-  if (fs.existsSync(configPath)) {
-    const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-    const adminApp = initializeApp({
-      projectId: firebaseConfig.projectId,
-    });
-    fdb = initializeFirestore(adminApp, {
-      databaseId: firebaseConfig.firestoreDatabaseId,
-    } as any);
-    console.log("🔥 Firebase Admin SDK initialized successfully with Firestore database:", firebaseConfig.firestoreDatabaseId);
-  } else {
-    console.warn("⚠️ Warning: firebase-applet-config.json is missing. Running in local filesystem mode.");
-  }
-} catch (error) {
-  console.error("❌ Failed to initialize Firebase Admin SDK:", error);
-}
-
-// Sync complete array with a Firestore collection, handling Add, Update, and Delete.
-async function syncCollection(colName: string, items: any[]) {
-  if (!fdb) return;
-  try {
-    const colRef = fdb.collection(colName);
-    
-    // 1. Get current document IDs in Firestore
-    const snapshot = await colRef.get();
-    const existingIds = snapshot.docs.map((doc: any) => doc.id);
-    
-    // 2. Map posted items
-    const postedIds = new Set(items.map((item: any) => item && item.id).filter(Boolean));
-    
-    // 3. Delete items no longer present
-    const deletePromises = existingIds
-      .filter((id: string) => !postedIds.has(id))
-      .map((id: string) => colRef.doc(id).delete());
-      
-    // 4. Save/update existing items
-    const writePromises = items.map((item: any) => {
-      if (!item || !item.id) return Promise.resolve();
-      return colRef.doc(item.id).set(item);
-    });
-    
-    await Promise.all([...deletePromises, ...writePromises]);
-  } catch (error) {
-    console.error(`Error syncing collection ${colName} to Firestore:`, error);
-  }
-}
-
-// Sync configuration fields in a single document
-async function syncConfig(configData: any) {
-  if (!fdb) return;
-  try {
-    const docRef = fdb.collection("config").doc("system");
-    await docRef.set(configData);
-  } catch (error) {
-    console.error("Error syncing configs to Firestore:", error);
-  }
-}
-
-// Bulk loads complete store from Firestore
-async function loadFromFirestore(): Promise<any> {
-  if (!fdb) return null;
-  const store: any = {
-    suppliers: [],
-    invoices: [],
-    payments: [],
-    backups: [],
-    supplierCategories: [],
-    warehouses: [],
-    linkedBanks: [],
-    safeBalance: 0,
-    creditNotes: []
-  };
-
-  try {
-    const [suppliersSnap, invoicesSnap, paymentsSnap, backupsSnap, creditNotesSnap, configSnap] = await Promise.all([
-      fdb.collection("suppliers").get(),
-      fdb.collection("invoices").get(),
-      fdb.collection("payments").get(),
-      fdb.collection("backups").get(),
-      fdb.collection("creditNotes").get(),
-      fdb.collection("config").doc("system").get()
-    ]);
-
-    store.suppliers = suppliersSnap.docs.map((doc: any) => doc.data());
-    store.invoices = invoicesSnap.docs.map((doc: any) => doc.data());
-    store.payments = paymentsSnap.docs.map((doc: any) => doc.data());
-    store.backups = backupsSnap.docs.map((doc: any) => doc.data());
-    store.creditNotes = creditNotesSnap.docs.map((doc: any) => doc.data());
-
-    if (configSnap.exists) {
-      const configData = configSnap.data() || {};
-      if (Array.isArray(configData.supplierCategories)) store.supplierCategories = configData.supplierCategories;
-      if (Array.isArray(configData.warehouses)) store.warehouses = configData.warehouses;
-      if (Array.isArray(configData.linkedBanks)) store.linkedBanks = configData.linkedBanks;
-      if (typeof configData.safeBalance === "number") store.safeBalance = configData.safeBalance;
+  const connectionString = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_Bm3sWhS7QRjE@ep-polished-firefly-atulc8ab.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require";
+  dbPool = new pg.Pool({
+    connectionString,
+    ssl: {
+      rejectUnauthorized: false
     }
+  });
+  console.log("🐘 PostgreSQL Pool successfully created.");
+} catch (error) {
+  console.error("❌ Failed to initialize PostgreSQL Pool:", error);
+}
 
-    return store;
+// Check connection and ensure table exists
+async function initializePostgres() {
+  if (!dbPool) return;
+  try {
+    const probe = await dbPool.query("SELECT NOW()");
+    console.log("✅ Successfully reached PostgreSQL database:", probe.rows[0]);
+    
+    // Create the system_store table if not present
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS system_store (
+        id VARCHAR(50) PRIMARY KEY,
+        data TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("✅ verified table structure in PostgreSQL 'system_store'.");
+    isPostgresActive = true;
   } catch (error) {
-    console.error("Error loading data from Firestore:", error);
+    console.error("⚠️ Failed to verify or run query against PostgreSQL. Sticking to server cache file:", error);
+    isPostgresActive = false;
+  }
+}
+
+// Bulk loads complete store from PostgreSQL
+async function loadFromPostgres(): Promise<any> {
+  if (!dbPool || !isPostgresActive) return null;
+  try {
+    const res = await dbPool.query("SELECT data FROM system_store WHERE id = 'main_store'");
+    if (res.rows.length > 0) {
+      return JSON.parse(res.rows[0].data);
+    }
+    return null;
+  } catch (error) {
+    console.error("Error loading data from PostgreSQL:", error);
     return null;
   }
 }
 
-// Bulk saves store state to Firestore
-async function saveToFirestore(data: any) {
-  if (!fdb || !data) return;
+// Bulk saves store state to PostgreSQL
+async function saveToPostgres(data: any) {
+  if (!dbPool || !isPostgresActive || !data) return;
   try {
-    await Promise.all([
-      syncCollection("suppliers", data.suppliers || []),
-      syncCollection("invoices", data.invoices || []),
-      syncCollection("payments", data.payments || []),
-      syncCollection("backups", data.backups || []),
-      syncCollection("creditNotes", data.creditNotes || [])
-    ]);
-
-    await syncConfig({
-      supplierCategories: data.supplierCategories || [],
-      warehouses: data.warehouses || [],
-      linkedBanks: data.linkedBanks || [],
-      safeBalance: typeof data.safeBalance === "number" ? data.safeBalance : 0
-    });
-    console.log("🔥 Successfully synchronized all local changes to permanent Firestore.");
+    const dataStr = JSON.stringify(data);
+    await dbPool.query(`
+      INSERT INTO system_store (id, data, updated_at)
+      VALUES ('main_store', $1, CURRENT_TIMESTAMP)
+      ON CONFLICT (id)
+      DO UPDATE SET data = $1, updated_at = CURRENT_TIMESTAMP
+    `, [dataStr]);
+    console.log("🐘 Successfully synchronized all local changes to permanent PostgreSQL.");
   } catch (error) {
-    console.error("❌ Failed to synchronize changes to Firestore:", error);
+    console.error("❌ Failed to synchronize changes to PostgreSQL:", error);
     throw error;
   }
 }
 
 // Initial seed and load check
 async function initializeDataStore() {
-  if (!fdb) {
-    console.log("No Firestore available. Running solely on local filesystem caching.");
+  await initializePostgres();
+
+  if (!isPostgresActive) {
+    console.log("No PostgreSQL database connection active. Running solely on local filesystem caching.");
     return;
   }
-  try {
-    console.log("Starting Firestore database reconciliation...");
-    
-    // Validate if the server-side has permission to write to this Firestore project instance
-    try {
-      await fdb.collection("system_connections").doc("probe").set({
-        lastCheck: new Date().toISOString(),
-        status: "active"
-      });
-      console.log("✅ Server-side write connection test to Firestore succeeded.");
-    } catch (permError: any) {
-      console.warn("⚠️ Server-side Firebase Admin SDK lacks write privileges on this project (requires Service Account JSON credentials). Switching backend to Local Filesystem mode.");
-      fdb = null;
-      console.log("ℹ️ Server-side fallback activated successfully. Local active caching will handle backup and load/save safely.");
-      return;
-    }
 
-    const storeFromDb = await loadFromFirestore();
+  try {
+    console.log("Starting PostgreSQL database reconciliation...");
+    const storeFromDb = await loadFromPostgres();
     
     const hasData = storeFromDb && (
-      storeFromDb.suppliers.length > 0 ||
-      storeFromDb.invoices.length > 0 ||
-      storeFromDb.supplierCategories.length > 0
+      (Array.isArray(storeFromDb.suppliers) && storeFromDb.suppliers.length > 0) ||
+      (Array.isArray(storeFromDb.invoices) && storeFromDb.invoices.length > 0) ||
+      (Array.isArray(storeFromDb.supplierCategories) && storeFromDb.supplierCategories.length > 0)
     );
 
     if (hasData) {
-      console.log("Existing permanent data found in Firestore. Synchronizing local cache...");
+      console.log("Existing permanent data found in PostgreSQL. Synchronizing local cache...");
       fs.writeFileSync(STORE_FILE, JSON.stringify(storeFromDb, null, 2), "utf-8");
     } else {
-      console.log("Firestore is empty. Checking for local migration data...");
+      console.log("PostgreSQL is empty. Checking for local migration data...");
       if (fs.existsSync(STORE_FILE)) {
         const localDataStr = fs.readFileSync(STORE_FILE, "utf-8");
         const localData = JSON.parse(localDataStr);
-        console.log("Migrating current local data_store.json to Firestore...");
-        await saveToFirestore(localData);
+        console.log("Migrating current local data_store.json to PostgreSQL...");
+        await saveToPostgres(localData);
         console.log("Migration complete!");
       } else {
-        console.log("Initializing first-time pristine defaults to Firestore...");
+        console.log("Initializing first-time pristine defaults to PostgreSQL...");
         const pristineState = {
           suppliers: [],
           invoices: [],
@@ -206,12 +133,12 @@ async function initializeDataStore() {
           safeBalance: 0,
           creditNotes: []
         };
-        await saveToFirestore(pristineState);
+        await saveToPostgres(pristineState);
         fs.writeFileSync(STORE_FILE, JSON.stringify(pristineState, null, 2), "utf-8");
       }
     }
   } catch (error) {
-    console.error("Error during Firestore datastore reconciliation:", error);
+    console.error("Error during PostgreSQL datastore reconciliation:", error);
   }
 }
 
@@ -224,7 +151,8 @@ app.get("/api/get-store", (req, res) => {
     if (fs.existsSync(STORE_FILE)) {
       const dataStr = fs.readFileSync(STORE_FILE, "utf-8");
       const data = JSON.parse(dataStr);
-      return res.json(data);
+      // Append database status
+      return res.json({ ...data, postgresActive: isPostgresActive });
     }
     return res.status(404).json({ message: "No stored data exists yet." });
   } catch (error: any) {
@@ -240,15 +168,19 @@ app.post("/api/save-store", async (req, res) => {
     // Save to local cache instantly
     fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2), "utf-8");
     
-    // Save to permanent Firestore asynchronously/synchronously
-    if (fdb) {
-      await saveToFirestore(data);
+    // Save to permanent PostgreSQL
+    if (isPostgresActive) {
+      await saveToPostgres(data);
     }
     
-    return res.json({ success: true, message: "Data saved successfully on server and persisted to Firestore." });
+    return res.json({ 
+      success: true, 
+      message: "Data saved successfully on server and persisted to PostgreSQL.",
+      postgresActive: isPostgresActive
+    });
   } catch (error: any) {
     console.error("Error writing data store file:", error);
-    return res.status(500).json({ error: "Failed to persist storage in Firestore database." });
+    return res.status(500).json({ error: "Failed to persist storage in PostgreSQL database." });
   }
 });
 
