@@ -194,9 +194,9 @@ export default function MawridDashboard() {
   const [reportDateType, setReportDateType] = useState<
     "issue_date" | "due_date"
   >("issue_date");
-  const [reportViewType, setReportViewType] = useState<"detailed" | "summary">(
-    "detailed",
-  );
+  const [reportViewType, setReportViewType] = useState<
+    "detailed" | "summary" | "aging"
+  >("detailed");
   const [activeReportPage, setActiveReportPage] = useState<number>(0);
   const [reportOrientation, setReportOrientation] = useState<"portrait" | "landscape">(
     "portrait",
@@ -2375,6 +2375,89 @@ export default function MawridDashboard() {
     }
   };
 
+  const getComponentReportAgingItems = () => {
+    const targetSuppliers =
+      selectedReportSupplierId === "all"
+        ? suppliers
+        : suppliers.filter((s) => s.id === selectedReportSupplierId);
+
+    const items: Array<{
+      supplier: any;
+      totalDebt: number;
+      current: number;
+      range_1_30: number;
+      range_31_60: number;
+      range_61_90: number;
+      range_91_plus: number;
+    }> = [];
+
+    // The current evaluation date is simulated as 2026-06-17 according to metadata
+    const evaluationDate = new Date("2026-06-17");
+
+    targetSuppliers.forEach((sup) => {
+      const supInvoices = invoices.filter((i) => {
+        const matchesSupplier = i.supplierId === sup.id;
+        const date =
+          (reportDateType === "issue_date" ? i.issueDate : i.dueDate) ||
+          "2026-06-01";
+        const matchesRange = date >= reportStartDate && date <= reportEndDate;
+        const matchesWarehouse =
+          reportWarehouseFilter === "all" ||
+          i.warehouse === reportWarehouseFilter;
+        return matchesSupplier && matchesRange && matchesWarehouse;
+      });
+
+      let totalDebt = 0;
+      let current = 0;
+      let range_1_30 = 0;
+      let range_31_60 = 0;
+      let range_61_90 = 0;
+      let range_91_plus = 0;
+
+      supInvoices.forEach((inv) => {
+        const invoicePayments = payments.filter((p) => p.invoiceId === inv.id);
+        const paidAmount = invoicePayments.reduce((sum, p) => sum + p.amount, 0);
+        const remainingBalance =
+          inv.totalAmount - (inv.creditNoteAmount || 0) - paidAmount;
+
+        if (remainingBalance <= 0) return; // Fully paid, no debt aging contribution
+
+        totalDebt += remainingBalance;
+
+        // Calculate age based on due date
+        const dueDate = new Date(inv.dueDate || "2026-06-01");
+        const diffTime = evaluationDate.getTime() - dueDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 0) {
+          current += remainingBalance;
+        } else if (diffDays >= 1 && diffDays <= 30) {
+          range_1_30 += remainingBalance;
+        } else if (diffDays >= 31 && diffDays <= 60) {
+          range_31_60 += remainingBalance;
+        } else if (diffDays >= 61 && diffDays <= 90) {
+          range_61_90 += remainingBalance;
+        } else {
+          range_91_plus += remainingBalance;
+        }
+      });
+
+      if (totalDebt > 0) {
+        items.push({
+          supplier: sup,
+          totalDebt,
+          current,
+          range_1_30,
+          range_31_60,
+          range_61_90,
+          range_91_plus,
+        });
+      }
+    });
+
+    return items;
+  };
+
   // Export report to spreadsheet document
   const handleExportReportToExcel = () => {
     let csvContent = "\uFEFF"; // Enable Arabic Excel Compatibility
@@ -2434,6 +2517,17 @@ export default function MawridDashboard() {
 
         csvContent += `"${nameField}",${supInvoices.length},${totalOriginal},${totalCN},${totalNet},"${overallStatusText}"\n`;
       });
+    } else if (reportViewType === "aging") {
+      // Debt Aging Excel Format
+      csvContent +=
+        "المورد,الشركة,غير مستحق بعد (حالي),1 - 30 يوم,31 - 60 يوم,61 - 90 يوم,أكثر من 90 يوم,إجمالي المديونية القائمة\n";
+
+      const agingItems = getComponentReportAgingItems();
+      agingItems.forEach((item) => {
+        const name = item.supplier.name.replace(/,/g, " ");
+        const company = item.supplier.company.replace(/,/g, " ");
+        csvContent += `"${name}","${company}",${item.current},${item.range_1_30},${item.range_31_60},${item.range_61_90},${item.range_91_plus},${item.totalDebt}\n`;
+      });
     } else {
       // Detailed Excel format (row-by-row invoice details)
       csvContent +=
@@ -2472,7 +2566,12 @@ export default function MawridDashboard() {
     const link = document.createElement("a");
     link.setAttribute("href", url);
 
-    const filePrefix = reportViewType === "summary" ? "إجمالي" : "تفصيلي";
+    const filePrefix =
+      reportViewType === "summary"
+        ? "إجمالي"
+        : reportViewType === "aging"
+        ? "أعمار_الديون"
+        : "تفصيلي";
     link.setAttribute(
       "download",
       `تقرير_مرسال_${filePrefix}_${reportStartDate}_إلى_${reportEndDate}.csv`,
@@ -2728,13 +2827,13 @@ export default function MawridDashboard() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-white flex items-center gap-2">
-                مؤسسة مرسال - Mersal Foundation
+                مستشفى مرسال للأطفال - Marsal Children's Hospital
                 <span className="text-xs bg-emerald-500/15 text-emerald-400 font-medium px-2 py-0.5 rounded-full border border-emerald-500/20">
                   للإصدار المالي
                 </span>
               </h1>
               <p className="text-xs text-slate-400">
-                منظومة الحسابات والمشتريات وتتبع سداد الموردين التفاعلية
+                المنظومة المالية المتكاملة لإدارة المشتريات والموردين والمدفوعات
               </p>
             </div>
           </div>
@@ -4426,7 +4525,7 @@ export default function MawridDashboard() {
                       value={reportViewType}
                       onChange={(e) => {
                         setReportViewType(
-                          e.target.value as "detailed" | "summary",
+                          e.target.value as "detailed" | "summary" | "aging",
                         );
                         setActiveReportPage(0);
                       }}
@@ -4434,6 +4533,7 @@ export default function MawridDashboard() {
                     >
                       <option value="summary">📊 تقرير إجمالي</option>
                       <option value="detailed">📝 تقرير تفصيلي</option>
+                      <option value="aging">⏳ تقرير أعمار الديون (Aging)</option>
                     </select>
                   </div>
                 </div>
@@ -4617,11 +4717,15 @@ export default function MawridDashboard() {
                 const rawReportItems: any[] =
                   reportViewType === "summary"
                     ? getReportSummaryItems()
-                    : getReportDetailedItems();
+                    : reportViewType === "detailed"
+                    ? getReportDetailedItems()
+                    : getComponentReportAgingItems();
                 const reportPages =
                   reportViewType === "summary"
                     ? dynamicChunkArray(rawReportItems, 6, 10)
-                    : dynamicChunkArray(rawReportItems, 5, 8);
+                    : reportViewType === "detailed"
+                    ? dynamicChunkArray(rawReportItems, 5, 8)
+                    : dynamicChunkArray(rawReportItems, 6, 10);
                 const reportPagesToRender =
                   reportPages.length > 0 ? reportPages : [[]];
 
@@ -4685,7 +4789,7 @@ export default function MawridDashboard() {
                             <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
                               <div>
                                 <h2 className="text-lg font-black text-slate-950 font-sans">
-                                  مؤسسة مرسال - Mersal Foundation
+                                  مستشفى مرسال للأطفال - Marsal Children's Hospital
                                 </h2>
                                 <p className="text-xs text-slate-500 font-medium font-sans">
                                   التقرير المالي المعزز لحسابات الموردين وفواتير
@@ -4706,7 +4810,7 @@ export default function MawridDashboard() {
                                   />
                                 </div>
                                 <span className="text-xs font-bold text-slate-950 block mt-1 font-sans">
-                                  مؤسسة مرسال - Mersal Foundation
+                                  مستشفى مرسال للأطفال - Marsal Children's Hospital
                                 </span>
                               </div>
                             </div>
@@ -4791,7 +4895,7 @@ export default function MawridDashboard() {
                                               : `كشف حساب المورد التفصيلي: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`}
                                           </span>
                                           <span className="text-[10px] text-slate-500 font-mono font-medium select-none">
-                                            مؤسسة مرسال - Mersal Foundation
+                                            مستشفى مرسال للأطفال - Marsal Children's Hospital
                                             (تابع التقرير المالي المعتمد) - صفحة{" "}
                                             {pageIdx + 1}
                                           </span>
@@ -4819,7 +4923,7 @@ export default function MawridDashboard() {
                                           حالة السداد الإجمالية
                                         </th>
                                       </tr>
-                                    ) : (
+                                    ) : reportViewType === "detailed" ? (
                                       <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold font-sans">
                                         <th className="py-2.5 px-3 text-right">
                                           المورد
@@ -4841,6 +4945,30 @@ export default function MawridDashboard() {
                                         </th>
                                         <th className="py-2.5 px-3 text-center">
                                           حالة السداد والتحصيل
+                                        </th>
+                                      </tr>
+                                    ) : (
+                                      <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold font-sans">
+                                        <th className="py-2.5 px-3 text-right">
+                                          المورد والشركة
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left font-semibold">
+                                          غير مستحق (حالي)
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left font-semibold text-amber-700">
+                                          1 - 30 يوم
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left font-semibold text-orange-700">
+                                          31 - 60 يوم
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left font-semibold text-rose-700">
+                                          61 - 90 يوم
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left font-semibold text-red-800">
+                                          أكثر من 90 يوم
+                                        </th>
+                                        <th className="py-2.5 px-3 text-left font-bold">
+                                          إجمالي المديونية القائمة
                                         </th>
                                       </tr>
                                     )}
@@ -4902,7 +5030,7 @@ export default function MawridDashboard() {
                                           </td>
                                         </tr>
                                       ))
-                                    ) : (
+                                    ) : reportViewType === "detailed" ? (
                                       (
                                         pageItems as any as Array<{
                                           supplier: any;
@@ -4951,7 +5079,7 @@ export default function MawridDashboard() {
                                             className="border-b border-slate-200 hover:bg-slate-50/50"
                                           >
                                             <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
-                                              <div className="font-bold text-slate-950 text-xs">
+                                              <div className="font-bold text-slate-950 text-xs text-right">
                                                 {item.supplier.name}
                                               </div>
                                             </td>
@@ -4985,6 +5113,47 @@ export default function MawridDashboard() {
                                           </tr>
                                         );
                                       })
+                                    ) : (
+                                      (
+                                        pageItems as any as Array<{
+                                          supplier: any;
+                                          totalDebt: number;
+                                          current: number;
+                                          range_1_30: number;
+                                          range_31_60: number;
+                                          range_61_90: number;
+                                          range_91_plus: number;
+                                        }>
+                                      ).map((item) => (
+                                        <tr
+                                          key={item.supplier.id}
+                                          className="border-b border-slate-200 hover:bg-slate-50/50"
+                                        >
+                                          <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
+                                            <div className="font-bold text-slate-950 text-xs text-right">
+                                              {item.supplier.name} <span className="text-[10px] text-slate-500 font-normal">({item.supplier.company})</span>
+                                            </div>
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono text-left font-medium text-slate-600">
+                                            {item.current > 0 ? `${fAmt(item.current)} ج.م` : "-"}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono text-left font-medium text-amber-600">
+                                            {item.range_1_30 > 0 ? `${fAmt(item.range_1_30)} ج.م` : "-"}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono text-left font-bold text-orange-600">
+                                            {item.range_31_60 > 0 ? `${fAmt(item.range_31_60)} ج.م` : "-"}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono text-left font-bold text-rose-500">
+                                            {item.range_61_90 > 0 ? `${fAmt(item.range_61_90)} ج.م` : "-"}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono text-left font-black text-rose-700">
+                                            {item.range_91_plus > 0 ? `${fAmt(item.range_91_plus)} ج.م` : "-"}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono font-black text-left text-indigo-700 bg-indigo-50/10">
+                                            {fAmt(item.totalDebt)} ج.م
+                                          </td>
+                                        </tr>
+                                      ))
                                     )}
                                   </tbody>
                                 </table>
@@ -5420,7 +5589,7 @@ export default function MawridDashboard() {
       {/* FOOTER */}
       <footer className="no-print text-center text-[11px] text-slate-400 border-t border-slate-200 mt-12 pt-6 max-w-7xl mx-auto w-full">
         <p>
-          مؤسسة مرسال - Mersal Foundation المتكاملة لإدارة المدفوعات والمشتريات
+          مستشفى مرسال للأطفال - Marsal Children's Hospital المنظومة المتكاملة لإدارة المدفوعات والمشتريات
           © 2026. كافة الحقوق محفوظة بسلامة وأمان.
         </p>
       </footer>

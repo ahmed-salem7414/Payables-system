@@ -1,6 +1,6 @@
 {
-  "name": "نظام مورد الذكي",
-  "description": "نظام متكامل باللغة العربية لإدارة الموردين وفواتير المشتريات والمدفوعات، مع تقارير PDF وتحليلات ذكية وتكامل بنكي وصلاحيات.",
+  "name": "مستشفى مرسال للأطفال - Marsal Children's Hospital",
+  "description": "نظام مالي وإداري متكامل لإدارة الموردين والمدفوعات وفواتير المرضى والتقارير المالية لمستشفى مرسال للأطفال.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
