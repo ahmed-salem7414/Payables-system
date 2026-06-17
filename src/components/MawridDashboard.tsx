@@ -6020,7 +6020,7 @@ export default function MawridDashboard() {
                 <button
                   type="button"
                   onClick={() => setShowAddSupplierModal(false)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-705 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
                 >
                   إلغاء الأمر
                 </button>
