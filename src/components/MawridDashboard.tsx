@@ -4840,6 +4840,16 @@ export default function MawridDashboard() {
                   return chunks;
                 };
 
+                const tc = {
+                  accentText: "text-emerald-850 font-black",
+                  bannerBorder: "border-emerald-600",
+                  borderSpecs: "border-emerald-200/80 bg-emerald-50/20 shadow-sm",
+                  invoiceText: "text-emerald-800 font-extrabold",
+                  totalDebtText: "text-emerald-950 font-black bg-emerald-50/30",
+                  headerTr: "bg-emerald-50/60 border-b-2 border-emerald-300",
+                  headerSpan: "border-emerald-600 text-emerald-950",
+                };
+
                 const getReportSummaryItems = () => {
                   const targetSuppliers =
                     selectedReportSupplierId === "all"
@@ -5035,82 +5045,101 @@ export default function MawridDashboard() {
                         return (
                           <div
                             key={pageIdx}
-                            className={`bg-white rounded-3xl border border-slate-300 p-8 shadow-sm space-y-6 printable-report-sheet max-w-7xl mx-auto text-slate-900 printable-report-page ${
+                            className={`bg-white rounded-3xl border-[6px] border-double border-emerald-700/60 p-10 shadow-xl space-y-6 printable-report-sheet max-w-7xl mx-auto text-slate-900 printable-report-page relative overflow-hidden ${
                               isPageActive
                                 ? "active-preview-page"
                                 : "hidden-on-screen"
                             }`}
                           >
-                            {/* Printed Header Banner */}
-                            <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
-                              <div>
-                                <h2 className="text-lg font-black text-slate-950 font-sans">
-                                  مستشفى مرسال للأطفال - Marsal Children's Hospital
-                                </h2>
-                                <p className="text-xs text-slate-500 font-medium font-sans">
-                                  التقرير المالي المعزز لحسابات الموردين وفواتير
-                                  الشراء
-                                </p>
-                                <p className="text-xs text-slate-500 font-mono mt-1">
-                                  تاريخ استخراج التقرير:{" "}
-                                  {new Date().toISOString().split("T")[0]}
-                                </p>
-                              </div>
-                              <div className="text-left flex flex-col items-end">
-                                <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-center">
-                                  <MersalLogo
-                                    width={100}
-                                    height={100}
-                                    isDarkBackground={false}
-                                    className="h-12 w-auto"
-                                  />
-                                </div>
-                                <span className="text-xs font-bold text-slate-950 block mt-1 font-sans">
-                                  مستشفى مرسال للأطفال - Marsal Children's Hospital
-                                </span>
-                              </div>
+                            {/* Official Background Watermark Logo with high transparency to convey ultimate security */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0">
+                              <MersalLogo width={500} height={500} isDarkBackground={false} />
                             </div>
 
-                            {/* Report specs indicators (ONLY ON FIRST PAGE: pageIdx === 0) */}
-                            {pageIdx === 0 && (
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border border-slate-200 rounded-xl p-4 bg-slate-50">
-                                <div className="text-center font-bold">
-                                  <span className="text-slate-500 text-xs font-medium block font-sans">
-                                    الفترة المحاسبية والمورد
-                                  </span>
-                                  <strong className="text-xs text-slate-800 font-bold block mt-1 leading-snug font-sans">
-                                    التقرير: من {reportStartDate} إلى{" "}
-                                    {reportEndDate}
-                                    {selectedReportSupplierId !== "all"
-                                      ? ` | مورد: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`
-                                      : " | كشف مجمع للموردين"}
-                                    {reportWarehouseFilter !== "all"
-                                      ? ` | مخزن: ${reportWarehouseFilter}`
-                                      : " | كافة المخازن"}
-                                  </strong>
+                            <div className="relative z-10 space-y-6">
+                              {/* Printed Header Banner */}
+                              <div className="border-b-2 border-emerald-650 pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div className="text-right">
+                                  <h2 className="text-xl font-extrabold text-slate-950 font-sans tracking-tight">
+                                    جمعيـة مرسـال الخيريـة - مستشفى مرسال
+                                  </h2>
+                                  <p className="text-[10px] text-emerald-800 font-bold font-sans mt-0.5">
+                                    الشؤون المالية والرقابة • إدارة الحسابات العامة ومراجعة فواتير الموردين
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 font-semibold font-sans mt-0.5">
+                                    التقرير المالي التدقيقي للموردين وفواتير الشراء المفتوحة
+                                  </p>
                                 </div>
-                                <div className="text-center border-y border-slate-200 sm:border-y-0 sm:border-x py-2.5 sm:py-0">
-                                  <span className="text-slate-500 text-xs font-medium block font-sans">
-                                    إجمالي التعاملات الصافية بالفترة
-                                  </span>
-                                  <strong className="text-sm text-slate-950 font-black block mt-1 font-mono">
-                                    {fAmt(getSelectedReportFinancials().total)}{" "}
-                                    ج.م
-                                  </strong>
-                                </div>
-                                <div className="text-center">
-                                  <span className="text-slate-500 text-xs font-medium block font-sans">
-                                    المديونية غير المسواة المتبقية
-                                  </span>
-                                  <strong className="text-sm text-red-650 font-black block mt-1 font-mono">
-                                    {fAmt(
-                                      getSelectedReportFinancials().pending,
-                                    )}{" "}
-                                    ج.م
-                                  </strong>
+                                <div className="text-left flex flex-col items-end">
+                                  <div className="flex items-center gap-2">
+                                    <MersalLogo
+                                      width={80}
+                                      height={80}
+                                      isDarkBackground={false}
+                                      className="h-10 w-auto"
+                                    />
+                                    <div className="border-r border-slate-300 h-8 pl-2"></div>
+                                    <div className="text-left">
+                                      <h3 className="text-sm font-black text-slate-950 font-sans leading-none">
+                                        Mersal Foundation
+                                      </h3>
+                                      <span className="text-[9px] text-slate-500 font-bold block mt-0.5">
+                                        Financial Audit Division
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="text-[9px] text-slate-400 font-mono mt-1">
+                                    تاريخ الطباعة: {new Date().toISOString().split("T")[0]} | المستند: MRL-FIN-{new Date().getFullYear()}-{String(new Date().getMonth() + 1).padStart(2, '0')}
+                                  </div>
                                 </div>
                               </div>
-                            )}
+
+                              {/* Report specs indicators (ONLY ON FIRST PAGE: pageIdx === 0) */}
+                              {pageIdx === 0 && (
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border border-emerald-200 bg-emerald-50/15 rounded-2xl p-5 shadow-sm relative z-10 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-emerald-100">
+                                  <div className="text-right flex flex-col justify-between font-bold pb-2 md:pb-0 md:pl-2">
+                                    <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
+                                      📅 فترة ومعايير التدقيق المالي
+                                    </span>
+                                    <span className="text-xs text-slate-800 font-bold block leading-relaxed font-sans">
+                                      من: <span className="font-mono">{reportStartDate}</span> <br/>
+                                      إلى: <span className="font-mono">{reportEndDate}</span>
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="text-right flex flex-col justify-between font-bold pt-2 md:pt-0 md:px-4">
+                                    <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
+                                      👤 نطاق البحث والمورد المختار
+                                    </span>
+                                    <span className="text-xs text-emerald-950 font-black block truncate leading-snug font-sans">
+                                      {selectedReportSupplierId === "all" 
+                                        ? "جميع الموردين المسجلين بالمستشفى" 
+                                        : suppliers.find((s) => s.id === selectedReportSupplierId)?.name}
+                                      {reportWarehouseFilter !== "all"
+                                        ? ` (مستودع: ${reportWarehouseFilter})`
+                                        : " (جميع المستودعات)"}
+                                    </span>
+                                  </div>
+
+                                  <div className="text-right flex flex-col justify-between font-bold pt-2 md:pt-0 md:px-4">
+                                    <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
+                                      💰 مجموع المطالبات الصافية
+                                    </span>
+                                    <strong className="text-sm text-emerald-800 font-black block font-mono">
+                                      {fAmt(getSelectedReportFinancials().total)} ج.م
+                                    </strong>
+                                  </div>
+
+                                  <div className="text-right flex flex-col justify-between font-bold pt-2 md:pt-0 md:pr-4">
+                                    <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
+                                      🚨 القيمة المتبقية للمديونية
+                                    </span>
+                                    <strong className="text-sm text-rose-700 font-black block font-mono">
+                                      {fAmt(getSelectedReportFinancials().pending)} ج.m
+                                    </strong>
+                                  </div>
+                                </div>
+                              )}
 
                             {/* Ledger Listing inside the PDF */}
                             <div className="space-y-4">
@@ -5137,7 +5166,7 @@ export default function MawridDashboard() {
                                 <table className="w-full text-[11px] text-right border border-slate-200 min-w-[700px]">
                                   <thead>
                                     {/* Repeatable print-only section title header */}
-                                    <tr className="print-only-tr bg-slate-100 border-b-2 border-slate-300">
+                                    <tr className={`print-only-tr border-b-2 ${tc.headerTr}`}>
                                       <th
                                         colSpan={
                                           reportViewType === "summary" ? 6 : 7
@@ -5145,7 +5174,7 @@ export default function MawridDashboard() {
                                         className="py-3 px-3 text-right bg-slate-50 border border-slate-350"
                                       >
                                         <div className="flex items-center justify-between text-slate-950 font-bold">
-                                          <span className="text-xs border-r-2 border-emerald-600 pr-2.5 font-bold font-sans">
+                                          <span className={`text-xs border-r-2 pr-2.5 font-bold font-sans ${tc.headerSpan}`}>
                                             {selectedReportSupplierId === "all"
                                               ? "تفاصيل أرصدة الموردين والفواتير النشطة"
                                               : `كشف حساب المورد التفصيلي: ${suppliers.find((s) => s.id === selectedReportSupplierId)?.name}`}
@@ -5274,7 +5303,7 @@ export default function MawridDashboard() {
                                               ? `-${fAmt(item.totalCN)} ج.م`
                                               : "0.0 ج.م"}
                                           </td>
-                                          <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">
+                                          <td className={`py-2.5 px-3 font-mono font-black text-left ${tc.accentText}`}>
                                             {fAmt(item.totalNet)} ج.م
                                           </td>
                                           <td className="py-2.5 px-3 text-center">
@@ -5356,7 +5385,7 @@ export default function MawridDashboard() {
                                                 ? `-${fAmt(item.invoice.creditNoteAmount)} ج.م`
                                                 : "0.0 ج.م"}
                                             </td>
-                                            <td className="py-2.5 px-3 font-mono font-black text-left text-emerald-700">
+                                            <td className={`py-2.5 px-3 font-mono font-black text-left ${tc.invoiceText}`}>
                                               {fAmt(item.payableAmount)} ج.م
                                             </td>
                                             <td className="py-2.5 px-3 text-center">
@@ -5405,7 +5434,7 @@ export default function MawridDashboard() {
                                           <td className="py-2.5 px-3 font-mono text-left font-black text-rose-700">
                                             {item.range_91_plus > 0 ? `${fAmt(item.range_91_plus)} ج.م` : "-"}
                                           </td>
-                                          <td className="py-2.5 px-3 font-mono font-black text-left text-indigo-700 bg-indigo-50/10">
+                                          <td className={`py-2.5 px-3 font-mono font-black text-left ${tc.totalDebtText}`}>
                                             {fAmt(item.totalDebt)} ج.م
                                           </td>
                                         </tr>
@@ -5416,11 +5445,44 @@ export default function MawridDashboard() {
                               </div>
                             </div>
 
+                            </div>
+
+                            {/* Signatures & Stamp section (Rendered only on LAST page of report) */}
+                            {pageIdx === reportPagesToRender.length - 1 && (
+                              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-6 border-t border-emerald-100 text-slate-900 select-none pb-2 relative z-10">
+                                <div className="text-center font-sans border border-slate-150 p-3 bg-slate-50/55 rounded-xl">
+                                  <span className="text-[10px] text-slate-500 font-bold block mb-6">أعده: أمين الحسابات والمخزن</span>
+                                  <div className="h-5 border-b border-dashed border-slate-350 mx-auto w-3/4 mb-1"></div>
+                                  <span className="text-[9px] text-slate-400 font-medium font-sans">الاسم والتوقيع</span>
+                                </div>
+                                <div className="text-center font-sans border border-slate-150 p-3 bg-slate-50/55 rounded-xl">
+                                  <span className="text-[10px] text-slate-500 font-bold block mb-6">راجع ماليًا: رئيس قسم التدقيق المالي</span>
+                                  <div className="h-5 border-b border-dashed border-slate-355 mx-auto w-3/4 mb-1"></div>
+                                  <span className="text-[9px] text-slate-400 font-medium font-sans">التوقيع والتاريخ</span>
+                                </div>
+                                <div className="text-center font-sans border border-slate-150 p-3 bg-slate-50/55 rounded-xl">
+                                  <span className="text-[10px] text-slate-500 font-bold block mb-6">موافق للصرف: المدير المالي والرقابي</span>
+                                  <div className="h-5 border-b border-dashed border-slate-355 mx-auto w-3/4 mb-1"></div>
+                                  <span className="text-[9px] text-slate-400 font-medium font-sans">معتمد ومكتمل الصرف الكترونياً</span>
+                                </div>
+                                <div className="flex flex-col items-center justify-center p-2 border-2 border-dashed border-emerald-300 bg-emerald-50/20 rounded-xl relative overflow-hidden">
+                                  {/* Emulated Stamp */}
+                                  <div className="border-2 border-emerald-600/60 rounded-full w-20 h-20 flex flex-col items-center justify-center text-center p-1 select-none pointer-events-none transform -rotate-6">
+                                    <span className="text-[7px] text-emerald-600/70 font-bold leading-none font-sans">مستشفى مرسال الخيرية</span>
+                                    <span className="text-[8px] text-emerald-700 font-extrabold leading-none border-y border-emerald-500/60 my-0.5 px-1 bg-white font-sans">مُعـتـمَـد ماليـاً</span>
+                                    <span className="text-[5px] text-emerald-600/60 font-mono">Marsal Hospital</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
                             {/* Legal terms stamp bottom screen */}
-                            <div className="flex items-center justify-center border-t border-slate-200 pt-4 pb-0 mt-auto text-xs w-full select-none">
-                              <div className="text-center font-mono text-[10px] text-slate-400">
-                                صفحة {pageIdx + 1} من{" "}
-                                {reportPagesToRender.length}
+                            <div className="flex items-center justify-between border-t border-slate-100 pt-4 pb-0 mt-auto text-xs w-full select-none text-slate-400 font-sans relative z-10">
+                              <span className="text-[9px] font-medium leading-none font-sans text-slate-400">
+                                مستند رسمي صادر عن منظومة مورد المعتمدة للمشتريات تحت إشراف الإدارة العامة لمستشفى مرسال للأطفال.
+                              </span>
+                              <div className="text-center font-mono text-[10px] text-slate-400 whitespace-nowrap">
+                                صفحة {pageIdx + 1} من {reportPagesToRender.length}
                               </div>
                             </div>
                           </div>
