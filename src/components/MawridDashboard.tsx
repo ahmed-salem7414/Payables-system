@@ -6423,7 +6423,7 @@ export default function MawridDashboard() {
                               </label>
                             </div>
 
-                            {!editingInvoice.isCustomVat ? (
+                            {!newInvoice.isCustomVat ? (
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="text-xs text-slate-600 font-bold font-sans">
                                   ضريبة القيمة المضافة (VAT):
@@ -6434,13 +6434,13 @@ export default function MawridDashboard() {
                                     min="0"
                                     max="100"
                                     value={
-                                      editingInvoice.vatRate !== undefined
-                                        ? editingInvoice.vatRate
+                                      newInvoice.vatRate !== undefined
+                                        ? newInvoice.vatRate
                                         : 14
                                     }
                                     onChange={(e) =>
-                                      setEditingInvoice({
-                                        ...editingInvoice,
+                                      setNewInvoice({
+                                        ...newInvoice,
                                         vatRate: Math.max(
                                           0,
                                           parseFloat(e.target.value) || 0,
