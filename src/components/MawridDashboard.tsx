@@ -5097,21 +5097,21 @@ export default function MawridDashboard() {
                               {/* Report specs indicators (ONLY ON FIRST PAGE: pageIdx === 0) */}
                               {pageIdx === 0 && (
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border border-emerald-200 bg-emerald-50/15 rounded-2xl p-5 shadow-sm relative z-10 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-emerald-100">
-                                  <div className="text-right flex flex-col justify-between font-bold pb-2 md:pb-0 md:pl-2">
+                                  <div className="text-center flex flex-col justify-between items-center font-bold pb-2 md:pb-0">
                                     <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
                                       📅 فترة ومعايير التدقيق المالي
                                     </span>
-                                    <span className="text-xs text-slate-800 font-bold block leading-relaxed font-sans">
+                                    <span className="text-xs text-slate-800 font-bold block leading-relaxed font-sans text-center">
                                       من: <span className="font-mono">{reportStartDate}</span> <br/>
                                       إلى: <span className="font-mono">{reportEndDate}</span>
                                     </span>
                                   </div>
                                   
-                                  <div className="text-right flex flex-col justify-between font-bold pt-2 md:pt-0 md:px-4">
+                                  <div className="text-center flex flex-col justify-between items-center font-bold pt-2 md:pt-0 md:px-4">
                                     <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
                                       👤 نطاق البحث والمورد المختار
                                     </span>
-                                    <span className="text-xs text-emerald-950 font-black block truncate leading-snug font-sans">
+                                    <span className="text-xs text-emerald-950 font-black block leading-snug font-sans text-center max-w-full break-words">
                                       {selectedReportSupplierId === "all" 
                                         ? "جميع الموردين المسجلين بالمستشفى" 
                                         : suppliers.find((s) => s.id === selectedReportSupplierId)?.name}
@@ -5121,21 +5121,21 @@ export default function MawridDashboard() {
                                     </span>
                                   </div>
 
-                                  <div className="text-right flex flex-col justify-between font-bold pt-2 md:pt-0 md:px-4">
+                                  <div className="text-center flex flex-col justify-between items-center font-bold pt-2 md:pt-0 md:px-4">
                                     <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
                                       💰 مجموع المطالبات الصافية
                                     </span>
-                                    <strong className="text-sm text-emerald-800 font-black block font-mono">
+                                    <strong className="text-sm text-emerald-800 font-black block font-mono text-center">
                                       {fAmt(getSelectedReportFinancials().total)} ج.م
                                     </strong>
                                   </div>
 
-                                  <div className="text-right flex flex-col justify-between font-bold pt-2 md:pt-0 md:pr-4">
+                                  <div className="text-center flex flex-col justify-between items-center font-bold pt-2 md:pt-0">
                                     <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
                                       🚨 القيمة المتبقية للمديونية
                                     </span>
-                                    <strong className="text-sm text-rose-700 font-black block font-mono">
-                                      {fAmt(getSelectedReportFinancials().pending)} ج.m
+                                    <strong className="text-sm text-rose-700 font-black block font-mono text-center">
+                                      {fAmt(getSelectedReportFinancials().pending)} ج.م
                                     </strong>
                                   </div>
                                 </div>
@@ -5189,19 +5189,19 @@ export default function MawridDashboard() {
                                     </tr>
                                     {reportViewType === "summary" ? (
                                       <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold font-sans">
-                                        <th className="py-2.5 px-3 text-right">
+                                        <th className="py-2.5 px-3 text-center">
                                           المورد
                                         </th>
                                         <th className="py-2.5 px-3 text-center">
                                           عدد الفواتير بالفترة
                                         </th>
-                                        <th className="py-2.5 px-3 text-left">
+                                        <th className="py-2.5 px-3 text-center">
                                           إجمالي الفواتير الأصلية
                                         </th>
-                                        <th className="py-2.5 px-3 text-left">
+                                        <th className="py-2.5 px-3 text-center">
                                           إجمالي الخصومات الدائنة
                                         </th>
-                                        <th className="py-2.5 px-3 text-left font-bold">
+                                        <th className="py-2.5 px-3 text-center font-bold">
                                           إجمالي صافي المطلوب سداده
                                         </th>
                                         <th className="py-2.5 px-3 text-center">
@@ -5210,22 +5210,22 @@ export default function MawridDashboard() {
                                       </tr>
                                     ) : reportViewType === "detailed" ? (
                                       <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold font-sans">
-                                        <th className="py-2.5 px-3 text-right">
+                                        <th className="py-2.5 px-3 text-center">
                                           المورد
                                         </th>
-                                        <th className="py-2.5 px-3 text-right font-semibold">
+                                        <th className="py-2.5 px-3 text-center font-semibold">
                                           تاريخ الإضافة
                                         </th>
-                                        <th className="py-2.5 px-3 text-right font-semibold">
+                                        <th className="py-2.5 px-3 text-center font-semibold">
                                           تاريخ الاستحقاق
                                         </th>
-                                        <th className="py-2.5 px-3 text-left font-semibold">
+                                        <th className="py-2.5 px-3 text-center font-semibold">
                                           قيمة الفاتورة الأصلية
                                         </th>
-                                        <th className="py-2.5 px-3 text-left font-semibold">
+                                        <th className="py-2.5 px-3 text-center font-semibold">
                                           خصم الإشعار الدائن
                                         </th>
-                                        <th className="py-2.5 px-3 text-left font-bold">
+                                        <th className="py-2.5 px-3 text-center font-bold">
                                           صافي المطلوب سداده
                                         </th>
                                         <th className="py-2.5 px-3 text-center">
@@ -5234,25 +5234,25 @@ export default function MawridDashboard() {
                                       </tr>
                                     ) : (
                                       <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold font-sans">
-                                        <th className="py-2.5 px-3 text-right">
+                                        <th className="py-2.5 px-3 text-center">
                                           المورد والشركة
                                         </th>
-                                        <th className="py-2.5 px-3 text-left font-semibold">
+                                        <th className="py-2.5 px-3 text-center font-semibold">
                                           غير مستحق (حالي)
                                         </th>
-                                        <th className="py-2.5 px-3 text-left font-semibold text-amber-700">
+                                        <th className="py-2.5 px-3 text-center font-semibold text-amber-700">
                                           1 - 30 يوم
                                         </th>
-                                        <th className="py-2.5 px-3 text-left font-semibold text-orange-700">
+                                        <th className="py-2.5 px-3 text-center font-semibold text-orange-700">
                                           31 - 60 يوم
                                         </th>
-                                        <th className="py-2.5 px-3 text-left font-semibold text-rose-700">
+                                        <th className="py-2.5 px-3 text-center font-semibold text-rose-700">
                                           61 - 90 يوم
                                         </th>
-                                        <th className="py-2.5 px-3 text-left font-semibold text-red-800">
+                                        <th className="py-2.5 px-3 text-center font-semibold text-red-800">
                                           أكثر من 90 يوم
                                         </th>
-                                        <th className="py-2.5 px-3 text-left font-bold">
+                                        <th className="py-2.5 px-3 text-center font-bold">
                                           إجمالي المديونية القائمة
                                         </th>
                                       </tr>
@@ -5287,23 +5287,23 @@ export default function MawridDashboard() {
                                           key={item.supplier.id}
                                           className="border-b border-slate-200 hover:bg-slate-50/50"
                                         >
-                                          <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
-                                            <div className="font-bold text-slate-950 text-xs">
+                                          <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans text-center">
+                                            <div className="font-bold text-slate-950 text-xs text-center">
                                               {item.supplier.name}
                                             </div>
                                           </td>
                                           <td className="py-2.5 px-3 font-mono font-bold text-center text-slate-700">
                                             {item.supInvoices.length} فواتير
                                           </td>
-                                          <td className="py-2.5 px-3 font-mono text-left font-medium">
+                                          <td className="py-2.5 px-3 font-mono text-center font-medium">
                                             {fAmt(item.totalOriginal)} ج.م
                                           </td>
-                                          <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-left">
+                                          <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-center">
                                             {item.totalCN > 0
                                               ? `-${fAmt(item.totalCN)} ج.م`
                                               : "0.0 ج.م"}
                                           </td>
-                                          <td className={`py-2.5 px-3 font-mono font-black text-left ${tc.accentText}`}>
+                                          <td className={`py-2.5 px-3 font-mono font-black text-center ${tc.accentText}`}>
                                             {fAmt(item.totalNet)} ج.م
                                           </td>
                                           <td className="py-2.5 px-3 text-center">
@@ -5363,29 +5363,29 @@ export default function MawridDashboard() {
                                             key={item.invoice.id}
                                             className="border-b border-slate-200 hover:bg-slate-50/50"
                                           >
-                                            <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
-                                              <div className="font-bold text-slate-950 text-xs text-right">
+                                            <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans text-center">
+                                              <div className="font-bold text-slate-950 text-xs text-center">
                                                 {item.supplier.name}
                                               </div>
                                             </td>
-                                            <td className="py-2.5 px-3 font-mono text-slate-600">
+                                            <td className="py-2.5 px-3 font-mono text-slate-600 text-center">
                                               {item.invoice.issueDate ||
                                                 "2026-06-01"}
                                             </td>
-                                            <td className="py-2.5 px-3 font-mono text-slate-500">
+                                            <td className="py-2.5 px-3 font-mono text-slate-500 text-center">
                                               {item.invoice.dueDate}
                                             </td>
-                                            <td className="py-2.5 px-3 font-mono text-left font-medium">
+                                            <td className="py-2.5 px-3 font-mono text-center font-medium">
                                               {fAmt(item.invoice.totalAmount)}{" "}
                                               ج.م
                                             </td>
-                                            <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-left">
+                                            <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-center">
                                               {item.invoice.creditNoteAmount &&
                                               item.invoice.creditNoteAmount > 0
                                                 ? `-${fAmt(item.invoice.creditNoteAmount)} ج.م`
                                                 : "0.0 ج.م"}
                                             </td>
-                                            <td className={`py-2.5 px-3 font-mono font-black text-left ${tc.invoiceText}`}>
+                                            <td className={`py-2.5 px-3 font-mono font-black text-center ${tc.invoiceText}`}>
                                               {fAmt(item.payableAmount)} ج.م
                                             </td>
                                             <td className="py-2.5 px-3 text-center">
@@ -5414,27 +5414,27 @@ export default function MawridDashboard() {
                                           key={item.supplier.id}
                                           className="border-b border-slate-200 hover:bg-slate-50/50"
                                         >
-                                          <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans">
-                                            <div className="font-bold text-slate-950 text-xs text-right">
+                                          <td className="py-2.5 px-3 font-semibold text-slate-900 border-r border-slate-100 align-middle font-sans text-center">
+                                            <div className="font-bold text-slate-950 text-xs text-center animate-fade-in">
                                               {item.supplier.name} <span className="text-[10px] text-slate-500 font-normal">({item.supplier.company})</span>
                                             </div>
                                           </td>
-                                          <td className="py-2.5 px-3 font-mono text-left font-medium text-slate-600">
+                                          <td className="py-2.5 px-3 font-mono text-center font-medium text-slate-600">
                                             {item.current > 0 ? `${fAmt(item.current)} ج.م` : "-"}
                                           </td>
-                                          <td className="py-2.5 px-3 font-mono text-left font-medium text-amber-600">
+                                          <td className="py-2.5 px-3 font-mono text-center font-medium text-amber-600">
                                             {item.range_1_30 > 0 ? `${fAmt(item.range_1_30)} ج.م` : "-"}
                                           </td>
-                                          <td className="py-2.5 px-3 font-mono text-left font-bold text-orange-600">
+                                          <td className="py-2.5 px-3 font-mono text-center font-bold text-orange-600">
                                             {item.range_31_60 > 0 ? `${fAmt(item.range_31_60)} ج.م` : "-"}
                                           </td>
-                                          <td className="py-2.5 px-3 font-mono text-left font-bold text-rose-500">
+                                          <td className="py-2.5 px-3 font-mono text-center font-bold text-rose-500">
                                             {item.range_61_90 > 0 ? `${fAmt(item.range_61_90)} ج.م` : "-"}
                                           </td>
-                                          <td className="py-2.5 px-3 font-mono text-left font-black text-rose-700">
+                                          <td className="py-2.5 px-3 font-mono text-center font-black text-rose-700">
                                             {item.range_91_plus > 0 ? `${fAmt(item.range_91_plus)} ج.م` : "-"}
                                           </td>
-                                          <td className={`py-2.5 px-3 font-mono font-black text-left ${tc.totalDebtText}`}>
+                                          <td className={`py-2.5 px-3 font-mono font-black text-center ${tc.totalDebtText}`}>
                                             {fAmt(item.totalDebt)} ج.م
                                           </td>
                                         </tr>
