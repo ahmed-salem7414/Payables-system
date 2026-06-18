@@ -4771,7 +4771,7 @@ export default function MawridDashboard() {
                     )}
 
                     {/* Rendering Pages */}
-                    <div id="printable-report-content" className="space-y-6">
+                    <div id="printable-report-content" className="space-y-6 pb-24 sm:pb-28 md:pb-36">
                       {reportPagesToRender.map((pageItems, pageIdx) => {
                         const isPageActive = pageIdx === activeReportPage;
                         const hasItems = pageItems.length > 0;
@@ -6229,10 +6229,10 @@ export default function MawridDashboard() {
                           {invoiceAttachments.map((f, idx) => (
                             <div
                               key={idx}
-                              className="flex items-center justify-between bg-white text-slate-805 p-1.5 rounded border border-slate-100 text-[11px]"
+                              className="flex items-center justify-between bg-white text-black p-1.5 rounded border border-slate-100 text-[11px]"
                             >
                               <span
-                                className="font-mono font-semibold truncate max-w-[200px]"
+                                className="font-mono font-bold text-black truncate max-w-[200px]"
                                 title={f.name}
                               >
                                 {f.name}
@@ -6256,7 +6256,9 @@ export default function MawridDashboard() {
                   </div>
                 </div>
 
-                {/* Left Side Panel: Items Row Editor & VAT/Calculations */}
+
+
+                {/* Left Side Panel: Items Row Editor & VAT/Calculations & Credit Note */}
                 <div className="lg:col-span-7 space-y-4">
                   {/* Items header */}
                   <div className="border border-slate-200 p-5 rounded-2xl bg-white space-y-4">
@@ -6293,7 +6295,7 @@ export default function MawridDashboard() {
                         <button
                           type="button"
                           onClick={handleAddDiscountRow}
-                          className="text-teal-600 hover:text-teal-700 font-bold text-xs flex items-center gap-1 cursor-pointer bg-teal-50 hover:bg-teal-100/70 py-1.5 px-2.5 rounded-lg border border-teal-100 transition-colors"
+                          className="text-sky-605 hover:text-sky-700 font-bold text-xs flex items-center gap-1 cursor-pointer bg-sky-50 hover:bg-sky-100/70 py-1.5 px-2.5 rounded-lg border border-sky-100 transition-colors"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           إضافة خصم جديد
@@ -6351,7 +6353,9 @@ export default function MawridDashboard() {
                               </div>
                               <button
                                 type="button"
-                                onClick={() => handleRemoveDiscountRow(index)}
+                                onClick={() =>
+                                  handleRemoveDiscountRow(index)
+                                }
                                 className="p-1 px-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-colors"
                               >
                                 <XCircle className="w-4 h-4" />
@@ -6419,9 +6423,9 @@ export default function MawridDashboard() {
                               </label>
                             </div>
 
-                            {!newInvoice.isCustomVat ? (
+                            {!editingInvoice.isCustomVat ? (
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-xs text-slate-600 font-bold">
+                                <span className="text-xs text-slate-600 font-bold font-sans">
                                   ضريبة القيمة المضافة (VAT):
                                 </span>
                                 <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
@@ -6430,13 +6434,13 @@ export default function MawridDashboard() {
                                     min="0"
                                     max="100"
                                     value={
-                                      newInvoice.vatRate !== undefined
-                                        ? newInvoice.vatRate
+                                      editingInvoice.vatRate !== undefined
+                                        ? editingInvoice.vatRate
                                         : 14
                                     }
                                     onChange={(e) =>
-                                      setNewInvoice({
-                                        ...newInvoice,
+                                      setEditingInvoice({
+                                        ...editingInvoice,
                                         vatRate: Math.max(
                                           0,
                                           parseFloat(e.target.value) || 0,
@@ -6445,7 +6449,7 @@ export default function MawridDashboard() {
                                     }
                                     className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
                                   />
-                                  <span className="text-slate-500 text-xs font-bold">
+                                  <span className="text-slate-500 text-xs font-bold font-sans">
                                     %
                                   </span>
                                 </div>
@@ -6609,7 +6613,7 @@ export default function MawridDashboard() {
                   </h4>
 
                   <div>
-                    <label className="text-slate-500 block mb-1">
+                    <label className="text-slate-505 block mb-1">
                       اختر المورد المرتبط *
                     </label>
                     <select
@@ -6647,7 +6651,7 @@ export default function MawridDashboard() {
                           invoiceNumber: e.target.value,
                         })
                       }
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-855"
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-800"
                     />
                   </div>
 
@@ -6666,7 +6670,7 @@ export default function MawridDashboard() {
                             issueDate: e.target.value,
                           })
                         }
-                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-855 font-semibold"
+                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-800 font-semibold"
                       />
                     </div>
                     <div>
@@ -6683,7 +6687,7 @@ export default function MawridDashboard() {
                             dueDate: e.target.value,
                           })
                         }
-                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-855 font-semibold"
+                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-800 font-semibold"
                       />
                     </div>
                     <div>
@@ -6725,7 +6729,7 @@ export default function MawridDashboard() {
                                 prev ? { ...prev, warehouse: trimmed } : null,
                               );
                               showToast(
-                                `تمت إضافة المخزن "${trimmed}" بنجاح وتحديده.`,
+                                "تمت إضافة المخزن " + trimmed + " بنجاح وتحديده."
                               );
                             } else {
                               setEditingInvoice((prev) =>
@@ -6733,7 +6737,7 @@ export default function MawridDashboard() {
                               );
                               showToast(
                                 "هذا المخزن موجود بالفعل وتم تحديده.",
-                                "info",
+                                "info"
                               );
                             }
                           }
@@ -6767,7 +6771,7 @@ export default function MawridDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-slate-505 block mb-1">
+                    <label className="text-slate-600 block mb-1 font-bold">
                       البيانات / مذكرات عامة
                     </label>
                     <input
@@ -6779,13 +6783,13 @@ export default function MawridDashboard() {
                           notes: e.target.value,
                         })
                       }
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white"
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800"
                       placeholder="شحنة التجهيز المقررة لمخازن العاشر"
                     />
                   </div>
 
                   <div>
-                    <label className="text-slate-505 block mb-1 font-bold">
+                    <label className="text-slate-600 block mb-1 font-bold">
                       مرفقات الفاتورة (يمكنك اختيار ملف أو أكثر)
                     </label>
                     <div className="space-y-2">
@@ -6793,7 +6797,7 @@ export default function MawridDashboard() {
                         <span className="text-slate-400 text-[11px] block">
                           اضغط لتصفح وإضافة مرفقات جديدة...
                         </span>
-                        <span className="bg-emerald-50 text-emerald-650 px-2.5 py-1.5 rounded text-[10px] font-bold">
+                        <span className="bg-emerald-50 text-emerald-600 px-2.5 py-1.5 rounded text-[10px] font-bold">
                           تصفح المرفقات
                         </span>
                         <input
@@ -6819,10 +6823,10 @@ export default function MawridDashboard() {
                             ? editingInvoice.attachments.map((file, idx) => (
                                 <div
                                   key={idx}
-                                  className="flex items-center justify-between bg-white text-slate-805 p-1.5 rounded border border-slate-100 text-[11px]"
+                                  className="flex items-center justify-between bg-white text-black p-1.5 rounded border border-slate-100 text-[11px]"
                                 >
                                   <span
-                                    className="font-mono font-semibold truncate max-w-[200px]"
+                                    className="font-mono font-bold text-black truncate max-w-[200px]"
                                     title={file.name}
                                   >
                                     {file.name}
@@ -6847,9 +6851,9 @@ export default function MawridDashboard() {
                                 </div>
                               ))
                             : editingInvoice.attachment && (
-                                <div className="flex items-center justify-between bg-white text-slate-805 p-1.5 rounded border border-slate-100 text-[11px]">
+                                <div className="flex items-center justify-between bg-white text-black p-1.5 rounded border border-slate-100 text-[11px]">
                                   <span
-                                    className="font-mono font-semibold truncate max-w-[200px]"
+                                    className="font-mono font-bold text-black truncate max-w-[200px]"
                                     title={editingInvoice.attachment.name}
                                   >
                                     {editingInvoice.attachment.name}
@@ -7042,7 +7046,7 @@ export default function MawridDashboard() {
 
                             {!editingInvoice.isCustomVat ? (
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-xs text-slate-600 font-bold">
+                                <span className="text-xs text-slate-600 font-bold font-sans">
                                   ضريبة القيمة المضافة (VAT):
                                 </span>
                                 <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
@@ -7066,7 +7070,7 @@ export default function MawridDashboard() {
                                     }
                                     className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
                                   />
-                                  <span className="text-slate-500 text-xs font-bold">
+                                  <span className="text-slate-500 text-xs font-bold font-sans">
                                     %
                                   </span>
                                 </div>
@@ -7192,7 +7196,7 @@ export default function MawridDashboard() {
                         <span>
                           {showEditInvoiceCNSection
                             ? "إغلاق نموذج الإشعار الدائن"
-                            : "عمل إشعار دائن (خصم/مرتجع) on هذه الفاتورة"}
+                            : "عمل إشعار دائن (خصم/مرتجع) على هذه الفاتورة"}
                         </span>
                       </button>
                       {!showEditInvoiceCNSection && (
@@ -7241,7 +7245,7 @@ export default function MawridDashboard() {
                                   notes: e.target.value,
                                 })
                               }
-                              className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800"
+                              className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-805"
                               placeholder="مثال: خصم جودة أو كميات ممزقة"
                             />
                           </div>
@@ -7285,35 +7289,27 @@ export default function MawridDashboard() {
                                 <input
                                   type="number"
                                   required={showEditInvoiceCNSection}
-                                  min="1"
-                                  value={item.quantity}
-                                  onChange={(e) =>
-                                    handleUpdateEditInvoiceCNItemRow(
-                                      index,
-                                      "quantity",
-                                      parseInt(e.target.value) || 1,
-                                    )
-                                  }
-                                  className="w-16 border border-slate-200 rounded p-1.5 text-center font-mono text-slate-800 text-xs bg-slate-50"
-                                />
-                                <input
-                                  type="number"
-                                  required={showEditInvoiceCNSection}
                                   min="0"
                                   step="any"
-                                  value={item.price}
-                                  onChange={(e) =>
+                                  value={item.price || ""}
+                                  placeholder="المبلغ المخصوم للبند"
+                                  onChange={(e) => {
                                     handleUpdateEditInvoiceCNItemRow(
                                       index,
                                       "price",
                                       parseFloat(e.target.value) || 0,
-                                    )
-                                  }
-                                  className="w-24 border border-slate-200 rounded p-1.5 text-left font-mono text-slate-800 text-xs bg-slate-50"
+                                    );
+                                    handleUpdateEditInvoiceCNItemRow(
+                                      index,
+                                      "quantity",
+                                      1,
+                                    );
+                                  }}
+                                  className="w-40 border border-slate-200 rounded p-1.5 text-left font-mono text-slate-800 text-xs bg-slate-50 font-bold focus:ring-1 focus:ring-emerald-500"
                                 />
-                                <div className="w-24 font-mono font-bold text-slate-700 text-left bg-slate-100 border border-slate-150 rounded p-1.5 text-xs overflow-hidden">
-                                  {fAmt(item.quantity * item.price)} ج.م
-                                </div>
+                                <span className="text-slate-400 text-[10px] font-bold select-none">
+                                  ج.م
+                                </span>
                                 <button
                                   type="button"
                                   onClick={() =>
@@ -7339,7 +7335,7 @@ export default function MawridDashboard() {
                               editInvoiceCNData.items.reduce(
                                 (sum, item) => sum + item.quantity * item.price,
                                 0,
-                              ),
+                              )
                             )}{" "}
                             ج.م
                           </span>
@@ -7786,7 +7782,7 @@ export default function MawridDashboard() {
                 </label>
                 <div className="flex items-center gap-2">
                   <label className="flex-1 flex items-center justify-between border border-dashed border-slate-300 hover:border-emerald-500 rounded-lg p-2 bg-slate-50 cursor-pointer transition-colors">
-                    <span className="text-slate-500 text-[11px] truncate max-w-[270px]">
+                    <span className={`text-[11px] truncate max-w-[270px] ${cnAttachment ? "text-black font-bold" : "text-slate-500"}`}>
                       {cnAttachment
                         ? cnAttachment.name
                         : "اختر ملفاً لإرفاقه بالخصم..."}
