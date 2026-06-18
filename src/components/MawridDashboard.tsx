@@ -191,8 +191,11 @@ export default function MawridDashboard() {
     if (!activeTok) return;
     try {
       setIsDriveLoading(true);
+      const query = encodeURIComponent("name contains 'Mawrid_Backup' and trashed = false");
+      const fields = encodeURIComponent("files(id, name, createdTime, size)");
+      const orderBy = encodeURIComponent("createdTime desc");
       const res = await fetch(
-        "https://www.googleapis.com/drive/v3/files?q=name contains 'Mawrid_Backup' and trashed = false&fields=files(id, name, createdTime, size)&orderBy=createdTime desc",
+        `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&orderBy=${orderBy}`,
         {
           headers: { Authorization: `Bearer ${activeTok}` },
         }
@@ -201,10 +204,13 @@ export default function MawridDashboard() {
         const data = await res.json();
         setDriveBackups(data.files || []);
       } else {
-        console.error("Failed to fetch Google Drive backups");
+        const errText = await res.text().catch(() => "");
+        console.error("Failed to fetch Google Drive backups:", res.status, errText);
+        showToast(`فشل استرجاع النسخ الاحتياطية من Drive: الكود ${res.status}`, "error");
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error("Error listing backups:", err);
+      showToast(`حدث خطأ أثناء تحميل ملفات Drive: ${err.message || err}`, "error");
     } finally {
       setIsDriveLoading(false);
     }
