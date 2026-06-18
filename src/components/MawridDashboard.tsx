@@ -1078,6 +1078,9 @@ export default function MawridDashboard() {
 
     setSuppliers([...suppliers, createdSupplier]);
     setShowAddSupplierModal(false);
+    if (showAddInvoiceModal) {
+      setNewInvoice(prev => ({ ...prev, supplierId: createdSupplier.id }));
+    }
     setNewSupplier({
       name: "",
       company: "",
@@ -6475,9 +6478,20 @@ export default function MawridDashboard() {
                   </h4>
 
                   <div>
-                    <label className="text-slate-500 block mb-1">
-                      اختر المورد المرتبط *
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-slate-500">
+                        اختر المورد المرتبط *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddSupplierModal(true)}
+                        className="text-emerald-700 hover:text-emerald-800 font-extrabold flex items-center gap-1 transition-colors px-1 bg-emerald-50 rounded"
+                        title="إضافة مورد جديد"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>مورد جديد</span>
+                      </button>
+                    </div>
                     <select
                       required
                       value={newInvoice.supplierId}
