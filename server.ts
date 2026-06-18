@@ -5,6 +5,8 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import pg from "pg";
+import { getDb, isConfigured, getPool } from "./src/db/index.ts";
+import * as schema from "./src/db/schema.ts";
 
 // robust global exception & promise rejection catch handlers to prevent the server process from crashing 
 process.on("unhandledRejection", (reason, promise) => {
@@ -26,31 +28,181 @@ app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
 const STORE_FILE = path.join(process.cwd(), "data_store.json");
 
-// PostgreSQL database features deactivated as explicitly requested.
-// The system now operates 100% on the internal data_store.json cache, which is ultra-stable, secure, with zero connection overhead.
 let isPostgresActive = false;
 let lastPostgresError: string | null = null;
 
-async function createPoolAndConnect(forceRecreate = false) {
-  console.log("🔌 PostgreSQL initialization bypassed. Running strictly in local file mode.");
-}
-
-async function initializePostgres(forceRecreate = false) {
-  isPostgresActive = false;
-  lastPostgresError = null;
-  console.log("🔌 PostgreSQL is deactivated. Using file-based storage data_store.json.");
-}
-
 async function loadFromPostgres(): Promise<any> {
-  return null;
+  if (!isConfigured()) return null;
+  const db = getDb();
+  try {
+    const sups = await db.select().from(schema.suppliers);
+    const invs = await db.select().from(schema.invoices);
+    const pays = await db.select().from(schema.payments);
+    const bks = await db.select().from(schema.backups);
+    const cns = await db.select().from(schema.creditNotes);
+    const cfgs = await db.select().from(schema.systemConfig);
+
+    // Reconstruct the configs
+    const supplierCategories = cfgs.find(c => c.key === "supplierCategories")?.value || ["مواد خام", "خدمات", "أجهزة ومعدات", "مستلزمات مكتبية"];
+    const warehouses = cfgs.find(c => c.key === "warehouses")?.value || ["المستودع الرئيسي", "مخزن أكتوبر", "مستودع الإسكندرية"];
+    const linkedBanks = cfgs.find(c => c.key === "linkedBanks")?.value || [];
+    const safeBalance = cfgs.find(c => c.key === "safeBalance")?.value || 0;
+
+    return {
+      suppliers: sups,
+      invoices: invs,
+      payments: pays,
+      backups: bks,
+      creditNotes: cns,
+      supplierCategories,
+      warehouses,
+      linkedBanks,
+      safeBalance
+    };
+  } catch (error) {
+    console.error("Failed to load from Postgres:", error);
+    throw error;
+  }
 }
 
 async function saveToPostgres(data: any) {
-  // No-op
+  if (!isConfigured()) return;
+  const db = getDb();
+  
+  try {
+    await db.transaction(async (tx) => {
+      // Clear existing records first
+      await tx.delete(schema.suppliers);
+      await tx.delete(schema.invoices);
+      await tx.delete(schema.payments);
+      await tx.delete(schema.backups);
+      await tx.delete(schema.creditNotes);
+      await tx.delete(schema.systemConfig);
+
+      // Insert suppliers
+      if (Array.isArray(data.suppliers) && data.suppliers.length > 0) {
+        await tx.insert(schema.suppliers).values(data.suppliers);
+      }
+
+      // Insert invoices
+      if (Array.isArray(data.invoices) && data.invoices.length > 0) {
+        const invoicesToSave = data.invoices.map((inv: any) => ({
+          id: inv.id,
+          invoiceNumber: inv.invoiceNumber,
+          supplierId: inv.supplierId,
+          issueDate: inv.issueDate,
+          dueDate: inv.dueDate,
+          items: inv.items || [],
+          totalAmount: typeof inv.totalAmount === "number" ? inv.totalAmount : 0,
+          status: inv.status || 'unpaid',
+          notes: inv.notes || null,
+          warehouse: inv.warehouse || null,
+          creditNoteAmount: typeof inv.creditNoteAmount === "number" ? inv.creditNoteAmount : null,
+          vatRate: typeof inv.vatRate === "number" ? inv.vatRate : null,
+          vatAmount: typeof inv.vatAmount === "number" ? inv.vatAmount : null,
+          customVatAmount: typeof inv.customVatAmount === "number" ? inv.customVatAmount : null,
+          isCustomVat: typeof inv.isCustomVat === "boolean" ? inv.isCustomVat : null,
+          attachments: inv.attachments || null,
+        }));
+        await tx.insert(schema.invoices).values(invoicesToSave);
+      }
+
+      // Insert payments
+      if (Array.isArray(data.payments) && data.payments.length > 0) {
+        const paymentsToSave = data.payments.map((p: any) => ({
+          id: p.id,
+          supplierId: p.supplierId,
+          invoiceId: p.invoiceId,
+          amount: typeof p.amount === "number" ? p.amount : 0,
+          paymentDate: p.paymentDate,
+          method: p.method,
+          transRef: p.transRef,
+        }));
+        await tx.insert(schema.payments).values(paymentsToSave);
+      }
+
+      // Insert backups
+      if (Array.isArray(data.backups) && data.backups.length > 0) {
+        const backupsToSave = data.backups.map((b: any) => ({
+          id: b.id,
+          timestamp: b.timestamp,
+          type: b.type,
+          size: b.size,
+          recordsCount: b.recordsCount || { suppliers: 0, invoices: 0, payments: 0 },
+          dataDump: b.dataDump,
+        }));
+        await tx.insert(schema.backups).values(backupsToSave);
+      }
+
+      // Insert creditNotes
+      if (Array.isArray(data.creditNotes) && data.creditNotes.length > 0) {
+        const creditNotesToSave = data.creditNotes.map((cn: any) => ({
+          id: cn.id,
+          creditNoteNumber: cn.creditNoteNumber,
+          supplierId: cn.supplierId,
+          amount: typeof cn.amount === "number" ? cn.amount : 0,
+          issueDate: cn.issueDate,
+          dueDate: cn.dueDate,
+          status: cn.status,
+          items: cn.items || [],
+          notes: cn.notes || null,
+          attachments: cn.attachments || null,
+        }));
+        await tx.insert(schema.creditNotes).values(creditNotesToSave);
+      }
+
+      // Insert config key-values
+      const configsToSave = [
+        { key: "supplierCategories", value: data.supplierCategories || [] },
+        { key: "warehouses", value: data.warehouses || [] },
+        { key: "linkedBanks", value: data.linkedBanks || [] },
+        { key: "safeBalance", value: typeof data.safeBalance === "number" ? data.safeBalance : 0 },
+      ];
+      await tx.insert(schema.systemConfig).values(configsToSave);
+    });
+  } catch (error) {
+    console.error("Failed to save to Postgres:", error);
+    throw error;
+  }
+}
+
+async function initializePostgres(forceRecreate = false) {
+  if (!isConfigured()) {
+    isPostgresActive = false;
+    lastPostgresError = "PostgreSQL environment variables are not loaded.";
+    console.log("🔌 PostgreSQL setup bypassed (missing coordinates).");
+    return;
+  }
+  
+  try {
+    console.log("🔌 Initializing PostgreSQL connection via connection pool...");
+    const pool = getPool();
+    // Test query
+    const res = await pool.query("SELECT 1;");
+    if (res.rows.length > 0) {
+      isPostgresActive = true;
+      lastPostgresError = null;
+      console.log("✅ PostgreSQL is ACTIVE and connected successfully!");
+
+      // Sync local data_store.json database cache into Postgres if database is clean/empty
+      const db = getDb();
+      const existingSuppliers = await db.select().from(schema.suppliers);
+      if (existingSuppliers.length === 0 && fs.existsSync(STORE_FILE)) {
+        console.log("💾 Database is empty but local file store is present. Seeding data_store.json into Postgres...");
+        const localData = JSON.parse(fs.readFileSync(STORE_FILE, "utf-8"));
+        await saveToPostgres(localData);
+        console.log("✅ Seed completed successfully!");
+      }
+    }
+  } catch (error: any) {
+    isPostgresActive = false;
+    lastPostgresError = error?.message || String(error);
+    console.error("❌ PostgreSQL connection check failed:", error);
+  }
 }
 
 async function initializeDataStore() {
-  console.log("🔌 System Initializing in Local-Only Persistence Mode...");
+  console.log("🔌 System Initializing Local Cache File...");
   try {
     if (!fs.existsSync(STORE_FILE)) {
       console.log("Initializing first-time pristine defaults to local file store...");
@@ -67,7 +219,7 @@ async function initializeDataStore() {
       };
       fs.writeFileSync(STORE_FILE, JSON.stringify(pristineState, null, 2), "utf-8");
     } else {
-      console.log("✅ Local data_store.json detected and loaded successfully.");
+      console.log("✅ Local data_store.json detected.");
     }
   } catch (error) {
     console.error("Error during Datastore initialization:", error);
@@ -76,19 +228,36 @@ async function initializeDataStore() {
 
 // Reconcile on app launch
 initializeDataStore();
+initializePostgres();
 
 // API endpoint to retrieve stored data
-app.get("/api/get-store", (req, res) => {
+app.get("/api/get-store", async (req, res) => {
   try {
+    if (isPostgresActive) {
+      try {
+        const data = await loadFromPostgres();
+        if (data) {
+          return res.json({
+            ...data,
+            postgresActive: true,
+            postgresError: null,
+          });
+        }
+      } catch (err: any) {
+        console.error("Failed to fetch from Postgres, falling back to file:", err);
+      }
+    }
+
     if (fs.existsSync(STORE_FILE)) {
       const dataStr = fs.readFileSync(STORE_FILE, "utf-8");
       const data = JSON.parse(dataStr);
       return res.json({ 
         ...data, 
-        postgresActive: false,
-        postgresError: null 
+        postgresActive: isPostgresActive,
+        postgresError: lastPostgresError 
       });
     }
+
     const pristineState = {
       suppliers: [],
       invoices: [],
@@ -103,8 +272,8 @@ app.get("/api/get-store", (req, res) => {
     fs.writeFileSync(STORE_FILE, JSON.stringify(pristineState, null, 2), "utf-8");
     return res.json({
       ...pristineState,
-      postgresActive: false,
-      postgresError: null
+      postgresActive: isPostgresActive,
+      postgresError: lastPostgresError,
     });
   } catch (error: any) {
     console.error("Error reading data store file:", error);
@@ -116,12 +285,35 @@ app.get("/api/get-store", (req, res) => {
 app.post("/api/save-store", async (req, res) => {
   try {
     const data = req.body;
+    
+    // Save to local cache file first
     fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2), "utf-8");
+
+    if (isPostgresActive) {
+      try {
+        await saveToPostgres(data);
+        return res.json({
+          success: true,
+          message: "Data saved successfully on PostgreSQL and local server backup file.",
+          postgresActive: true,
+          postgresError: null
+        });
+      } catch (err: any) {
+        console.error("Failed to commit save to Postgres:", err);
+        return res.json({
+          success: true,
+          message: "Saved to local cache, but database write failed: " + err.message,
+          postgresActive: false,
+          postgresError: err.message
+        });
+      }
+    }
+
     return res.json({ 
       success: true, 
       message: "Data saved successfully on local secure server file system.",
       postgresActive: false,
-      postgresError: null
+      postgresError: lastPostgresError
     });
   } catch (error: any) {
     console.error("Critical error in save-store endpoint:", error);
@@ -132,17 +324,27 @@ app.post("/api/save-store", async (req, res) => {
 // API endpoint to manually request database reconnection and verify status
 app.post("/api/reconnect-db", async (req, res) => {
   try {
-    return res.json({
-      success: true,
-      postgresActive: false,
-      postgresError: null,
-      message: "تم إلغاء تفعيل قاعدة البيانات الخارجية ونظامك يعمل الآن بالكامل في الوضع المحلي الفائق الآمن والمستقر وصفر الأخطاء!"
-    });
+    await initializePostgres();
+    if (isPostgresActive) {
+      return res.json({
+        success: true,
+        postgresActive: true,
+        postgresError: null,
+        message: "تم الاتصال بقاعدة بيانات Cloud SQL بنجاح ومزامنة البيانات!"
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        postgresActive: false,
+        postgresError: lastPostgresError,
+        message: "فشل إعادة الاتصال: " + lastPostgresError
+      });
+    }
   } catch (err: any) {
     return res.status(500).json({
       success: false,
       postgresActive: false,
-      postgresError: null,
+      postgresError: String(err),
       message: "فشل: " + String(err)
     });
   }
@@ -151,7 +353,7 @@ app.post("/api/reconnect-db", async (req, res) => {
 // API endpoint to completely reset the connection and clear/reinitialize the database back to clean defaults
 app.post("/api/reset-db", async (req, res) => {
   try {
-    console.log("🚨 Client-requested full local data store reset...");
+    console.log("🚨 Client-requested full data store reset...");
     
     const pristineState = {
       suppliers: [],
@@ -168,17 +370,21 @@ app.post("/api/reset-db", async (req, res) => {
     // Save pristine file locally
     fs.writeFileSync(STORE_FILE, JSON.stringify(pristineState, null, 2), "utf-8");
 
+    if (isPostgresActive) {
+      await saveToPostgres(pristineState);
+    }
+
     return res.json({
       success: true,
-      postgresActive: false,
+      postgresActive: isPostgresActive,
       postgresError: null,
-      message: "تمت إعادة ضبط وتصفير النظام المحلي بالكامل وحذف كافة الفواتير والمعاملات بنجاح!"
+      message: "تمت إعادة ضبط وتصفير النظام بالكامل وحذف كافة الفواتير والمعاملات من قاعدة البيانات والملفات بنجاح!"
     });
   } catch (err: any) {
-    console.error("❌ Critical error during local file reset:", err);
+    console.error("❌ Critical error during reset:", err);
     return res.status(500).json({
       success: false,
-      postgresActive: false,
+      postgresActive: isPostgresActive,
       postgresError: err?.message || String(err),
       message: "فشلت عملية إعادة التهيئة: " + (err?.message || String(err))
     });
