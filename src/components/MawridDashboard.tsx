@@ -40,6 +40,8 @@ import {
   FileSpreadsheet,
   Paperclip,
   Image,
+  Cloud,
+  CloudLightning,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -80,6 +82,9 @@ import {
   testConnection,
   loadFromUserFirestore,
   saveToUserFirestore,
+  initAuthListener,
+  googleSignIn,
+  googleSignOut,
 } from "../firebase";
 
 const fAmt = (val: number | undefined | null): string => {
@@ -125,6 +130,242 @@ export default function MawridDashboard() {
   // Notifications toggle and state
   const [showNotifications, setShowNotifications] = useState(false);
   const [alerts, setAlerts] = useState<string[]>([]);
+
+  // Google Drive Integration States
+  const [gdriveUser, setGdriveUser] = useState<any>(null);
+  const [gdriveToken, setGdriveToken] = useState<string | null>(null);
+  const [driveBackups, setDriveBackups] = useState<any[]>([]);
+  const [isDriveLoading, setIsDriveLoading] = useState(false);
+  const [isSignDriveLoading, setIsSignDriveLoading] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = initAuthListener(
+      (user, token) => {
+        setGdriveUser(user);
+        setGdriveToken(token);
+        handleListBackupsFromDrive(token);
+      },
+      () => {
+        setGdriveUser(null);
+        setGdriveToken(null);
+        setDriveBackups([]);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    setIsSignDriveLoading(true);
+    try {
+      const result = await googleSignIn();
+      if (result) {
+        setGdriveUser(result.user);
+        setGdriveToken(result.accessToken);
+        showToast("تم ربط حساب Google Drive بنجاح!", "success");
+        handleListBackupsFromDrive(result.accessToken);
+      }
+    } catch (err: any) {
+      console.error(err);
+      showToast("فشل ربط حساب Google Drive.", "error");
+    } finally {
+      setIsSignDriveLoading(false);
+    }
+  };
+
+  const handleGoogleSignOut = async () => {
+    const confirmed = window.confirm("هل ترغب في تسجيل الخروج وإلغاء ربط حساب Google Drive؟");
+    if (!confirmed) return;
+    try {
+      await googleSignOut();
+      setGdriveUser(null);
+      setGdriveToken(null);
+      setDriveBackups([]);
+      showToast("تم تسجيل الخروج وإلغاء الربط بنجاح.", "success");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleListBackupsFromDrive = async (token = gdriveToken) => {
+    const activeTok = token || gdriveToken;
+    if (!activeTok) return;
+    try {
+      setIsDriveLoading(true);
+      const res = await fetch(
+        "https://www.googleapis.com/drive/v3/files?q=name contains 'Mawrid_Backup' and trashed = false&fields=files(id, name, createdTime, size)&orderBy=createdTime desc",
+        {
+          headers: { Authorization: `Bearer ${activeTok}` },
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setDriveBackups(data.files || []);
+      } else {
+        console.error("Failed to fetch Google Drive backups");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDriveLoading(false);
+    }
+  };
+
+  const handleUploadBackupToDrive = async () => {
+    if (!gdriveToken) {
+      showToast("يرجى ربط حساب Google Drive أولاً.", "error");
+      return;
+    }
+    const confirmed = window.confirm("هل ترغب في رفع نسخة احتياطية جديدة الآن إلى حسابك على Google Drive؟");
+    if (!confirmed) return;
+
+    try {
+      setIsDriveLoading(true);
+      const fullBackup = {
+        suppliers,
+        invoices,
+        payments,
+        backups,
+        creditNotes,
+        supplierCategories,
+        warehouses,
+        linkedBanks,
+        safeBalance,
+        timestamp: Date.now(),
+        v: "3.2",
+      };
+      const fileContent = JSON.stringify(fullBackup, null, 2);
+      const filename = `Mawrid_Backup_${new Date().toISOString().split("T")[0]}_${Date.now()}.json`;
+
+      const boundary = "mawrid_backup_boundary";
+      const delimiter = `\r\n--${boundary}\r\n`;
+      const close_delim = `\r\n--${boundary}--`;
+
+      const metadata = {
+        name: filename,
+        mimeType: "application/json",
+        description: "Mawrid Supplier Management System Backup File",
+      };
+
+      const multipartRequestBody =
+        delimiter +
+        "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+        JSON.stringify(metadata) +
+        delimiter +
+        "Content-Type: application/json\r\n\r\n" +
+        fileContent +
+        close_delim;
+
+      const response = await fetch(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${gdriveToken}`,
+            "Content-Type": `multipart/related; boundary=${boundary}`,
+          },
+          body: multipartRequestBody,
+        }
+      );
+
+      if (response.ok) {
+        showToast("تم رفع النسخة الاحتياطية بنجاح إلى Google Drive!", "success");
+        handleListBackupsFromDrive(gdriveToken);
+      } else {
+        const errText = await response.text();
+         console.error("GDrive upload error:", errText);
+         showToast("فشل رفع النسخة الاحتياطية لـ Google Drive.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("حدث خطأ أثناء الاتصال بجوجل درايف.", "error");
+    } finally {
+      setIsDriveLoading(false);
+    }
+  };
+
+  const handleRestoreFromDriveFile = async (fileId: string, fileName: string) => {
+    if (!gdriveToken) return;
+    const confirmed = window.confirm(
+      `هل أنت متأكد من استعادة قاعدة البيانات من النسخة [${fileName}]؟ سيتم استبدال جميع البيانات الحالية بالكامل.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsDriveLoading(true);
+      const res = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+        {
+          headers: { Authorization: `Bearer ${gdriveToken}` },
+        }
+      );
+      if (res.ok) {
+        const backupData = await res.json();
+        if (backupData.suppliers && backupData.invoices) {
+          setSuppliers(backupData.suppliers || []);
+          setInvoices(backupData.invoices || []);
+          setPayments(backupData.payments || []);
+          setBackups(backupData.backups || []);
+          setCreditNotes(backupData.creditNotes || []);
+          if (backupData.supplierCategories) setSupplierCategories(backupData.supplierCategories);
+          if (backupData.warehouses) setWarehouses(backupData.warehouses);
+          if (backupData.linkedBanks) setLinkedBanks(backupData.linkedBanks);
+          if (typeof backupData.safeBalance === "number") setSafeBalance(backupData.safeBalance);
+
+          // Save to localStorage as well
+          localStorage.setItem("mawrid_suppliers", JSON.stringify(backupData.suppliers || []));
+          localStorage.setItem("mawrid_invoices", JSON.stringify(backupData.invoices || []));
+          localStorage.setItem("mawrid_payments", JSON.stringify(backupData.payments || []));
+          localStorage.setItem("mawrid_backups", JSON.stringify(backupData.backups || []));
+          localStorage.setItem("mawrid_creditNotes", JSON.stringify(backupData.creditNotes || []));
+          localStorage.setItem("mawrid_supplier_categories", JSON.stringify(backupData.supplierCategories || []));
+          localStorage.setItem("mawrid_warehouses", JSON.stringify(backupData.warehouses || []));
+          localStorage.setItem("mawrid_linked_banks", JSON.stringify(backupData.linkedBanks || []));
+          localStorage.setItem("mawrid_safe_balance", String(backupData.safeBalance || 0));
+
+          showToast("تم استيراد واستعادة قاعدة البيانات من Google Drive بنجاح!", "success");
+        } else {
+          showToast("الملف المختار غير صالح أو يحتوي على بنية غير مطابقة.", "error");
+        }
+      } else {
+        showToast("فشل تحميل البيانات من Google Drive.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("خطأ أثناء استعادة البيانات.", "error");
+    } finally {
+      setIsDriveLoading(false);
+    }
+  };
+
+  const handleDeleteDriveFile = async (fileId: string, fileName: string) => {
+    if (!gdriveToken) return;
+    const confirmed = window.confirm(
+      `هل تريد بالتأكيد حذف الملف [${fileName}] من حساب Google Drive الخاص بك نهائياً؟`
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsDriveLoading(true);
+      const res = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${fileId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${gdriveToken}` },
+        }
+      );
+      if (res.ok) {
+        showToast("تم حذف النسخة الاحتياطية من Google Drive بنجاح.", "success");
+        handleListBackupsFromDrive(gdriveToken);
+      } else {
+        showToast("فشل حذف النسخة الاحتياطية من Google Drive.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("خطأ أثناء حذف الملف.", "error");
+    } finally {
+      setIsDriveLoading(false);
+    }
+  };
 
   // Search and Filter States
   const [supplierSearch, setSupplierSearch] = useState("");
@@ -1635,16 +1876,22 @@ export default function MawridDashboard() {
     field: string,
     value: any,
   ) => {
-    const updatedItems = editInvoiceCNData.items.map((item, i) => {
-      if (i === index) {
-        return { ...item, [field]: value };
-      }
-      return item;
+    setEditInvoiceCNData((prev) => {
+      const updatedItems = prev.items.map((item, i) => {
+        if (i === index) {
+          const updatedItem = { ...item, [field]: value };
+          if (field === "price") {
+            updatedItem.quantity = 1;
+          }
+          return updatedItem;
+        }
+        return item;
+      });
+      return {
+        ...prev,
+        items: updatedItems,
+      };
     });
-    setEditInvoiceCNData((prev) => ({
-      ...prev,
-      items: updatedItems,
-    }));
   };
 
   const handleSaveCNFromEditInvoice = () => {
@@ -1655,7 +1902,7 @@ export default function MawridDashboard() {
     }
 
     const calculatedTotal = editInvoiceCNData.items.reduce(
-      (sum, item) => sum + item.quantity * item.price,
+      (sum, item) => sum + item.quantity * (Number(item.price) || 0),
       0,
     );
     if (calculatedTotal <= 0) {
@@ -1667,7 +1914,7 @@ export default function MawridDashboard() {
     }
 
     const hasEmptyItem = editInvoiceCNData.items.some(
-      (item) => !item.name.trim() || item.price <= 0,
+      (item) => !item.name.trim() || (Number(item.price) || 0) <= 0,
     );
     if (hasEmptyItem) {
       showToast(
@@ -1690,7 +1937,10 @@ export default function MawridDashboard() {
           .toISOString()
           .split("T")[0],
       status: "active",
-      items: editInvoiceCNData.items,
+      items: editInvoiceCNData.items.map((item) => ({
+        ...item,
+        price: Number(item.price) || 0,
+      })),
       notes: `${editInvoiceCNData.notes || ""} [تم إنشاؤه من الفاتورة: ${editingInvoice.invoiceNumber}]`,
     };
 
@@ -5161,8 +5411,8 @@ export default function MawridDashboard() {
                             </div>
 
                             {/* Legal terms stamp bottom screen */}
-                            <div className="flex items-center justify-center border-t border-slate-200 pt-3 mt-auto text-xs w-full">
-                              <div className="text-center font-mono text-[10px] text-slate-400 select-none">
+                            <div className="flex items-center justify-center border-t border-slate-200 pt-4 pb-0 mt-auto text-xs w-full select-none">
+                              <div className="text-center font-mono text-[10px] text-slate-400">
                                 صفحة {pageIdx + 1} من{" "}
                                 {reportPagesToRender.length}
                               </div>
@@ -5270,6 +5520,125 @@ export default function MawridDashboard() {
                     استرجع الداتا الافتراضية
                   </button>
                 </div>
+              </div>
+
+              {/* Google Drive Cloud Backup Section */}
+              <div className="bg-[#0f172a]/60 border border-slate-700 p-5 rounded-2xl space-y-4 shadow-sm text-right" dir="rtl">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="font-bold text-sky-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                      <Cloud className="w-4 h-4 text-sky-400" />
+                      النسخ الاحتياطي السحابي عبر Google Drive الآمن
+                    </h4>
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      قم بربط حسابك لحفظ واسترجاع نسخة كاملة لقاعدة بيانات نظام مورد من أي جهاز وفي أي وقت مباشرةً على Google Drive الخاص بك بطريقة مشفرة وسرية.
+                    </p>
+                  </div>
+
+                  {!gdriveUser ? (
+                    <button
+                      onClick={handleGoogleSignIn}
+                      disabled={isSignDriveLoading}
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all text-center select-none"
+                    >
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 48 48">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                      </svg>
+                      {isSignDriveLoading ? "جاري الاتصال بجوجل..." : "ربط حساب Google Drive"}
+                    </button>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto">
+                      <span className="text-emerald-300 text-xs font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        {gdriveUser.email}
+                      </span>
+                      <button
+                        onClick={handleGoogleSignOut}
+                        className="text-slate-400 hover:text-rose-400 bg-slate-800 hover:bg-rose-950/20 border border-slate-700 hover:border-rose-500/30 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                      >
+                        إلغاء الربط
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {gdriveUser && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="pt-2 border-t border-slate-800 space-y-4 overflow-hidden"
+                  >
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#0a0f1d] p-3 rounded-xl border border-slate-800">
+                      <span className="text-xs text-slate-300 font-sans">
+                        لرفع النسخة الحالية من قاعدة البيانات، اضغط الزر السريع:
+                      </span>
+                      <button
+                        onClick={handleUploadBackupToDrive}
+                        disabled={isDriveLoading}
+                        className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer select-none transition-all font-sans"
+                      >
+                        <CloudLightning className="w-4 h-4 text-sky-200" />
+                        {isDriveLoading ? "جاري الرفع..." : "رفع نسخة سحابية جديدة الآن"}
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[11px] font-bold text-slate-400 block uppercase tracking-wider font-sans">
+                        قائمة النسخ السحابية المحفوظة على Drive:
+                      </span>
+
+                      {isDriveLoading && driveBackups.length === 0 ? (
+                        <div className="text-center py-4 text-slate-400 text-xs animate-pulse font-sans">
+                          جاري جلب قائمة الملفات من Google Drive...
+                        </div>
+                      ) : driveBackups.length === 0 ? (
+                        <div className="text-center py-4 text-slate-500 text-xs italic bg-[#0f172a] rounded-lg border border-dashed border-slate-800 font-sans">
+                          لا توجد أي نسخ احتياطية مرفوعة سحابياً من هذا التطبيق حتى الآن.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-56 overflow-y-auto pr-1">
+                          {driveBackups.map((file) => (
+                            <div
+                              key={file.id}
+                              className="flex items-center justify-between p-3 bg-slate-900/50 border border-slate-800 hover:border-slate-700 rounded-xl transition-colors gap-3"
+                            >
+                              <div className="text-right truncate flex-1">
+                                <span className="text-white text-xs font-bold block truncate max-w-[200px] sm:max-w-xs font-mono" title={file.name}>
+                                  {file.name}
+                                </span>
+                                <span className="text-[10px] text-slate-500 block font-mono mt-0.5">
+                                  {new Date(file.createdTime).toLocaleString("ar")} | {(Number(file.size || 0) / 1024).toFixed(1)} KB
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                  onClick={() => handleRestoreFromDriveFile(file.id, file.name)}
+                                  disabled={isDriveLoading}
+                                  className="text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-600 border border-emerald-500/20 hover:border-emerald-500 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer font-sans"
+                                  title="استعادة قاعدة البيانات بالكامل من هذا الملف"
+                                >
+                                  استعادة
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteDriveFile(file.id, file.name)}
+                                  disabled={isDriveLoading}
+                                  className="text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 hover:border-rose-500 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer font-sans"
+                                  title="حذف هذا الملف السحابي نهائياً"
+                                >
+                                  حذف
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
               </div>
 
               {/* Automatic Backup state indicator */}
@@ -6295,7 +6664,7 @@ export default function MawridDashboard() {
                         <button
                           type="button"
                           onClick={handleAddDiscountRow}
-                          className="text-sky-605 hover:text-sky-700 font-bold text-xs flex items-center gap-1 cursor-pointer bg-sky-50 hover:bg-sky-100/70 py-1.5 px-2.5 rounded-lg border border-sky-100 transition-colors"
+                          className="text-emerald-600 hover:text-emerald-700 font-bold text-xs flex items-center gap-1 cursor-pointer bg-emerald-50 hover:bg-emerald-100/70 py-1.5 px-2.5 rounded-lg border border-emerald-100 transition-colors"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           إضافة خصم جديد
@@ -6916,7 +7285,7 @@ export default function MawridDashboard() {
                         <button
                           type="button"
                           onClick={handleAddEditDiscountRow}
-                          className="text-teal-600 hover:text-teal-700 font-bold text-xs flex items-center gap-1 cursor-pointer bg-teal-50 hover:bg-teal-100/70 py-1.5 px-2.5 rounded-lg border border-teal-100 transition-colors"
+                          className="text-emerald-600 hover:text-emerald-700 font-bold text-xs flex items-center gap-1 cursor-pointer bg-emerald-50 hover:bg-emerald-100/70 py-1.5 px-2.5 rounded-lg border border-emerald-100 transition-colors"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           إضافة خصم جديد
@@ -7291,18 +7660,15 @@ export default function MawridDashboard() {
                                   required={showEditInvoiceCNSection}
                                   min="0"
                                   step="any"
-                                  value={item.price || ""}
+                                  value={item.price === 0 ? "" : (item.price ?? "")}
                                   placeholder="المبلغ المخصوم للبند"
                                   onChange={(e) => {
+                                    const valStr = e.target.value;
+                                    const parsed = valStr === "" ? "" : parseFloat(valStr);
                                     handleUpdateEditInvoiceCNItemRow(
                                       index,
                                       "price",
-                                      parseFloat(e.target.value) || 0,
-                                    );
-                                    handleUpdateEditInvoiceCNItemRow(
-                                      index,
-                                      "quantity",
-                                      1,
+                                      parsed === "" || isNaN(parsed) ? "" : parsed
                                     );
                                   }}
                                   className="w-40 border border-slate-200 rounded p-1.5 text-left font-mono text-slate-800 text-xs bg-slate-50 font-bold focus:ring-1 focus:ring-emerald-500"
