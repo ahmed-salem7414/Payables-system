@@ -5061,7 +5061,7 @@ export default function MawridDashboard() {
                               <div className="border-b-2 border-emerald-650 pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                 <div className="text-right">
                                   <h2 className="text-xl font-extrabold text-slate-950 font-sans tracking-tight">
-                                    جمعيـة مرسـال الخيريـة - مستشفى مرسال
+                                    مستشفى مرسال للأطفال - Marsal Children's Hospital
                                   </h2>
                                   <p className="text-[10px] text-emerald-800 font-bold font-sans mt-0.5">
                                     الشؤون المالية والرقابة • إدارة الحسابات العامة ومراجعة فواتير الموردين
@@ -5447,34 +5447,6 @@ export default function MawridDashboard() {
 
                             </div>
 
-                            {/* Signatures & Stamp section (Rendered only on LAST page of report) */}
-                            {pageIdx === reportPagesToRender.length - 1 && (
-                              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-6 border-t border-emerald-100 text-slate-900 select-none pb-2 relative z-10">
-                                <div className="text-center font-sans border border-slate-150 p-3 bg-slate-50/55 rounded-xl">
-                                  <span className="text-[10px] text-slate-500 font-bold block mb-6">أعده: أمين الحسابات والمخزن</span>
-                                  <div className="h-5 border-b border-dashed border-slate-350 mx-auto w-3/4 mb-1"></div>
-                                  <span className="text-[9px] text-slate-400 font-medium font-sans">الاسم والتوقيع</span>
-                                </div>
-                                <div className="text-center font-sans border border-slate-150 p-3 bg-slate-50/55 rounded-xl">
-                                  <span className="text-[10px] text-slate-500 font-bold block mb-6">راجع ماليًا: رئيس قسم التدقيق المالي</span>
-                                  <div className="h-5 border-b border-dashed border-slate-355 mx-auto w-3/4 mb-1"></div>
-                                  <span className="text-[9px] text-slate-400 font-medium font-sans">التوقيع والتاريخ</span>
-                                </div>
-                                <div className="text-center font-sans border border-slate-150 p-3 bg-slate-50/55 rounded-xl">
-                                  <span className="text-[10px] text-slate-500 font-bold block mb-6">موافق للصرف: المدير المالي والرقابي</span>
-                                  <div className="h-5 border-b border-dashed border-slate-355 mx-auto w-3/4 mb-1"></div>
-                                  <span className="text-[9px] text-slate-400 font-medium font-sans">معتمد ومكتمل الصرف الكترونياً</span>
-                                </div>
-                                <div className="flex flex-col items-center justify-center p-2 border-2 border-dashed border-emerald-300 bg-emerald-50/20 rounded-xl relative overflow-hidden">
-                                  {/* Emulated Stamp */}
-                                  <div className="border-2 border-emerald-600/60 rounded-full w-20 h-20 flex flex-col items-center justify-center text-center p-1 select-none pointer-events-none transform -rotate-6">
-                                    <span className="text-[7px] text-emerald-600/70 font-bold leading-none font-sans">مستشفى مرسال الخيرية</span>
-                                    <span className="text-[8px] text-emerald-700 font-extrabold leading-none border-y border-emerald-500/60 my-0.5 px-1 bg-white font-sans">مُعـتـمَـد ماليـاً</span>
-                                    <span className="text-[5px] text-emerald-600/60 font-mono">Marsal Hospital</span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
 
                             {/* Legal terms stamp bottom screen */}
                             <div className="flex items-center justify-between border-t border-slate-100 pt-4 pb-0 mt-auto text-xs w-full select-none text-slate-400 font-sans relative z-10">
