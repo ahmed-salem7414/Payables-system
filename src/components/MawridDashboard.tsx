@@ -194,7 +194,7 @@ export default function MawridDashboard() {
     const top = window.screen.height / 2 - height / 2;
     
     const popup = window.open(
-      "/auth-helper",
+      "/?auth-helper=true",
       "MawridGoogleAuthGate",
       `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,status=yes`
     );

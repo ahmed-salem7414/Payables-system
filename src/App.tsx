@@ -8,17 +8,29 @@ import MyDashboard from "./components/MawridDashboard";
 import AuthHelper from "./components/AuthHelper";
 
 export default function App() {
-  const [path, setPath] = useState(window.location.pathname);
+  const [isAuthHelper, setIsAuthHelper] = useState(false);
 
   useEffect(() => {
-    const handlePopState = () => {
-      setPath(window.location.pathname);
+    const checkPath = () => {
+      const isAuthPath = 
+        window.location.pathname === "/auth-helper" || 
+        window.location.search.includes("auth-helper=true") ||
+        window.location.hash.includes("auth-helper");
+      setIsAuthHelper(isAuthPath);
     };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+
+    checkPath();
+    
+    // Listen for state and URL adjustments dynamically
+    window.addEventListener("popstate", checkPath);
+    window.addEventListener("hashchange", checkPath);
+    return () => {
+      window.removeEventListener("popstate", checkPath);
+      window.removeEventListener("hashchange", checkPath);
+    };
   }, []);
 
-  if (path === "/auth-helper") {
+  if (isAuthHelper) {
     return <AuthHelper />;
   }
 
