@@ -10,8 +10,8 @@ html, body {
   font-family: var(--font-sans);
   direction: rtl;
   text-align: right;
-  background-color: #f8fafc; /* Lead modern slate/gray background */
-  color: #0f172a;
+  background-color: #0f172a; /* Sophisticated Dark theme background */
+  color: #f1f5f9;
 }
 
 /* Custom scrollbars */
@@ -20,33 +20,188 @@ html, body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #0f172a;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #334155;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #475569;
 }
 
 /* Print CSS optimized for high-quality corporate Arabic PDF */
-@media print {
-  body {
-    background: white;
-    color: black;
-    font-size: 11pt;
-  }
-  .no-print {
+.print-only-tr {
+  display: none !important;
+}
+
+/* Real-world high-fidelity page design applicable to screen preview */
+.printable-report-page {
+  width: 100% !important;
+  max-width: 80rem !important; /* 7xl wide container to stay parallel with other site elements */
+  height: 750px !important;    /* Uniform height on screen */
+  min-height: 750px !important;
+  max-height: 750px !important;
+  padding: 2.5rem !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 1.5rem !important; /* rounded-3xl */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  margin: 1.5rem auto !important; /* spacing of pages in preview flow */
+  transition: all 0.3s ease;
+  direction: rtl !important;
+  text-align: right !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important; /* Keep tables at the top of the page */
+  gap: 1.5rem !important;
+}
+
+@media screen {
+  .printable-report-page {
     display: none !important;
+  }
+  .printable-report-page.active-preview-page {
+    display: flex !important;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 landscape !important;
+    margin: 0 !important;
+  }
+  
+  /* Force exact colors and backgrounds on all printed elements */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    box-sizing: border-box !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+  }
+
+  html, body, #root, main, .app-container {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 297mm !important;
+    height: auto !important;
+    box-shadow: none !important;
+  }
+
+  /* Defeat all parent margins/paddings that could slide the print area */
+  main, div:has(#printable-report-content) {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    width: 297mm !important;
+    max-width: 297mm !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Reset outer wrapper to prevent any spacing leaks or offsets during generation */
+  #printable-report-content {
+    margin: 0 auto !important;
+    padding: 0 !important;
+    width: 297mm !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Defeat space-y margins between pages */
+  #printable-report-content > * {
+    margin: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Force transparent background on all non-report elements to prevent bleed */
+  div:not(.printable-report-page):not(.printable-report-sheet) {
+    background-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
+  }
+  
+  .no-print, header, footer, aside, button, nav {
+    display: none !important;
+    visibility: hidden !important;
   }
   .print-only {
     display: block !important;
   }
-  .print-card {
-    border: 1px solid #e2e8f0 !important;
+  .print-only-tr {
+    display: table-row !important;
+  }
+  
+  /* Reset page spacing and rounded borders for clean A4 paper sheets */
+  .printable-report-sheet, .printable-report-page {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important; /* Keep tables at the top of the page in print */
+    gap: 1rem !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
-    background: transparent !important;
-    page-break-inside: avoid;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    
+    /* Strict physical dimensions per sheet matching standard landscape A4 with safety margin */
+    width: 297mm !important;
+    height: 209mm !important;
+    min-height: 209mm !important;
+    max-height: 209mm !important;
+    padding: 12mm !important;
+  }
+  
+  .printable-report-page:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+  
+  table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    margin-top: 15px !important;
+  }
+  thead {
+    display: table-header-group !important;
+  }
+  tr {
+    page-break-inside: avoid !important;
+  }
+  th {
+    border: 1px solid #cbd5e1 !important;
+  }
+  td {
+    border: 1px solid #e2e8f0 !important;
+  }
+  
+  /* Retain original badge color themes with a subtle print border */
+  .printable-report-sheet .rounded-full, .printable-report-page .rounded-full {
+    border: 1px solid currentColor !important;
   }
 }
