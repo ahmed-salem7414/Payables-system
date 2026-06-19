@@ -24,6 +24,8 @@ export const auth = getAuth(app);
 
 const provider = new GoogleAuthProvider();
 provider.addScope("https://www.googleapis.com/auth/drive.file");
+provider.addScope("https://www.googleapis.com/auth/userinfo.email");
+provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
 
 let isSigningIn = false;
 let cachedAccessToken: string | null = null;

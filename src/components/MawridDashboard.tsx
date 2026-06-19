@@ -165,8 +165,16 @@ export default function MawridDashboard() {
         handleListBackupsFromDrive(result.accessToken);
       }
     } catch (err: any) {
-      console.error(err);
-      showToast("فشل ربط حساب Google Drive.", "error");
+      console.error("Google Sign-In Error:", err);
+      const msg = String(err?.message || err);
+      let arabicHint = "فشل ربط حساب Google Drive.";
+      
+      if (msg.includes("popup-blocked") || msg.includes("popup_blocked_by_browser") || msg.includes("closed by user")) {
+        arabicHint = "تم إغلاق أو حظر النافذة المنبثقة من قبل متصفحك. يرجى تفعيل النوابض وتأكيد تسجيل الدخول.";
+      } else {
+        arabicHint = "لإتمام ربط الحساب، اضغط على زر 'الفتح في نافذة جديدة' (Open in new tab) أعلى اليمين والسماح بالنوافذ المنبثقة لتجنب قيود الحماية داخل الـ IFrame للمتصفحات.";
+      }
+      showToast(arabicHint, "error");
     } finally {
       setIsSignDriveLoading(false);
     }
