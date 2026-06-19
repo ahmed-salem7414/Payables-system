@@ -32,15 +32,6 @@ export interface Invoice {
   totalAmount: number;   // المبلغ الإجمالي
   status: 'paid' | 'unpaid'; // حالة السداد (تم السداد / لم يتم السداد)
   notes?: string;
-  warehouse?: string;    // اسم المخزن المتلقي للشحنة
-  creditNoteAmount?: number; // إجمالي قيمة الإشعارات الدائنة للخصم
-  creditNotes?: CreditNote[]; // الإشعارات الدائنة المرتبطة بالفاتورة
-  vatRate?: number;     // نسبة ضريبة القيمة المضافة بالـ %
-  vatAmount?: number;    // قيمة ضريبة القيمة المضافة المحسوبة
-  customVatAmount?: number; // قيمة ضريبة مخصصة مدخلة يدوياً
-  isCustomVat?: boolean; // هل تم إدخال الضريبة يدوياً
-  attachment?: { name: string; type: string; dataUrl: string }; // المرفق
-  attachments?: Array<{ name: string; type: string; dataUrl: string }>; // المرفقات المتعددة
 }
 
 export interface Payment {
@@ -79,18 +70,3 @@ export interface BankConfig {
   apiKey: string;
   isLinked: boolean;
 }
-
-export interface CreditNote {
-  id: string;
-  creditNoteNumber: string; // رقم الإشعار الدائن
-  supplierId: string;       // المورد المرتبط
-  amount: number;           // قيمة الإشعار الدائن
-  issueDate: string;        // تاريخ الإصدار
-  dueDate: string;          // تاريخ الاستحقاق المتوقع
-  status: 'active' | 'applied'; // حالة الإشعار (نشط / مطبق)
-  items: Array<{ name: string; quantity: number; price: number }>; // تفاصيل بنود الإشعار الدائن
-  notes?: string;           // ملاحظات
-  attachment?: { name: string; type: string; dataUrl: string }; // المرفق
-  attachments?: Array<{ name: string; type: string; dataUrl: string }>; // المرفقات المتعددة
-}
-
