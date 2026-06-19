@@ -159,33 +159,59 @@ export default function MawridDashboard() {
         setDriveBackups([]);
       }
     );
-    return () => unsubscribe();
+    
+    // Capture successful authentication message from the popup helper of the same origin
+    const handleAuthMessage = (event: MessageEvent) => {
+      const origin = event.origin;
+      if (!origin.endsWith('.run.app') && !origin.includes('localhost')) {
+        return;
+      }
+      
+      if (event.data?.type === "GOOGLE_AUTH_SUCCESS") {
+        const { user, accessToken } = event.data;
+        setGdriveUser(user);
+        setGdriveToken(accessToken);
+        handleListBackupsFromDrive(accessToken);
+        showToast("تم ربط حساب Google Drive بنجاح!", "success");
+        setIsSignDriveLoading(false);
+      }
+    };
+    
+    window.addEventListener("message", handleAuthMessage);
+    
+    return () => {
+      unsubscribe();
+      window.removeEventListener("message", handleAuthMessage);
+    };
   }, []);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = () => {
     setIsSignDriveLoading(true);
-    try {
-      const result = await googleSignIn();
-      if (result) {
-        setGdriveUser(result.user);
-        setGdriveToken(result.accessToken);
-        showToast("تم ربط حساب Google Drive بنجاح!", "success");
-        handleListBackupsFromDrive(result.accessToken);
-      }
-    } catch (err: any) {
-      console.error("Google Sign-In Error:", err);
-      const msg = String(err?.message || err);
-      let arabicHint = "فشل ربط حساب Google Drive.";
-      
-      if (msg.includes("popup-blocked") || msg.includes("popup_blocked_by_browser") || msg.includes("closed by user")) {
-        arabicHint = "تم إغلاق أو حظر النافذة المنبثقة من قبل متصفحك. يرجى تفعيل النوابض وتأكيد تسجيل الدخول.";
-      } else {
-        arabicHint = "لإتمام ربط الحساب، اضغط على زر 'الفتح في نافذة جديدة' (Open in new tab) أعلى اليمين والسماح بالنوافذ المنبثقة لتجنب قيود الحماية داخل الـ IFrame للمتصفحات.";
-      }
-      showToast(arabicHint, "error");
-    } finally {
+    
+    const width = 600;
+    const height = 700;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+    
+    const popup = window.open(
+      "/auth-helper",
+      "MawridGoogleAuthGate",
+      `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,status=yes`
+    );
+    
+    if (!popup) {
+      showToast("عذراً، تم حظر النافذة المنبثقة من قبل متصفحك! يرجى الاستمرار بالنقر والسماح بفتح النوافذ المنبثقة ليرتبط حسابك بنجاح.", "error");
       setIsSignDriveLoading(false);
+      return;
     }
+    
+    // Fallback scanner to reset loading mode when popup closes
+    const closeCheckInterval = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(closeCheckInterval);
+        setIsSignDriveLoading(false);
+      }
+    }, 1000);
   };
 
   const handleGoogleSignOut = async () => {
