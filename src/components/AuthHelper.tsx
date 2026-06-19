@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { googleSignIn } from "../firebase";
-import { Cloud, CheckCircle2, AlertTriangle, ShieldCheck, HelpCircle } from "lucide-react";
+import { Cloud, CheckCircle2, AlertTriangle, ShieldCheck, HelpCircle, Copy, Check, ArrowRight } from "lucide-react";
 
 export default function AuthHelper() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copiedDomain, setCopiedDomain] = useState<string | null>(null);
+
+  // Extract relevant domains for user convenience
+  const devDomain = "ais-dev-q3mtusmun2tsb5rur7bk5w-88619399054.europe-west2.run.app";
+  const preDomain = "ais-pre-q3mtusmun2tsb5rur7bk5w-88619399054.europe-west2.run.app";
 
   const handleStartAuth = async () => {
     setLoading(true);
@@ -35,31 +40,48 @@ export default function AuthHelper() {
       }
     } catch (err: any) {
       console.error("Auth helper popup error:", err);
-      const msg = String(err?.message || err);
+      const msg = String(err?.message || err).toLowerCase();
       if (msg.includes("popup-closed-by-user") || msg.includes("auth/popup-closed-by-user")) {
         setError("تم إغلاق نافذة الدخول قبل إتمام الربط.");
+      } else if (msg.includes("unauthorized-domain") || msg.includes("auth/unauthorized-domain")) {
+        setError("unauthorized-domain");
       } else {
-        setError(msg);
+        setError(String(err?.message || err));
       }
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col items-center justify-center p-6 text-right font-sans selection:bg-sky-500/20" dir="rtl">
-      {/* Decorative gradient glowing spots */}
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-sky-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedDomain(text);
+      setTimeout(() => setCopiedDomain(null), 2000);
+    }).catch(err => {
+      console.error("Failed to copy text: ", err);
+    });
+  };
 
-      <div className="w-full max-w-md bg-[#0b1329]/80 border border-slate-800/80 p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 backdrop-blur-md space-y-6">
+  const isUnauthorizedDomainError = error === "unauthorized-domain";
+
+  return (
+    <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col items-center justify-center p-4 md:p-6 text-right font-sans selection:bg-sky-500/20" dir="rtl">
+      {/* Decorative gradient glowing spots */}
+      <div className="absolute top-10 right-10 w-96 h-96 bg-sky-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-10 left-10 w-96 h-96 bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+      <div className={`w-full ${isUnauthorizedDomainError ? "max-w-xl" : "max-w-md"} bg-[#0b1329]/80 border border-slate-800/80 p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 backdrop-blur-md space-y-6 transition-all duration-300`}>
         
         {/* Header Icon */}
         <div className="flex justify-center">
           <div className="relative">
-            <div className="absolute inset-0 bg-sky-500/20 rounded-full blur-xl animate-pulse"></div>
+            <div className={`absolute inset-0 ${isUnauthorizedDomainError ? "bg-amber-500/20" : "bg-sky-500/20"} rounded-full blur-xl animate-pulse`}></div>
             <div className="relative bg-slate-900 border border-slate-700/60 p-5 rounded-2xl flex items-center justify-center">
-              <Cloud className="w-10 h-10 text-sky-400" />
+              {isUnauthorizedDomainError ? (
+                <AlertTriangle className="w-10 h-10 text-amber-400 animate-bounce" />
+              ) : (
+                <Cloud className="w-10 h-10 text-sky-400" />
+              )}
             </div>
           </div>
         </div>
@@ -67,10 +89,12 @@ export default function AuthHelper() {
         {/* Title and Intro */}
         <div className="text-center space-y-2">
           <h2 className="text-xl font-extrabold text-white tracking-tight">
-            ربط حساب Google Drive الآمن
+            {isUnauthorizedDomainError ? "تفعيل وإضافة النطاق المصرح به في Firebase" : "ربط حساب Google Drive الآمن"}
           </h2>
           <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
-            بوابة الإقران الخارجية لتجاوز قيود النوافذ المنبثقة داخل متصفحك وحفظ النسخ الاحتياطية لنظام مورد تلقائياً.
+            {isUnauthorizedDomainError 
+              ? "لتأمين تسجيل السحاب، يطلب Firebase تسجيل نطاقات الإقران الرسمية الخاصة بالتطبيق."
+              : "بوابة الإقران الخارجية لتجاوز قيود النوافذ المنبثقة داخل متصفحك وحفظ النسخ الاحتياطية لنظام مورد تلقائياً."}
           </p>
         </div>
 
@@ -83,6 +107,81 @@ export default function AuthHelper() {
               {userEmail}
             </p>
             <p className="text-[11px] text-slate-400">سيتم إغلاق هذه النافذة تلقائياً والمتابعة بنظام مورد...</p>
+          </div>
+        ) : isUnauthorizedDomainError ? (
+          <div className="space-y-5 animate-fadeIn">
+            {/* Warning Message */}
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 text-sm text-amber-300 leading-relaxed">
+              تظهر هذه المشكلة لأن النطاق الحالي للغرفة البرمجية غير معرّف في مشروعك الخاص بـ Firebase. لحل هذه المشكلة في أقل من دقيقة، يرجى القيام بالخطوات التالية:
+            </div>
+
+            {/* Steps & Solution Instruction */}
+            <div className="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 md:p-5 text-xs text-slate-300 space-y-4">
+              <h3 className="font-bold text-white text-sm border-b border-slate-800 pb-2">خطوات الحل السريع:</h3>
+              
+              <ol className="list-decimal list-inside space-y-2.5 leading-relaxed text-right">
+                <li>
+                  افتح لوحة تحكم مشروعك <span className="text-sky-400 font-bold font-mono">vibrant-continuity-5fbwx</span> في موقع <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-sky-400 underline hover:text-sky-300">Firebase Console ↗</a>
+                </li>
+                <li>
+                  اذهب إلى قسم <span className="text-white font-bold">Authentication</span> من القائمة الجانبية.
+                </li>
+                <li>
+                  اضغط على تبويب <span className="text-white font-bold">Settings (الإعدادات)</span> في الأعلى، ثم اختر قسم <span className="text-white font-bold">Authorized domains</span>.
+                </li>
+                <li>
+                  اضغط على زر <span className="text-white font-bold">Add domain (إضافة نطاق)</span> وألصق النطاقين المدرجين بالأسفل (واحداً تلو الآخر):
+                </li>
+              </ol>
+
+              {/* Copyable Domains Widget */}
+              <div className="space-y-2 pt-2">
+                <p className="text-[11px] font-semibold text-slate-400">انسخ النطاقات وألصقها في البوابة:</p>
+                
+                {/* Dev domain */}
+                <div className="flex items-center justify-between bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded font-mono">1</span>
+                    <span className="font-mono text-[11px] select-all break-all text-slate-200">{devDomain}</span>
+                  </div>
+                  <button 
+                    onClick={() => copyToClipboard(devDomain)}
+                    className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-sky-400 rounded-lg transition-colors cursor-pointer"
+                    title="نسخ النطاق"
+                  >
+                    {copiedDomain === devDomain ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                {/* Pre domain */}
+                <div className="flex items-center justify-between bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded font-mono">2</span>
+                    <span className="font-mono text-[11px] select-all break-all text-slate-200">{preDomain}</span>
+                  </div>
+                  <button 
+                    onClick={() => copyToClipboard(preDomain)}
+                    className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-sky-400 rounded-lg transition-colors cursor-pointer"
+                    title="نسخ النطاق"
+                  >
+                    {copiedDomain === preDomain ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-sky-500/5 text-[11px] p-3 rounded-xl border border-sky-500/10 leading-relaxed text-sky-300">
+                💡 <span className="font-bold">ملاحظة أمان:</span> بمجرد حفظ النطاقات، ستتمكن من النقر على زر المتابعة بالأسفل وإتمام الإقران بنجاح تام وبدون تكرار هذا الإجراء مجدداً.
+              </div>
+            </div>
+
+            {/* Back to auth try */}
+            <button
+              onClick={handleStartAuth}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-extrabold py-3.5 px-6 rounded-2xl text-xs cursor-pointer select-none transition-all shadow-lg active:scale-[0.98] duration-200"
+            >
+              <span>أكملت إضافة النطاقات! اضغط لتسجيل الدخول الآن</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         ) : error ? (
           <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 text-right space-y-2 animate-fadeIn">
@@ -114,7 +213,7 @@ export default function AuthHelper() {
         )}
 
         {/* Action Button */}
-        {!success && (
+        {!success && !isUnauthorizedDomainError && (
           <div className="pt-2">
             <button
               disabled={loading}
@@ -136,7 +235,7 @@ export default function AuthHelper() {
         {/* Footer */}
         <div className="text-center pt-2">
           <span className="text-[10px] text-slate-500 font-mono">
-            Mawrid Security Gate &bull; v1.1
+            Mawrid Security Gate &bull; v1.2
           </span>
         </div>
 
