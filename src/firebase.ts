@@ -17,7 +17,22 @@ import {
   onAuthStateChanged,
   User,
 } from "firebase/auth";
-import firebaseConfig from "../firebase-applet-config.json";
+import defaultFirebaseConfig from "../firebase-applet-config.json";
+
+// Dynamic configuration matching the user's active/edited Firebase Project
+let firebaseConfig = defaultFirebaseConfig;
+if (typeof window !== "undefined") {
+  const custom = window.localStorage.getItem("mawrid_custom_firebase_config");
+  if (custom) {
+    try {
+      firebaseConfig = JSON.parse(custom);
+    } catch (e) {
+      console.error("Failed to parse custom Firebase config:", e);
+    }
+  }
+}
+
+export const activeFirebaseConfig = firebaseConfig;
 
 // Initialize Firebase App
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();

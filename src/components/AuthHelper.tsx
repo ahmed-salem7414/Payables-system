@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { googleSignIn, googleSignInRedirect, handleRedirectResult } from "../firebase";
+import { googleSignIn, googleSignInRedirect, handleRedirectResult, activeFirebaseConfig } from "../firebase";
 import { 
   Cloud, 
   CheckCircle2, 
@@ -24,6 +24,75 @@ export default function AuthHelper() {
   const [error, setError] = useState<string | null>(null);
   const [copiedDomain, setCopiedDomain] = useState<string | null>(null);
   const [lastAttemptTime, setLastAttemptTime] = useState<number>(0);
+
+  const [configText, setConfigText] = useState("");
+  const [showConfigEditor, setShowConfigEditor] = useState(false);
+  const [configError, setConfigError] = useState<string | null>(null);
+  const [isCustomConfigActive, setIsCustomConfigActive] = useState(false);
+
+  useEffect(() => {
+    const custom = localStorage.getItem("mawrid_custom_firebase_config");
+    setIsCustomConfigActive(!!custom);
+    if (custom) {
+      try {
+        setConfigText(JSON.stringify(JSON.parse(custom), null, 2));
+      } catch (e) {
+        setConfigText(custom);
+      }
+    }
+  }, []);
+
+  const handleSaveCustomConfig = () => {
+    setConfigError(null);
+    if (!configText.trim()) {
+      setConfigError("يرجى إدخال إعدادات مشروع Firebase أولاً.");
+      return;
+    }
+
+    try {
+      let parsed: any = null;
+      let cleaned = configText.trim();
+      
+      // If it looks like a JavaScript object instead of strict JSON (e.g., keys are not in double quotes)
+      // or starts with 'const firebaseConfig ='
+      if (!cleaned.startsWith("{")) {
+        const match = cleaned.match(/\{[\s\S]*\}/);
+        if (match) {
+          cleaned = match[0];
+        }
+      }
+
+      // Convert standard JS object syntax to valid JSON by quoting unquoted keys
+      // and converting single quotes to double quotes, to be extra robust.
+      let jsonStr = cleaned
+        .replace(/'/g, '"') // Replace single quotes with double quotes
+        .replace(/(\w+)\s*:/g, '"$1":') // Quote unquoted keys
+        .replace(/,\s*}/g, "}"); // Remove trailing commas
+      
+      parsed = JSON.parse(jsonStr);
+
+      const requiredKeys = ["apiKey", "projectId", "authDomain", "appId"];
+      const missingKeys = requiredKeys.filter(k => !parsed[k]);
+      if (missingKeys.length > 0) {
+        throw new Error(`مشروع Firebase غير كامل. ينقصه الحقول التالية: ${missingKeys.join(", ")}`);
+      }
+
+      localStorage.setItem("mawrid_custom_firebase_config", JSON.stringify(parsed));
+      setError(null);
+      alert("تم حفظ إعدادات مشروعك بنجاح! سيتم الآن إعادة تحميل الصفحة لتطبيق الإعدادات الجديدة والمزامنة.");
+      window.location.reload();
+    } catch (e: any) {
+      console.error(e);
+      setConfigError(`فشل تحليل الإعدادات. يرجى التأكد من نسخ كود الـ JSON أو كود الإعدادات بشكل كامل وصحيح: ${e.message}`);
+    }
+  };
+
+  const handleResetToDefaultConfig = () => {
+    if (window.confirm("هل أنت متأكد من العودة إلى مشروع Firebase الافتراضي للتطبيق؟")) {
+      localStorage.removeItem("mawrid_custom_firebase_config");
+      window.location.reload();
+    }
+  };
 
   // Extract relevant domains for user convenience
   const devDomain = "ais-dev-q3mtusmun2tsb5rur7bk5w-88619399054.europe-west2.run.app";
@@ -352,6 +421,76 @@ export default function AuthHelper() {
                   <span>تحديث الصفحة ومسح ذاكرة الكاش محلياً</span>
                 </button>
               </div>
+            </div>
+
+            {/* DYNAMIC FIREBASE CONFIG EDIT MODULE - FOR USERS WHO ENCOUNTER DOMAIN ERRORS OUT OF USER CONTROL */}
+            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 md:p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-indigo-400 shrink-0" />
+                  <h4 className="font-extrabold text-sm text-indigo-300">هل تواجه خطأ النطاق غير المصرح به بالرغم من إضافته؟</h4>
+                </div>
+                <button
+                  onClick={() => setShowConfigEditor(!showConfigEditor)}
+                  className="text-[11px] bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                >
+                  {showConfigEditor ? "إخفاء لوحة الإعدادات" : "عرض حلول متقدمة إضافية"}
+                </button>
+              </div>
+
+              {showConfigEditor && (
+                <div className="space-y-3.5 animate-fadeIn">
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    يستخدم هذا التطبيق حالياً معرّف مشروع افتراضي هو: <span className="font-mono font-bold text-sky-400 bg-sky-500/5 px-1.5 py-0.5 rounded border border-sky-500/10">{activeFirebaseConfig.projectId}</span>.
+                    <br />
+                    إذا كانت لوحة تحكم Firebase التي أضفت إليها النطاق تملك معرّف مشروع مختلفاً، فهذا هو السبب الرئيسي لعدم المزامنة! يمكنك ربط التطبيق بمشروعك الخاص مباشرة وإزالة الخطأ للأبد.
+                  </p>
+
+                  <div className="bg-slate-950/80 p-3.5 rounded-xl border border-indigo-500/10 space-y-3">
+                    <label className="block text-xs font-bold text-slate-200">
+                      ألصق كود تهيئة Firebase المشروع الخاص بك (JSON):
+                    </label>
+                    <textarea
+                      rows={5}
+                      className="w-full bg-slate-900 border border-slate-700/60 rounded-lg p-2.5 text-[11px] font-mono text-slate-200 placeholder-slate-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                      placeholder={`{
+  "apiKey": "AIzaSy...",
+  "authDomain": "...",
+  "projectId": "...",
+  "appId": "..."
+}`}
+                      value={configText}
+                      onChange={(e) => setConfigText(e.target.value)}
+                    />
+                    
+                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                      * للاستخراج: اذهب لإعدادات مشروعك في Firebase Console ➔ قسم General ➔ انزل لـ "Your apps" ➔ اختر تطبيق الويب NPM ➔ وانسخ الكائن بالكامل.
+                    </p>
+
+                    {configError && (
+                      <p className="text-xs text-rose-400 font-bold">{configError}</p>
+                    )}
+
+                    <div className="flex gap-2 pt-1.5">
+                      <button
+                        onClick={handleSaveCustomConfig}
+                        className="flex-grow bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-4 rounded-lg transition-colors cursor-pointer"
+                      >
+                        حفظ إعدادات مشروعي وإعادة تحميل التطبيق
+                      </button>
+
+                      {isCustomConfigActive && (
+                        <button
+                          onClick={handleResetToDefaultConfig}
+                          className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer"
+                        >
+                          إرجاع المشروع الافتراضي
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Error Indicator (If any) */}
