@@ -176,12 +176,41 @@ export default function MawridDashboard() {
         setIsSignDriveLoading(false);
       }
     };
+
+    // Check localStorage for successful auth transfers (e.g., when popup completes via redirect)
+    const checkLocalStorageAuth = () => {
+      try {
+        const raw = localStorage.getItem("mawrid_gdrive_auth");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.accessToken && (Date.now() - parsed.timestamp < 300000)) {
+            setGdriveUser(parsed.user);
+            setGdriveToken(parsed.accessToken);
+            handleListBackupsFromDrive(parsed.accessToken);
+            showToast("تم ربط حساب Google Drive بنجاح!", "success");
+            setIsSignDriveLoading(false);
+            
+            // Clear storage to prevent repeat notifications
+            localStorage.removeItem("mawrid_gdrive_auth");
+          }
+        }
+      } catch (e) {
+        console.error("Local storage auth reading failed:", e);
+      }
+    };
+
+    // Run checks
+    checkLocalStorageAuth();
     
     window.addEventListener("message", handleAuthMessage);
+    window.addEventListener("focus", checkLocalStorageAuth);
+    document.addEventListener("visibilitychange", checkLocalStorageAuth);
     
     return () => {
       unsubscribe();
       window.removeEventListener("message", handleAuthMessage);
+      window.removeEventListener("focus", checkLocalStorageAuth);
+      document.removeEventListener("visibilitychange", checkLocalStorageAuth);
     };
   }, []);
 

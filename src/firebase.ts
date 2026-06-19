@@ -11,6 +11,8 @@ import {
 import {
   getAuth,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   onAuthStateChanged,
   User,
@@ -68,6 +70,36 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
     throw error;
   } finally {
     isSigningIn = false;
+  }
+};
+
+export const googleSignInRedirect = async (): Promise<void> => {
+  try {
+    isSigningIn = true;
+    await signInWithRedirect(auth, provider);
+  } catch (error: any) {
+    console.error("Sign in redirect error:", error);
+    throw error;
+  } finally {
+    isSigningIn = false;
+  }
+};
+
+export const handleRedirectResult = async (): Promise<{ user: User; accessToken: string } | null> => {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result) {
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (!credential?.accessToken) {
+        throw new Error("Failed to get access token from redirect result");
+      }
+      cachedAccessToken = credential.accessToken;
+      return { user: result.user, accessToken: cachedAccessToken };
+    }
+    return null;
+  } catch (error: any) {
+    console.error("Redirect handler error:", error);
+    throw error;
   }
 };
 
