@@ -704,6 +704,10 @@ export default function MawridDashboard() {
   const [addWarehouseContext, setAddWarehouseContext] = useState<"new" | "edit" | null>(null);
   const [newWarehouseName, setNewWarehouseName] = useState("");
 
+  // Delete Confirmation modals states
+  const [supplierToDelete, setSupplierToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [warehouseToDelete, setWarehouseToDelete] = useState<{ name: string; invoicesCount: number } | null>(null);
+
   // New Supplier form state
   const [newSupplier, setNewSupplier] = useState<
     Omit<Supplier, "id" | "createdAt">
@@ -1293,14 +1297,13 @@ export default function MawridDashboard() {
   // Delete Supplier handler
   const handleDeleteSupplier = (id: string, name: string) => {
     if (!checkPermission("delete")) return;
+    setSupplierToDelete({ id, name });
+  };
 
-    if (
-      !window.confirm(
-        `هل أنت متأكد من رغبتك في حذف المورد "${name}" وكافة فواتيره وبياناته المرتبطة به نهائياً؟`,
-      )
-    ) {
-      return;
-    }
+  // Execution of Supplier deletion
+  const executeDeleteSupplier = () => {
+    if (!supplierToDelete) return;
+    const { id, name } = supplierToDelete;
 
     // Verify if there are unpaid invoices before deleting
     const hasUnpaid = invoices.some(
@@ -1311,6 +1314,7 @@ export default function MawridDashboard() {
         "لا يمكن حذف المورد نظراً لوجود فواتير مستحقة وغير مسددة مسجلة عليه.",
         "error",
       );
+      setSupplierToDelete(null);
       return;
     }
 
@@ -1318,6 +1322,25 @@ export default function MawridDashboard() {
     // Filter invoices associated
     setInvoices(invoices.filter((i) => i.supplierId !== id));
     showToast(`تم حذف المورد ${name} وكافة بياناته بنجاح.`);
+    setSupplierToDelete(null);
+  };
+
+  // Request Warehouse deletion modal
+  const handleRequestDeleteWarehouse = (name: string, invoicesCount: number) => {
+    setWarehouseToDelete({ name, invoicesCount });
+  };
+
+  // Execution of Warehouse deletion
+  const executeDeleteWarehouse = () => {
+    if (!warehouseToDelete) return;
+    const { name } = warehouseToDelete;
+    const updated = warehouses.filter((w) => w !== name);
+    setWarehouses(updated);
+    showToast(
+      `تم حذف المخزن "${name}" بنجاح من النظام.`,
+      "info"
+    );
+    setWarehouseToDelete(null);
   };
 
   // Edit Supplier handler
@@ -6065,29 +6088,7 @@ export default function MawridDashboard() {
                       <div className="mt-5 pt-3 border-t border-slate-800 flex items-center justify-end relative z-10">
                         <button
                           onClick={() => {
-                            if (whInvoices.length > 0) {
-                              if (
-                                !window.confirm(
-                                  `تنبيه: هذا المخزن مرتبط بالفعل بـ (${whInvoices.length}) فواتير مسجلة في شحنات المشتريات. حذفه الآن سيؤثر على تصفية وعرض هذي الفواتير. هل تود حذفه نهائياً من خيارات الإرسال على أي حال؟`,
-                                )
-                              ) {
-                                return;
-                              }
-                            } else {
-                              if (
-                                !window.confirm(
-                                  `هل أنت متأكد من حذف المخزن "${wh}" من السجلات وقائمة الخيارات المتاحة؟`,
-                                )
-                              ) {
-                                return;
-                              }
-                            }
-                            const updated = warehouses.filter((w) => w !== wh);
-                            setWarehouses(updated);
-                            showToast(
-                              `تم حذف المخزن "${wh}" بنجاح من النظام.`,
-                              "info",
-                            );
+                            handleRequestDeleteWarehouse(wh, whInvoices.length);
                           }}
                           className="text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 p-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1 cursor-pointer"
                           title="حذف المخزن من قائمة الخيارات"
@@ -6506,6 +6507,129 @@ export default function MawridDashboard() {
                 className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-4 rounded-xl transition-colors cursor-pointer font-sans"
               >
                 إلغاء
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: CONFIRM DELETE SUPPLIER */}
+      {supplierToDelete && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5"
+          >
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+              <div className="p-2 bg-rose-50 rounded-xl">
+                <ShieldAlert className="w-6 h-6 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900 font-sans">
+                  تأكيد حذف المورد نهائياً
+                </h3>
+                <p className="text-[10px] text-slate-450 font-sans">
+                  إجراء حساس يتطلب التحقق الأمني من الإدارة.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-amber-50/50 rounded-2xl border border-amber-200/40 text-rose-950 text-xs leading-relaxed space-y-2 font-sans">
+              <span className="font-bold block text-rose-900 flex items-center gap-1.5 font-sans">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                تنبيه حذف نهائي وتصفية:
+              </span>
+              <p className="font-sans font-medium text-slate-700">
+                هل أنت متأكد من رغبتك في حذف المورد <span className="text-rose-600 font-extrabold font-mono">"{supplierToDelete.name}"</span> وكافة فواتير المشتريات والبيانات والعمليات المرتبطة به من السجلات؟
+              </p>
+              <span className="text-[10px] text-slate-450 block font-normal leading-normal font-sans">
+                ملاحظة: النظام لن يسمح بالحذف في حال وجود أي أرصدة معلقة أو فواتير مستحقة الدفع حالياً.
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={executeDeleteSupplier}
+                className="flex-1 bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 font-sans"
+              >
+                <Trash2 className="w-4 h-4" />
+                نعم، احذف المورد فوراً
+              </button>
+              <button
+                type="button"
+                onClick={() => setSupplierToDelete(null)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-4 rounded-xl transition-colors cursor-pointer font-sans"
+              >
+                التراجع والإلغاء
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: CONFIRM DELETE WAREHOUSE */}
+      {warehouseToDelete && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5"
+          >
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+              <div className="p-2 bg-orange-50 rounded-xl">
+                <Warehouse className="w-6 h-6 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900 font-sans">
+                  إزالة مخزن من خيارات النظام
+                </h3>
+                <p className="text-[10px] text-slate-450 font-sans">
+                  حذف وإلغاء وجهة استلام الفواتير الحالية.
+                </p>
+              </div>
+            </div>
+
+            <div className={`p-4 rounded-2xl border text-xs leading-relaxed space-y-2 font-sans ${
+              warehouseToDelete.invoicesCount > 0 
+                ? "bg-rose-50/50 border-rose-200 text-rose-950" 
+                : "bg-slate-50/50 border-slate-200 text-slate-800"
+            }`}>
+              <span className={`font-bold block flex items-center gap-1.5 font-sans ${
+                warehouseToDelete.invoicesCount > 0 ? "text-rose-900" : "text-amber-700"
+              }`}>
+                <AlertTriangle className="w-4 h-4" />
+                {warehouseToDelete.invoicesCount > 0 ? "تحذير: المخزن مرتبط بعمليات!" : "تأكيد إزالة المخزن:"}
+              </span>
+              <p className="font-sans font-medium text-slate-700">
+                {warehouseToDelete.invoicesCount > 0 ? (
+                  <>
+                    تنبيه: هذا المخزن مرتبط بالفعل بـ <span className="font-bold underline">({warehouseToDelete.invoicesCount})</span> فواتير مسجلة في شحنات المشتريات. حذفه الآن سيؤثر على تصفية وعرض هذي الفواتير. هل تود حذف المخزن <span className="text-rose-600 font-extrabold font-mono">"{warehouseToDelete.name}"</span> نهائياً على أي حال؟
+                  </>
+                ) : (
+                  <>
+                    هل أنت متأكد من رغبتك في حذف المخزن <span className="text-slate-900 font-black font-mono">"{warehouseToDelete.name}"</span> من السجلات وقائمة الخيارات المتاحة؟
+                  </>
+                )}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={executeDeleteWarehouse}
+                className="flex-1 bg-rose-600 hover:bg-rose-500 active:bg-rose-750 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 font-sans"
+              >
+                <Trash2 className="w-4 h-4" />
+                تأكيد وبدء الحذف
+              </button>
+              <button
+                type="button"
+                onClick={() => setWarehouseToDelete(null)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-4 rounded-xl transition-colors cursor-pointer font-sans"
+              >
+                تراجع
               </button>
             </div>
           </motion.div>
