@@ -3261,7 +3261,7 @@ export default function MawridDashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0f172a] text-[#f1f5f9] font-sans selection:bg-emerald-500 selection:text-white pb-10">
+    <div className="min-h-screen flex flex-col bg-[#060a12] text-[#f1f5f9] font-sans selection:bg-emerald-500 selection:text-white pb-10">
       {/* Toast Alert */}
       <AnimatePresence>
         {toast && (
@@ -3269,12 +3269,12 @@ export default function MawridDashboard() {
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className={`fixed top-4 left-4 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border ${
+            className={`fixed top-4 left-4 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border backdrop-blur-md ${
               toast.type === "success"
-                ? "bg-slate-800 text-emerald-400 border-slate-700"
+                ? "bg-[#0f1c30]/90 text-emerald-400 border-emerald-500/35 shadow-emerald-500/10"
                 : toast.type === "error"
-                  ? "bg-slate-800 text-rose-400 border-slate-700"
-                  : "bg-slate-800 text-amber-400 border-slate-700"
+                  ? "bg-[#251218]/90 text-rose-400 border-rose-500/35 shadow-rose-500/10"
+                  : "bg-[#201b10]/90 text-amber-400 border-amber-500/35 shadow-amber-500/10"
             }`}
           >
             {toast.type === "success" && (
@@ -3286,16 +3286,16 @@ export default function MawridDashboard() {
             {toast.type === "info" && (
               <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
             )}
-            <span className="text-sm font-semibold">{toast.message}</span>
+            <span className="text-sm font-bold">{toast.message}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Corporate Arabic Header */}
-      <header className="no-print bg-[#1e293b] border-b border-slate-700 sticky top-0 z-40 px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-4 shadow-lg">
+      <header className="no-print bg-[#0b101d]/90 backdrop-blur-md border-b border-slate-800/85 sticky top-0 z-40 px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-4 shadow-xl">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="bg-slate-900/30 px-3 py-1.5 rounded-2xl border border-slate-700/50 flex items-center justify-center">
+            <div className="bg-slate-900/40 px-3 py-1.5 rounded-2xl border border-slate-800 flex items-center justify-center">
               <MersalLogo
                 width={110}
                 height={110}
@@ -3432,8 +3432,8 @@ export default function MawridDashboard() {
       <main className="max-w-7xl mx-auto px-4 md:px-6 mt-6 flex-1 w-full flex flex-col lg:flex-row gap-6">
         {/* RIGHT SIDEBAR - Tab controller and dynamic Navigation */}
         <aside className="no-print w-full lg:w-64 shrink-0">
-          <div className="bg-[#111827] rounded-2xl border border-slate-700 p-2.5 lg:p-4 shadow-lg flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible lg:sticky lg:top-24 z-30 w-full no-scrollbar">
-            <p className="hidden lg:block text-[11px] font-bold text-slate-500 tracking-wider uppercase px-3 pb-2 border-b border-slate-800 mb-2">
+          <div className="bg-[#0e1726]/90 rounded-2xl border border-slate-800/80 p-2.5 lg:p-4 shadow-xl flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible lg:sticky lg:top-24 z-30 w-full no-scrollbar">
+            <p className="hidden lg:block text-[11px] font-bold text-slate-500 tracking-wider uppercase px-3 pb-2 border-b border-slate-800/65 mb-2">
               القائمة المالية
             </p>
 
@@ -3441,8 +3441,8 @@ export default function MawridDashboard() {
               onClick={() => setActiveTab("suppliers")}
               className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "suppliers"
-                  ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "bg-emerald-500/10 text-emerald-400 shadow-[0_2px_12px_rgba(16,185,129,0.08)] border border-emerald-500/25"
+                  : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
               }`}
             >
               <Users className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
@@ -3453,8 +3453,8 @@ export default function MawridDashboard() {
               onClick={() => setActiveTab("invoices")}
               className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "invoices"
-                  ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "bg-emerald-500/10 text-emerald-400 shadow-[0_2px_12px_rgba(16,185,129,0.08)] border border-emerald-500/25"
+                  : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
               }`}
             >
               <Receipt className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
@@ -3465,8 +3465,8 @@ export default function MawridDashboard() {
               onClick={() => setActiveTab("payments")}
               className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "payments"
-                  ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "bg-emerald-500/10 text-emerald-400 shadow-[0_2px_12px_rgba(16,185,129,0.08)] border border-emerald-500/25"
+                  : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
               }`}
             >
               <CreditCard className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
@@ -3477,15 +3477,15 @@ export default function MawridDashboard() {
               onClick={() => setActiveTab("banking")}
               className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "banking"
-                  ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "bg-emerald-500/10 text-emerald-400 shadow-[0_2px_12px_rgba(16,185,129,0.08)] border border-emerald-500/25"
+                  : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
               }`}
             >
               <Building className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
               <span>التكامل البنكي والتسوية</span>
             </button>
 
-            <p className="hidden lg:block text-[11px] font-bold text-slate-500 tracking-wider uppercase px-3 pt-4 pb-2 border-b border-slate-800 mb-2">
+            <p className="hidden lg:block text-[11px] font-bold text-slate-500 tracking-wider uppercase px-3 pt-4 pb-2 border-b border-slate-800/65 mb-2">
               التحليلات والمتابعة
             </p>
 
@@ -3493,8 +3493,8 @@ export default function MawridDashboard() {
               onClick={() => setActiveTab("reports")}
               className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "reports"
-                  ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "bg-emerald-500/10 text-emerald-400 shadow-[0_2px_12px_rgba(16,185,129,0.08)] border border-emerald-500/25"
+                  : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
               }`}
             >
               <FileText className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
@@ -3505,8 +3505,8 @@ export default function MawridDashboard() {
               onClick={() => setActiveTab("warehouses")}
               className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "warehouses"
-                  ? "bg-[#1e293b] text-emerald-400 shadow-md border border-slate-700"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "bg-emerald-500/10 text-emerald-400 shadow-[0_2px_12px_rgba(16,185,129,0.08)] border border-emerald-500/25"
+                  : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
               }`}
             >
               <Warehouse className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
@@ -3517,8 +3517,8 @@ export default function MawridDashboard() {
               onClick={() => setActiveTab("backups")}
               className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "backups"
-                  ? "bg-[#1e293b] text-[#c084fc] shadow-md border border-slate-700"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "bg-purple-500/10 text-[#d8b4fe] shadow-[0_2px_12px_rgba(168,85,247,0.08)] border border-purple-500/25"
+                  : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
               }`}
             >
               <Database className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
@@ -3531,80 +3531,80 @@ export default function MawridDashboard() {
         <div className="flex-1 min-w-0">
           {/* Dashboard Summary Statistics Bar (Always rendered at the top of content tabs in screen) */}
           <div className="no-print grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-            <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-md flex items-center justify-between">
+            <div className="bg-[#0e1726]/60 backdrop-blur-md p-5 rounded-2xl border border-slate-800/80 hover:border-slate-700/80 shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5">
               <div>
                 <p className="text-xs text-slate-400 font-medium">
                   إجمالي المشتريات
                 </p>
-                <p className="text-lg md:text-xl font-bold text-white mt-1">
+                <p className="text-lg md:text-xl font-extrabold text-white mt-1">
                   {fAmt(dashboardStats.totalInvoicesAmount)}{" "}
-                  <span className="text-xs text-slate-400">ج.م</span>
+                  <span className="text-xs text-slate-400 font-normal">ج.م</span>
                 </p>
                 <div className="flex items-center gap-1 mt-1.5 text-slate-500 text-[10px]">
                   <Activity className="w-3.5 h-3.5 text-slate-500" />
                   <span>تاريخ آخر تحديث اليوم</span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-300">
+              <div className="w-10 h-10 rounded-xl bg-slate-800/60 flex items-center justify-center text-sky-400 border border-slate-700/30">
                 <Receipt className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-md flex items-center justify-between">
+            <div className="bg-[#0c1f1a]/60 backdrop-blur-md p-5 rounded-2xl border border-emerald-500/20 hover:border-emerald-500/35 shadow-[0_4px_20px_rgba(16,185,129,0.06)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5">
               <div>
-                <p className="text-xs text-slate-400 font-medium">
+                <p className="text-xs text-emerald-400/90 font-medium">
                   إجمالي المسدد
                 </p>
-                <p className="text-lg md:text-xl font-bold text-emerald-400 mt-1">
+                <p className="text-lg md:text-xl font-extrabold text-emerald-400 mt-1">
                   {fAmt(dashboardStats.paidAmount)}{" "}
-                  <span className="text-xs text-slate-400">ج.م</span>
+                  <span className="text-xs text-slate-400 font-normal">ج.م</span>
                 </p>
-                <div className="flex items-center gap-1 mt-1.5 text-emerald-500 text-[10px] font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1 mt-1.5 text-emerald-400/80 text-[10px] font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                   <span>معدل تسوية {dashboardStats.paymentRatio}%</span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
                 <Check className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-md flex items-center justify-between">
+            <div className="bg-[#241318]/60 backdrop-blur-md p-5 rounded-2xl border border-rose-500/20 hover:border-rose-500/35 shadow-[0_4px_20px_rgba(244,63,94,0.06)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5">
               <div>
-                <p className="text-xs text-slate-400 font-medium">
+                <p className="text-xs text-rose-450 font-medium">
                   المديونية المستحقة
                 </p>
-                <p className="text-lg md:text-xl font-bold text-rose-400 mt-1">
+                <p className="text-lg md:text-xl font-extrabold text-rose-400 mt-1">
                   {fAmt(dashboardStats.pendingAmount)}{" "}
-                  <span className="text-xs text-slate-400">ج.م</span>
+                  <span className="text-xs text-slate-400 font-normal">ج.م</span>
                 </p>
-                <div className="flex items-center gap-1 mt-1.5 text-rose-400 text-[10px] font-medium">
+                <div className="flex items-center gap-1 mt-1.5 text-rose-400 text-[10px] font-semibold">
                   <AlertTriangle className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
                   <span>
                     {dashboardStats.unpaidInvoicesCount} فواتير تحتاج سداد
                   </span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400 border border-rose-500/20">
                 <ShieldAlert className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-md flex items-center justify-between">
+            <div className="bg-[#19152b]/60 backdrop-blur-md p-5 rounded-2xl border border-purple-500/20 hover:border-purple-500/35 shadow-[0_4px_20px_rgba(168,85,247,0.06)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5">
               <div>
-                <p className="text-xs text-slate-400 font-medium">
+                <p className="text-xs text-purple-300 font-medium">
                   حساب الموردين
                 </p>
-                <p className="text-lg md:text-xl font-bold text-white mt-1">
+                <p className="text-lg md:text-xl font-extrabold text-white mt-1">
                   {dashboardStats.suppliersCount}{" "}
-                  <span className="text-xs text-slate-400">موردين</span>
+                  <span className="text-xs text-slate-400 font-normal">موردين</span>
                 </p>
-                <div className="flex items-center gap-1 mt-1.5 text-[#c084fc] text-[10px] font-medium">
-                  <UserCheck className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1 mt-1.5 text-purple-400/80 text-[10px] font-semibold">
+                  <UserCheck className="w-3.5 h-3.5 text-purple-400" />
                   <span>مصنفين حسب الخدمات</span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-[#c084fc]">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-[#c084fc] border border-purple-500/20">
                 <Users className="w-5 h-5" />
               </div>
             </div>
@@ -3618,7 +3618,7 @@ export default function MawridDashboard() {
               className="space-y-6"
             >
               {/* Filter controls and add buttons */}
-              <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-700 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="bg-[#0e1726]/85 backdrop-blur-md p-4 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-fadeIn">
                 <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
                   {/* Search Bar */}
                   <div className="relative w-full md:w-64">
@@ -3627,7 +3627,7 @@ export default function MawridDashboard() {
                       placeholder="ابحث باسم المورد أو الشركة..."
                       value={supplierSearch}
                       onChange={(e) => setSupplierSearch(e.target.value)}
-                      className="w-full text-xs border border-slate-700 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-[#0f172a] text-white"
+                      className="w-full text-xs border border-slate-800/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-[#060a12]/80 text-white transition-all"
                     />
                     <Users className="w-4 h-4 text-slate-500 absolute right-3 top-3.5" />
                   </div>
@@ -3635,7 +3635,7 @@ export default function MawridDashboard() {
 
                 <button
                   onClick={() => setShowAddSupplierModal(true)}
-                  className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-colors"
+                  className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-all duration-200"
                 >
                   <Plus className="w-4 h-4" />
                   <span>إضافة مورد جديد</span>
@@ -3645,7 +3645,7 @@ export default function MawridDashboard() {
               {/* Grid / List of suppliers */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredSuppliers.length === 0 ? (
-                  <div className="col-span-2 bg-[#1e293b] rounded-2xl border border-slate-700 p-12 text-center text-slate-400 text-sm">
+                  <div className="col-span-2 bg-[#0e1726]/50 rounded-2xl border border-slate-800/80 p-12 text-center text-slate-400 text-sm">
                     لا يوجد موردين متوافقين مع معايير البحث الحالية.
                   </div>
                 ) : (
@@ -3672,18 +3672,18 @@ export default function MawridDashboard() {
                           setInvoiceSearch(sup.name);
                           setActiveTab("invoices");
                         }}
-                        className="bg-[#1e293b] rounded-2xl border border-slate-700 p-5 shadow-sm hover:shadow-lg hover:border-emerald-500/40 transition-all flex flex-col justify-between cursor-pointer group"
+                        className="bg-[#0e1726]/80 backdrop-blur-xs rounded-2xl border border-slate-800/90 p-5 shadow-sm hover:shadow-[0_4px_25px_rgba(16,185,129,0.06)] hover:bg-[#111e33]/90 hover:border-emerald-500/25 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
                       >
                         <div>
                           <div className="flex items-start justify-between">
                             <div>
-                              <span className="text-[10px] font-bold bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">
+                              <span className="text-[10px] font-bold bg-[#14223d]/80 text-[#38bdf8] px-2.5 py-1 rounded-full border border-sky-500/20">
                                 {sup.category}
                               </span>
                               <h3 className="text-base font-bold text-white mt-1.5 group-hover:text-emerald-400 transition-colors flex items-center gap-1">
                                 {sup.name}
                               </h3>
-                              <p className="text-xs text-emerald-400 font-semibold">
+                              <p className="text-xs text-emerald-400 font-semibold mt-0.5">
                                 {sup.company}
                               </p>
                               <span className="text-[9px] text-slate-400 mt-1 block group-hover:text-emerald-400 group-hover:underline">
@@ -4022,7 +4022,7 @@ export default function MawridDashboard() {
                   className="space-y-6"
                 >
                   {/* Search and filter toolbar */}
-                  <div className="bg-[#1e293b] p-4 rounded-2xl border border-slate-700 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="bg-[#0e1726]/85 backdrop-blur-md p-4 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-fadeIn">
                     <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
                       {/* Invoice search */}
                       <div className="relative w-full md:w-64">
@@ -4031,7 +4031,7 @@ export default function MawridDashboard() {
                           placeholder="ابحث برقم الفاتورة، الإشعار أو المورد..."
                           value={invoiceSearch}
                           onChange={(e) => setInvoiceSearch(e.target.value)}
-                          className="w-full text-xs border border-slate-700 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-[#0f172a] text-white"
+                          className="w-full text-xs border border-slate-800/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-[#060a12]/80 text-white transition-all"
                         />
                         <Search className="w-4 h-4 text-slate-500 absolute right-3 top-3.5" />
                       </div>
@@ -4043,7 +4043,7 @@ export default function MawridDashboard() {
                           onChange={(e) =>
                             setInvoiceStatusFilter(e.target.value)
                           }
-                          className="w-full text-xs border border-slate-700 px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer bg-[#0f172a] text-white font-bold"
+                          className="w-full text-xs border border-slate-800/80 px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer bg-[#060a12]/80 text-white font-bold transition-all"
                         >
                           <option value="all">كل حالات السداد / التطبيق</option>
                           <option value="unpaid">غير مسدد / كإشعار نشط</option>
@@ -4056,7 +4056,7 @@ export default function MawridDashboard() {
 
                     <button
                       onClick={() => setShowAddInvoiceModal(true)}
-                      className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-colors"
+                      className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-all duration-200"
                     >
                       <Plus className="w-4 h-4" />
                       <span>تسجيل فاتورة جديدة</span>
@@ -4705,20 +4705,20 @@ export default function MawridDashboard() {
               className="space-y-6"
             >
               {/* Bank Integration Panel Intro */}
-              <div className="bg-[#1e293b] p-6 rounded-2xl border border-slate-700 shadow-lg">
+              <div className="bg-[#0e1726]/85 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-xl">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div>
                     <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <Building className="w-5 h-5 text-emerald-400" />
-                      بوابات التكامل البنكي والتحويل الفوري (RTGS Console)
+                       <Building className="w-5 h-5 text-emerald-400" />
+                       بوابات التكامل البنكي والتحويل الفوري (RTGS Console)
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">
                       تكامل لحظي مع شبكة المدفوعات القومية للبنوك وتفويض
                       التحويلات والخصم المباشر لحسابات الموردين
                     </p>
                   </div>
-                  <div className="text-xs bg-slate-800 text-slate-300 font-semibold px-3 py-1 rounded-xl flex items-center gap-1 border border-slate-700">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <div className="text-xs bg-slate-900/40 text-emerald-350 font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 border border-emerald-500/25">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></span>
                     المسار البنكي متصل (Settle Server Online)
                   </div>
                 </div>
@@ -4729,8 +4729,8 @@ export default function MawridDashboard() {
                       key={index}
                       className={`p-4 rounded-xl border transition-all ${
                         bank.isLinked
-                          ? "bg-[#0f172a] border-emerald-500/30 shadow-md"
-                          : "bg-[#111827] border-slate-800 opacity-60 hover:opacity-100"
+                          ? "bg-[#060a12]/85 border-emerald-500/25 shadow-[0_2px_15px_rgba(16,185,129,0.04)]"
+                          : "bg-[#090f1a]/70 border-slate-800/80 opacity-60 hover:opacity-100"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-3">
@@ -4896,7 +4896,7 @@ export default function MawridDashboard() {
               className="space-y-6 animate-fade-in"
             >
               {/* Unified High-Density Single Line Control Panel for reports/portfolio */}
-              <div className="no-print bg-[#1e293b]/95 p-4 rounded-xl border border-slate-700/80 shadow-2xl">
+              <div className="no-print bg-[#0e1726]/85 backdrop-blur-md p-4 rounded-xl border border-slate-800/80 shadow-2xl animate-fadeIn">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
                   {/* 1. Supplier Select */}
                   <div className="flex flex-col gap-1 w-full">
@@ -4909,7 +4909,7 @@ export default function MawridDashboard() {
                         setSelectedReportSupplierId(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px]"
+                      className="bg-[#060a12]/80 text-[#34d399] border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="all">جميع الموردين</option>
                       {suppliers.map((s) => (
@@ -4931,7 +4931,7 @@ export default function MawridDashboard() {
                         setReportWarehouseFilter(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-[#34d399] border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px]"
+                      className="bg-[#060a12]/80 text-[#34d399] border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="all">كافة المستودعات</option>
                       {warehouses.map((w) => (
@@ -4955,7 +4955,7 @@ export default function MawridDashboard() {
                         );
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-amber-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-amber-500 font-bold cursor-pointer font-sans w-full h-[42px]"
+                      className="bg-[#060a12]/80 text-amber-400 border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="issue_date">🕒 تاريخ الإضافة</option>
                       <option value="due_date">⚠️ تاريخ الاستحقاق</option>
@@ -4974,7 +4974,7 @@ export default function MawridDashboard() {
                         setReportStartDate(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-slate-200 border border-slate-700 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold font-mono w-full align-middle h-[42px]"
+                      className="bg-[#060a12]/80 text-slate-200 border border-slate-800/80 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
                     />
                   </div>
 
@@ -4990,7 +4990,7 @@ export default function MawridDashboard() {
                         setReportEndDate(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-slate-200 border border-slate-700 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500 font-bold font-mono w-full align-middle h-[42px]"
+                      className="bg-[#060a12]/80 text-slate-200 border border-slate-800/80 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
                     />
                   </div>
 
@@ -5007,7 +5007,7 @@ export default function MawridDashboard() {
                         );
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#0f172a] text-cyan-400 border border-slate-700 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-cyan-500 font-bold cursor-pointer font-sans w-full h-[42px]"
+                      className="bg-[#060a12]/80 text-cyan-400 border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-cyan-500/20 focus:border-cyan-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="summary">📊 تقرير إجمالي</option>
                       <option value="detailed">📝 تقرير تفصيلي</option>
@@ -5693,9 +5693,9 @@ export default function MawridDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-[#1e293b] p-6 rounded-2xl border border-slate-700 shadow-lg space-y-6 text-[#f1f5f9]"
+              className="bg-[#0e1726]/85 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-xl space-y-6 text-[#f1f5f9]"
             >
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-700 pb-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
                 <div>
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <Database className="w-5 h-5 text-indigo-400" />
@@ -5719,7 +5719,7 @@ export default function MawridDashboard() {
               </div>
 
               {/* Database State Controllers & JSON Persistence File Actions */}
-              <div className="bg-[#0f172a]/60 border border-slate-700 p-5 rounded-2xl space-y-4 shadow-sm">
+              <div className="bg-[#060a12]/60 border border-slate-800/70 p-5 rounded-2xl space-y-4 shadow-sm">
                 <div>
                   <h4 className="font-bold text-emerald-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
                     <Shield className="w-4 h-4 text-emerald-500" />
@@ -5780,212 +5780,6 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
-              {/* Google Drive Cloud Backup Section - ACTIVE & RE-ENABLED */}
-              <div className="bg-[#0f172a]/40 border border-slate-800 p-6 rounded-2xl space-y-4 text-right relative overflow-hidden animate-fadeIn" dir="rtl">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-slate-500/5 rounded-full blur-[80px] pointer-events-none"></div>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold tracking-wider text-emerald-400 uppercase bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-                      {gdriveUser ? "الحالة: متصل بجوجل درايف" : "الحالة: غير متصل"}
-                    </span>
-                    <h4 className="font-extrabold text-white text-sm flex items-center gap-2 pt-1 font-sans">
-                      <Cloud className="w-5 h-5 text-sky-400" />
-                      النسخ السحابي عبر Google Drive الآمن
-                    </h4>
-                    <p className="text-xs text-slate-450 leading-relaxed max-w-xl font-sans">
-                      احمِ حساباتك من الفقدان بمزامنة قاعدة البيانات مع حسابك الشخصي لـ Google Drive في بيئة سحابية معتمدة وآمنة بالكامل.
-                    </p>
-                  </div>
-
-                  {!gdriveUser ? (
-                    <button
-                      onClick={handleGoogleSignIn}
-                      disabled={isSignDriveLoading}
-                      className="bg-white hover:bg-slate-50 text-slate-900 font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 border border-slate-200"
-                    >
-                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 48 48">
-                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.78 17.74 9.5 24 9.5z"></path>
-                        <path fill="#4285F4" d="M46.5 24c0-1.55-.15-3.24-.47-4.77H24v9.03h12.75c-.55 2.97-2.22 5.5-4.77 7.2l7.35 5.69C43.62 36.88 46.5 31.05 46.5 24z"></path>
-                        <path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"></path>
-                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.35-5.69c-2.07 1.39-4.74 2.25-8.54 2.25-7.1 0-13.11-4.79-15.26-11.23l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-                      </svg>
-                      {isSignDriveLoading ? "جاري الاتصال بجوجل..." : "ربط حساب Google Drive"}
-                    </button>
-                  ) : (
-                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto">
-                      <span className="text-emerald-350 text-xs font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-sans">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        {gdriveUser.email}
-                      </span>
-                      <button
-                        onClick={handleGoogleSignOut}
-                        className="text-slate-400 hover:text-rose-400 bg-slate-800 hover:bg-rose-950/20 border border-slate-700 hover:border-rose-500/30 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
-                      >
-                        إلغاء الربط
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {gdriveUser && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="space-y-6 overflow-hidden"
-                  >
-                    {/* Status Alert for Background Backup */}
-                    {isSilentBackupRunning && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs p-3 rounded-xl flex items-center gap-2 shrink-0 justify-start"
-                      >
-                        <span className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
-                        <span>جاري إرسال نسخة احتياطية سحابية تلقائية وصامتة إلى Google Drive حالياً...</span>
-                      </motion.div>
-                    )}
-
-                    {/* WhatsApp-Like Backup Box */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {/* Section 1: Last Backup Info */}
-                      <div className="bg-[#0a0f1d] p-4 rounded-xl border border-slate-800/80 space-y-4">
-                        <h5 className="text-[11px] font-bold text-sky-400 uppercase tracking-wider pb-2 border-b border-slate-800">
-                          آخر نسخة احتياطية (Google Drive)
-                        </h5>
-                        
-                        <div className="space-y-2 text-slate-350 text-xs text-right">
-                          <p className="flex justify-between items-center gap-2">
-                            <span className="text-slate-450">النسخة السحابية:</span>
-                            <span className="font-bold text-white font-mono">
-                              {lastBackupTime ? new Date(lastBackupTime).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" }) : "أبداً"}
-                            </span>
-                          </p>
-                          <p className="flex justify-between items-center gap-2">
-                            <span className="text-slate-450">حجم قاعدة البيانات:</span>
-                            <span className="font-bold text-white font-mono">
-                              {(() => {
-                                try {
-                                  return (JSON.stringify({suppliers, invoices, payments, backups, creditNotes, supplierCategories, warehouses, linkedBanks, safeBalance}).length / 1024).toFixed(1) + " KB";
-                                } catch (_) {
-                                  return "0.0 KB";
-                                }
-                              })()}
-                            </span>
-                          </p>
-                        </div>
-
-                        <div className="pt-2">
-                          <button
-                            onClick={handleUploadBackupToDrive}
-                            disabled={isDriveLoading}
-                            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs cursor-pointer select-none transition-all shadow-sm shadow-emerald-950"
-                          >
-                            <CloudLightning className="w-4 h-4 text-emerald-200" />
-                            {isDriveLoading ? "جاري الحفظ والرفع..." : "إجراء نسخ احتياطي سحابي الآن"}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Section 2: Drive Settings */}
-                      <div className="bg-[#0a0f1d] p-4 rounded-xl border border-slate-800/80 space-y-4">
-                        <h5 className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider pb-2 border-b border-slate-800">
-                          إعدادات حساب Google Drive
-                        </h5>
-
-                        <div className="space-y-4 text-xs font-sans">
-                          {/* Frequency Rule Selector */}
-                          <div className="flex items-center justify-between gap-4">
-                            <span className="text-slate-450 block">النسخ الاحتياطي التلقائي:</span>
-                            <select
-                              value={autoBackupFreq}
-                              onChange={(e) => {
-                                const freq = e.target.value;
-                                setAutoBackupFreq(freq);
-                                localStorage.setItem("mawrid_auto_backup_freq", freq);
-                                showToast(`تم ضبط تكرار النسخ التلقائي إلى: ${freq === "daily" ? "يومياً" : freq === "weekly" ? "أسبوعياً" : freq === "monthly" ? "شهرياً" : "معطل"}`, "success");
-                              }}
-                              className="bg-[#0c1626] border border-slate-700 hover:border-slate-600 focus:outline-none rounded-lg px-2 py-1.5 text-xs text-white cursor-pointer select-none"
-                            >
-                              <option value="daily">يومياً (Daily)</option>
-                              <option value="weekly">أسبوعياً (Weekly)</option>
-                              <option value="monthly">شهرياً (Monthly)</option>
-                              <option value="off">أبداً / معطل (Never)</option>
-                            </select>
-                          </div>
-
-                          {/* Account Link */}
-                          <div className="flex items-center justify-between gap-4">
-                            <span className="text-slate-450">الحساب المرتبط:</span>
-                            <span className="text-slate-200 font-mono text-[11px] font-bold truncate max-w-[160px] sm:max-w-xs">{gdriveUser?.email}</span>
-                          </div>
-
-                          {/* Over Network Setting Indicator */}
-                          <div className="flex items-center justify-between gap-4">
-                            <span className="text-slate-450">النسخ الاحتياطي عبر:</span>
-                            <span className="text-slate-400 text-[11px]">الواي فاي وبيانات الأجهزة (الكل)</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Old Backups File Manager */}
-                    <div className="space-y-2 pt-2 border-t border-slate-800/50">
-                      <span className="text-[11px] font-bold text-slate-400 block uppercase tracking-wider font-sans">
-                        قائمة النسخ السحابية السابقة المتوفرة للاستعادة أو الإدارة:
-                      </span>
-
-                      {isDriveLoading && driveBackups.length === 0 ? (
-                        <div className="text-center py-4 text-slate-400 text-xs animate-pulse font-sans">
-                          جاري جلب قائمة الملفات من Google Drive...
-                        </div>
-                      ) : driveBackups.length === 0 ? (
-                        <div className="text-center py-4 text-slate-500 text-xs italic bg-[#0f172a] rounded-lg border border-dashed border-slate-800 font-sans">
-                          لا توجد أي نسخ احتياطية مرفوعة سحابياً من هذا التطبيق حتى الآن.
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-56 overflow-y-auto pr-1">
-                          {driveBackups.map((file) => (
-                            <div
-                              key={file.id}
-                              className="flex items-center justify-between p-3 bg-slate-900/50 border border-slate-800 hover:border-slate-700 rounded-xl transition-colors gap-3"
-                            >
-                              <div className="text-right truncate flex-1">
-                                <span className="text-white text-xs font-bold block truncate max-w-[200px] sm:max-w-xs font-mono" title={file.name}>
-                                  {file.name}
-                                </span>
-                                <span className="text-[10px] text-slate-500 block font-mono mt-0.5">
-                                  {new Date(file.createdTime).toLocaleString("ar")} | {(Number(file.size || 0) / 1024).toFixed(1)} KB
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-2 shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={() => handleRestoreFromDriveFile(file.id, file.name)}
-                                  disabled={isDriveLoading}
-                                  className="text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-600 border border-emerald-500/20 hover:border-emerald-500 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer font-sans"
-                                  title="استعادة قاعدة البيانات بالكامل من هذا الملف"
-                                >
-                                  استعادة
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteDriveFile(file.id, file.name)}
-                                  disabled={isDriveLoading}
-                                  className="text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 hover:border-rose-500 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer font-sans"
-                                  title="حذف هذا الملف السحابي نهائياً"
-                                >
-                                  حذف
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </div>
 
               {/* Automatic Backup state indicator */}
               <div className="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10 flex items-center gap-3 text-xs text-slate-300">
@@ -6085,7 +5879,7 @@ export default function MawridDashboard() {
               className="space-y-6 animate-fade-in text-[#f1f5f9]"
             >
               {/* Header Box */}
-              <div className="bg-[#1e293b] p-6 rounded-2xl border border-slate-700 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="bg-[#0e1726]/85 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <Warehouse className="w-5 h-5 text-emerald-400" />
@@ -6103,7 +5897,7 @@ export default function MawridDashboard() {
                     type="text"
                     id="new-warehouse-input"
                     placeholder="اسم المخزن الجديد (مثال: مخزن طنطا الفرعي)"
-                    className="border border-slate-700 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none text-white font-bold bg-[#0f172a] min-w-[240px]"
+                    className="border border-slate-800 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none text-white font-bold bg-[#060a12]/80 transition-all min-w-[240px]"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         const val = (
@@ -6606,22 +6400,22 @@ export default function MawridDashboard() {
 
       {/* MODAL: ADD WAREHOUSE */}
       {showAddWarehouseModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
+        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5"
+            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800/80 space-y-5"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-emerald-50 rounded-xl">
-                  <Warehouse className="w-5 h-5 text-emerald-600" />
+                <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                  <Warehouse className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-900">
+                  <h3 className="text-sm font-extrabold text-white">
                     إضافة مخزن جديد للنظام
                   </h3>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] text-slate-450">
                     سيتم إدراج هذا المستودع في قائمة الخيارات لجميع الفواتير وتعيينه كوجهة حالية للعملية.
                   </p>
                 </div>
@@ -6633,7 +6427,7 @@ export default function MawridDashboard() {
                   setNewWarehouseName("");
                   setAddWarehouseContext(null);
                 }}
-                className="p-1.5 rounded-xl hover:bg-slate-150 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-slate-800/60 text-slate-450 hover:text-white transition-colors cursor-pointer"
               >
                 <XCircle className="w-5 h-5" />
               </button>
@@ -6641,7 +6435,7 @@ export default function MawridDashboard() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-slate-600 block mb-1.5 text-xs font-bold font-sans">
+                <label className="text-slate-400 block mb-1.5 text-xs font-bold font-sans">
                   اسم المخزن / المستودع *
                 </label>
                 <input
@@ -6651,7 +6445,7 @@ export default function MawridDashboard() {
                   value={newWarehouseName}
                   onChange={(e) => setNewWarehouseName(e.target.value)}
                   placeholder="مثال: مخزن طنطا الفرعي، مخزن مرسال الرئيسي"
-                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50 text-slate-950 font-bold placeholder:text-slate-400 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full border border-slate-800 rounded-xl p-3 bg-[#060a12]/80 text-white font-bold placeholder:text-slate-500 text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       handleSaveNewWarehouse();
@@ -6665,7 +6459,7 @@ export default function MawridDashboard() {
               <button
                 type="button"
                 onClick={handleSaveNewWarehouse}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 font-sans"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 font-sans"
               >
                 <Plus className="w-4 h-4" />
                 تأكيد الإضافة والتحديد
@@ -6677,7 +6471,7 @@ export default function MawridDashboard() {
                   setNewWarehouseName("");
                   setAddWarehouseContext(null);
                 }}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-4 rounded-xl transition-colors cursor-pointer font-sans"
+                className="bg-slate-800/50 hover:bg-slate-805 text-slate-300 border border-slate-700/50 text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer font-sans"
               >
                 إلغاء
               </button>
@@ -6688,33 +6482,33 @@ export default function MawridDashboard() {
 
       {/* MODAL: CONFIRM DELETE SUPPLIER */}
       {supplierToDelete && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
+        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5"
+            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800/80 space-y-5"
           >
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="p-2 bg-rose-50 rounded-xl">
-                <ShieldAlert className="w-6 h-6 text-rose-600" />
+            <div className="flex items-center gap-3 border-b border-slate-800/60 pb-3">
+              <div className="p-2 bg-rose-500/10 rounded-xl border border-rose-500/20">
+                <ShieldAlert className="w-6 h-6 text-rose-450" />
               </div>
               <div>
-                <h3 className="text-sm font-extrabold text-slate-900 font-sans">
+                <h3 className="text-sm font-extrabold text-white font-sans">
                   تأكيد حذف المورد نهائياً
                 </h3>
-                <p className="text-[10px] text-slate-450 font-sans">
+                <p className="text-[10px] text-slate-400 font-sans">
                   إجراء حساس يتطلب التحقق الأمني من الإدارة.
                 </p>
               </div>
             </div>
 
-            <div className="p-4 bg-amber-50/50 rounded-2xl border border-amber-200/40 text-rose-950 text-xs leading-relaxed space-y-2 font-sans">
-              <span className="font-bold block text-rose-900 flex items-center gap-1.5 font-sans">
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <div className="p-4 bg-amber-500/5 rounded-2xl border border-amber-500/20 text-amber-200 text-xs leading-relaxed space-y-2 font-sans">
+              <span className="font-bold block text-rose-400 flex items-center gap-1.5 font-sans">
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
                 تنبيه حذف نهائي وتصفية:
               </span>
-              <p className="font-sans font-medium text-slate-700">
-                هل أنت متأكد من رغبتك في حذف المورد <span className="text-rose-600 font-extrabold font-mono">"{supplierToDelete.name}"</span> وكافة فواتير المشتريات والبيانات والعمليات المرتبطة به من السجلات؟
+              <p className="font-sans font-medium text-slate-300">
+                هل أنت متأكد من رغبتك في حذف المورد <span className="text-rose-400 font-extrabold font-mono">"{supplierToDelete.name}"</span> وكافة فواتير المشتريات والبيانات والعمليات المرتبطة به من السجلات؟
               </p>
               <span className="text-[10px] text-slate-450 block font-normal leading-normal font-sans">
                 ملاحظة: النظام لن يسمح بالحذف في حال وجود أي أرصدة معلقة أو فواتير مستحقة الدفع حالياً.
@@ -6725,7 +6519,7 @@ export default function MawridDashboard() {
               <button
                 type="button"
                 onClick={executeDeleteSupplier}
-                className="flex-1 bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 font-sans"
+                className="flex-1 bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 font-sans"
               >
                 <Trash2 className="w-4 h-4" />
                 نعم، احذف المورد فوراً
@@ -6733,7 +6527,7 @@ export default function MawridDashboard() {
               <button
                 type="button"
                 onClick={() => setSupplierToDelete(null)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-4 rounded-xl transition-colors cursor-pointer font-sans"
+                className="bg-slate-800/50 hover:bg-slate-805 text-slate-300 border border-slate-700/50 text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer font-sans"
               >
                 التراجع والإلغاء
               </button>
@@ -6744,21 +6538,21 @@ export default function MawridDashboard() {
 
       {/* MODAL: CONFIRM DELETE WAREHOUSE */}
       {warehouseToDelete && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
+        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5"
+            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800/80 space-y-5"
           >
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="p-2 bg-orange-50 rounded-xl">
-                <Warehouse className="w-6 h-6 text-orange-600" />
+            <div className="flex items-center gap-3 border-b border-slate-800/60 pb-3">
+              <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/25">
+                <Warehouse className="w-6 h-6 text-amber-400" />
               </div>
               <div>
-                <h3 className="text-sm font-extrabold text-slate-900 font-sans">
+                <h3 className="text-sm font-extrabold text-white font-sans">
                   إزالة مخزن من خيارات النظام
                 </h3>
-                <p className="text-[10px] text-slate-450 font-sans">
+                <p className="text-[10px] text-slate-400 font-sans">
                   حذف وإلغاء وجهة استلام الفواتير الحالية.
                 </p>
               </div>
@@ -6766,23 +6560,23 @@ export default function MawridDashboard() {
 
             <div className={`p-4 rounded-2xl border text-xs leading-relaxed space-y-2 font-sans ${
               warehouseToDelete.invoicesCount > 0 
-                ? "bg-rose-50/50 border-rose-200 text-rose-950" 
-                : "bg-slate-50/50 border-slate-200 text-slate-800"
+                ? "bg-rose-500/10 border-rose-500/20 text-rose-200" 
+                : "bg-slate-800/30 border-slate-850 text-slate-300"
             }`}>
               <span className={`font-bold block flex items-center gap-1.5 font-sans ${
-                warehouseToDelete.invoicesCount > 0 ? "text-rose-900" : "text-amber-700"
+                warehouseToDelete.invoicesCount > 0 ? "text-rose-400" : "text-amber-400"
               }`}>
                 <AlertTriangle className="w-4 h-4" />
                 {warehouseToDelete.invoicesCount > 0 ? "تحذير: المخزن مرتبط بعمليات!" : "تأكيد إزالة المخزن:"}
               </span>
-              <p className="font-sans font-medium text-slate-700">
+              <p className="font-sans font-medium text-slate-300">
                 {warehouseToDelete.invoicesCount > 0 ? (
                   <>
-                    تنبيه: هذا المخزن مرتبط بالفعل بـ <span className="font-bold underline">({warehouseToDelete.invoicesCount})</span> فواتير مسجلة في شحنات المشتريات. حذفه الآن سيؤثر على تصفية وعرض هذي الفواتير. هل تود حذف المخزن <span className="text-rose-600 font-extrabold font-mono">"{warehouseToDelete.name}"</span> نهائياً على أي حال؟
+                    تنبيه: هذا المخزن مرتبط بالفعل بـ <span className="font-bold underline text-white">({warehouseToDelete.invoicesCount})</span> فواتير مسجلة في شحنات المشتريات. حذفه الآن سيؤثر على تصفية وعرض هذي الفواتير. هل تود حذف المخزن <span className="text-rose-450 font-extrabold font-mono">"{warehouseToDelete.name}"</span> نهائياً على أي حال؟
                   </>
                 ) : (
                   <>
-                    هل أنت متأكد من رغبتك في حذف المخزن <span className="text-slate-900 font-black font-mono">"{warehouseToDelete.name}"</span> من السجلات وقائمة الخيارات المتاحة؟
+                    هل أنت متأكد من رغبتك في حذف المخزن <span className="text-white font-black font-mono">"{warehouseToDelete.name}"</span> من السجلات وقائمة الخيارات المتاحة؟
                   </>
                 )}
               </p>
@@ -6792,7 +6586,7 @@ export default function MawridDashboard() {
               <button
                 type="button"
                 onClick={executeDeleteWarehouse}
-                className="flex-1 bg-rose-600 hover:bg-rose-500 active:bg-rose-750 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 font-sans"
+                className="flex-1 bg-rose-600 hover:bg-rose-500 active:bg-rose-750 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 font-sans"
               >
                 <Trash2 className="w-4 h-4" />
                 تأكيد وبدء الحذف
@@ -6800,7 +6594,7 @@ export default function MawridDashboard() {
               <button
                 type="button"
                 onClick={() => setWarehouseToDelete(null)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-4 rounded-xl transition-colors cursor-pointer font-sans"
+                className="bg-slate-800/50 hover:bg-slate-805 text-slate-300 border border-slate-700/50 text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer font-sans"
               >
                 تراجع
               </button>
@@ -6811,19 +6605,19 @@ export default function MawridDashboard() {
 
       {/* MODAL: ADD SUPPLIER */}
       {showAddSupplierModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-[80] p-4">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto"
+            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/85 space-y-4 max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-extrabold text-black">
+            <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+              <h3 className="text-base font-extrabold text-white">
                 إضافة مورد جديد
               </h3>
               <button
                 onClick={() => setShowAddSupplierModal(false)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
+                className="p-1 rounded-lg hover:bg-slate-800/60 text-slate-400 hover:text-white transition-colors"
               >
                 <XCircle className="w-5 h-5" />
               </button>
@@ -6832,7 +6626,7 @@ export default function MawridDashboard() {
             <form onSubmit={handleAddSupplier} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     اسم المورد الكامل *
                   </label>
                   <input
@@ -6842,12 +6636,12 @@ export default function MawridDashboard() {
                     onChange={(e) =>
                       setNewSupplier({ ...newSupplier, name: e.target.value })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-950 font-semibold placeholder:text-slate-400"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="م. محمد العربي"
                   />
                 </div>
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     اسم الشركة / المؤسسة *
                   </label>
                   <input
@@ -6860,7 +6654,7 @@ export default function MawridDashboard() {
                         company: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-950 font-semibold placeholder:text-slate-400"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="مجموعة السويدي كابلات"
                   />
                 </div>
@@ -6868,7 +6662,7 @@ export default function MawridDashboard() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     رقم الهاتف التواصل *
                   </label>
                   <input
@@ -6877,12 +6671,12 @@ export default function MawridDashboard() {
                     onChange={(e) =>
                       setNewSupplier({ ...newSupplier, phone: e.target.value })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-950 font-semibold placeholder:text-slate-400"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="01012345678"
                   />
                 </div>
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     رقم الحساب البنكي / International IBAN *
                   </label>
                   <input
@@ -6894,14 +6688,14 @@ export default function MawridDashboard() {
                         bankAccount: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-[11px] text-slate-950 font-semibold placeholder:text-slate-400"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 font-mono text-[11px] text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="EG000000000000000000000000000"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-slate-500 block mb-1">
+                <label className="text-slate-400 block mb-1">
                   ملاحظات وشروط إضافية
                 </label>
                 <textarea
@@ -6909,22 +6703,22 @@ export default function MawridDashboard() {
                   onChange={(e) =>
                     setNewSupplier({ ...newSupplier, notes: e.target.value })
                   }
-                  className="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 h-20 text-slate-950 font-semibold placeholder:text-slate-400"
+                  className="w-full border border-slate-850 rounded-lg p-2 bg-[#060a12]/85 h-20 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                   placeholder="أدخل أي ملاحظات حول الدفع أو السداد..."
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <div className="flex items-center justify-end gap-2 border-t border-slate-800/60 pt-3">
                 <button
                   type="button"
                   onClick={() => setShowAddSupplierModal(false)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                  className="bg-slate-800/50 hover:bg-slate-805 text-slate-300 border border-slate-700/50 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer transition-colors"
                 >
                   إلغاء الأمر
                 </button>
                 <button
                   type="submit"
-                  className="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer"
+                  className="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer transition-all"
                 >
                   حفظ المورد
                 </button>
@@ -6936,20 +6730,20 @@ export default function MawridDashboard() {
 
       {/* MODAL: ADD INVOICE */}
       {showAddInvoiceModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[95vh] overflow-y-auto"
+            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/80 space-y-4 max-h-[95vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-950 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-sky-600" />
+            <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-sky-400" />
                 تسجيل فاتورة جديدة
               </h3>
               <button
                 onClick={() => setShowAddInvoiceModal(false)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-slate-800/60 text-slate-450 hover:text-white transition-colors"
               >
                 <XCircle className="w-5 h-5" />
               </button>
@@ -6958,20 +6752,20 @@ export default function MawridDashboard() {
             <form onSubmit={handleAddInvoice} className="text-xs space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 {/* Right Side Panel: Core Invoice Details */}
-                <div className="lg:col-span-5 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-4">
-                  <h4 className="font-bold text-slate-800 border-b border-slate-200 pb-2 mb-1">
+                <div className="lg:col-span-5 bg-[#060a12]/80 p-4 rounded-2xl border border-slate-800/60 space-y-4">
+                  <h4 className="font-bold text-slate-200 border-b border-slate-800/50 pb-2 mb-1">
                     بيانات الشحنة والمورد
                   </h4>
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-slate-500">
+                      <label className="text-slate-400 font-bold">
                         اختر المورد المرتبط *
                       </label>
                       <button
                         type="button"
                         onClick={() => setShowAddSupplierModal(true)}
-                        className="text-emerald-700 hover:text-emerald-800 font-extrabold flex items-center gap-1 transition-colors px-1 bg-emerald-50 rounded"
+                        className="text-emerald-400 hover:text-emerald-300 font-extrabold flex items-center gap-1 transition-colors px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded text-[10px]"
                         title="إضافة مورد جديد"
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -6987,11 +6781,11 @@ export default function MawridDashboard() {
                           supplierId: e.target.value,
                         })
                       }
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-semibold text-slate-900 focus:outline-none"
+                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12]/90 font-semibold text-white focus:outline-none focus:ring-1 focus:ring-sky-500/40 transition-all cursor-pointer"
                     >
-                      <option value="">-- اضغط للاختيار --</option>
+                      <option className="bg-[#0e1726]" value="">-- اضغط للاختيار --</option>
                       {suppliers.map((s) => (
-                        <option key={s.id} value={s.id}>
+                        <option className="bg-[#0e1726]" key={s.id} value={s.id}>
                           {s.name} ({s.company})
                         </option>
                       ))}
@@ -6999,7 +6793,7 @@ export default function MawridDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-slate-500 block mb-1 font-bold">
+                    <label className="text-slate-400 block mb-1 font-bold">
                       تاريخ إضافة الفاتورة *
                     </label>
                     <input
@@ -7012,12 +6806,12 @@ export default function MawridDashboard() {
                           issueDate: e.target.value,
                         })
                       }
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-black font-semibold"
+                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12]/90 font-mono text-white font-semibold focus:ring-1 focus:ring-sky-500/40 outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="text-slate-500 block mb-1 font-bold">
+                    <label className="text-slate-400 block mb-1 font-bold">
                       تاريخ الاستحقاق المتوقع *
                     </label>
                     <input
@@ -7030,13 +6824,13 @@ export default function MawridDashboard() {
                           dueDate: e.target.value,
                         })
                       }
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-black font-semibold"
+                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12]/90 font-mono text-white font-semibold focus:ring-1 focus:ring-sky-500/40 outline-none"
                     />
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-slate-550 block">
+                      <label className="text-slate-400 block font-bold">
                         المخزن المتلقي للشحنة *
                       </label>
                       <button
@@ -7045,7 +6839,7 @@ export default function MawridDashboard() {
                           setAddWarehouseContext("new");
                           setShowAddWarehouseModal(true);
                         }}
-                        className="text-[10px] text-sky-600 font-bold hover:text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-100 hover:bg-sky-100 transition-colors cursor-pointer"
+                        className="text-[10px] text-sky-450 font-bold hover:text-sky-300 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20 hover:bg-sky-500/20 transition-all cursor-pointer"
                       >
                         + مخزن جديد
                       </button>
@@ -7059,11 +6853,11 @@ export default function MawridDashboard() {
                           warehouse: e.target.value,
                         })
                       }
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12]/90 text-white font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500/40 transition-all"
                     >
-                      <option value="">-- اختر المخزن --</option>
+                      <option className="bg-[#0e1726]" value="">-- اختر المخزن --</option>
                       {warehouses.map((wh) => (
-                        <option key={wh} value={wh}>
+                        <option className="bg-[#0e1726]" key={wh} value={wh}>
                           {wh}
                         </option>
                       ))}
@@ -7071,7 +6865,7 @@ export default function MawridDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-black font-bold block mb-1">
+                    <label className="text-slate-400 font-bold block mb-1">
                       البيانات / مذكرات عامة
                     </label>
                     <input
@@ -7080,22 +6874,22 @@ export default function MawridDashboard() {
                       onChange={(e) =>
                         setNewInvoice({ ...newInvoice, notes: e.target.value })
                       }
-                      className="w-full border border-slate-205 rounded-lg p-2.5 bg-white text-black font-semibold"
+                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12]/90 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-sky-500/40 outline-none transition-all"
                       placeholder="شحنة التجهيز المقررة لمخازن العاشر"
                     />
                   </div>
 
                   <div>
-                    <label className="text-slate-700 block mb-1.5 font-bold">
+                    <label className="text-slate-400 block mb-1.5 font-bold">
                       مرفقات الفاتورة (يمكنك اختيار ملف أو أكثر) *
                     </label>
                     <div className="space-y-2">
-                      <label className="w-full flex flex-col items-center justify-center border-2 border-dashed border-sky-300 hover:border-sky-500 hover:bg-sky-50/50 rounded-2xl p-4 bg-slate-50 cursor-pointer transition-all duration-200 group text-center">
-                        <Upload className="w-6 h-6 text-sky-500 group-hover:scale-110 transition-transform mb-1.5" />
-                        <span className="text-slate-800 font-bold text-xs">
+                      <label className="w-full flex flex-col items-center justify-center border-2 border-dashed border-slate-800 hover:border-sky-500/80 hover:bg-[#060a12]/80 rounded-2xl p-4 bg-[#060a12]/40 cursor-pointer transition-all duration-200 group text-center">
+                        <Upload className="w-6 h-6 text-sky-400 group-hover:scale-110 transition-transform mb-1.5" />
+                        <span className="text-slate-200 font-bold text-xs">
                           اضغط لتصفح واختيار ملف أو أكثر من جهازك
                         </span>
-                        <span className="text-slate-500 text-[10px] mt-0.5">
+                        <span className="text-slate-450 text-[10px] mt-0.5">
                           الصيغ المدعومة: الصور، PDF، ملفات Word و Excel
                         </span>
                         <input
@@ -7109,17 +6903,17 @@ export default function MawridDashboard() {
                         />
                       </label>
                       {invoiceAttachments.length > 0 && (
-                        <div className="bg-slate-50 p-2 rounded-xl border border-slate-200 mt-2 space-y-1">
-                          <p className="font-bold text-slate-700 text-[10px] mb-1">
+                        <div className="bg-[#060a12]/50 p-2 rounded-xl border border-slate-800 mt-2 space-y-1">
+                          <p className="font-bold text-slate-300 text-[10px] mb-1">
                             المرفقات المختارة ({invoiceAttachments.length}):
                           </p>
                           {invoiceAttachments.map((f, idx) => (
                             <div
                               key={idx}
-                              className="flex items-center justify-between bg-white text-black p-1.5 rounded border border-slate-100 text-[11px]"
+                              className="flex items-center justify-between bg-[#111927] text-white p-1.5 rounded border border-slate-800/80 text-[11px]"
                             >
                               <span
-                                className="font-mono font-bold text-black truncate max-w-[200px]"
+                                className="font-mono font-bold text-slate-200 truncate max-w-[200px]"
                                 title={f.name}
                               >
                                 {f.name}
@@ -7131,7 +6925,7 @@ export default function MawridDashboard() {
                                     prev.filter((_, i) => i !== idx),
                                   )
                                 }
-                                className="p-1 text-rose-500 hover:bg-rose-50 rounded cursor-pointer"
+                                className="p-1 text-rose-400 hover:bg-rose-500/10 rounded cursor-pointer"
                               >
                                 <XCircle className="w-4 h-4" />
                               </button>
@@ -7148,9 +6942,9 @@ export default function MawridDashboard() {
                 {/* Left Side Panel: Items Row Editor & VAT/Calculations & Credit Note */}
                 <div className="lg:col-span-7 space-y-4">
                   {/* Items header */}
-                  <div className="border border-slate-200 p-5 rounded-2xl bg-white space-y-4">
+                  <div className="border border-slate-800/60 p-5 rounded-2xl bg-[#060a12]/80 space-y-4">
                     <div>
-                      <label className="text-slate-600 block mb-1 font-bold">
+                      <label className="text-slate-400 block mb-1 font-bold">
                         القيمة الأساسية للفاتورة (قبل الخصم) *
                       </label>
                       <div className="relative">
@@ -7166,23 +6960,23 @@ export default function MawridDashboard() {
                             )
                           }
                           placeholder="مثال: 15000"
-                          className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50 font-mono font-bold text-slate-900 text-sm focus:ring-1 focus:ring-sky-500 focus:bg-white"
+                          className="w-full border border-slate-800 rounded-xl p-3 bg-[#060a12] font-mono font-bold text-white text-sm focus:ring-1 focus:ring-sky-500/40 outline-none transition-all"
                         />
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs select-none">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs select-none">
                           ج.م
                         </span>
                       </div>
                     </div>
 
-                    <div className="border-t border-slate-100 pt-3">
+                    <div className="border-t border-slate-800/50 pt-3">
                       <div className="flex items-center justify-between mb-2">
-                        <label className="text-slate-700 block font-bold text-xs">
+                        <label className="text-slate-300 block font-bold text-xs">
                           الخصومات المطبقة على الفاتورة (تنقص من الإجمالي):
                         </label>
                         <button
                           type="button"
                           onClick={handleAddDiscountRow}
-                          className="text-emerald-600 hover:text-emerald-700 font-bold text-xs flex items-center gap-1 cursor-pointer bg-emerald-50 hover:bg-emerald-100/70 py-1.5 px-2.5 rounded-lg border border-emerald-100 transition-colors"
+                          className="text-emerald-450 hover:text-emerald-300 font-bold text-xs flex items-center gap-1 cursor-pointer bg-emerald-500/10 hover:bg-emerald-500/20 py-1.5 px-2.5 rounded-lg border border-emerald-500/20 transition-all"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           إضافة خصم جديد
@@ -7190,7 +6984,7 @@ export default function MawridDashboard() {
                       </div>
 
                       {discounts.length === 0 ? (
-                        <p className="text-[11px] text-slate-400 py-2 text-right">
+                        <p className="text-[11px] text-slate-450 py-2 text-right">
                           لا توجد خصومات مضافة حالياً. سيتم حساب القيمة الأساسية
                           للفاتورة كاملة.
                         </p>
@@ -7199,7 +6993,7 @@ export default function MawridDashboard() {
                           {discounts.map((disc, index) => (
                             <div
                               key={index}
-                              className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200"
+                              className="flex items-center gap-2 bg-[#0e1726]/40 p-2 rounded-xl border border-slate-800/60"
                             >
                               <div className="flex-1">
                                 <input
@@ -7214,7 +7008,7 @@ export default function MawridDashboard() {
                                     )
                                   }
                                   placeholder="نوع الخصم (مثال: خصم تعجيل دفع، خصم تجاري...)"
-                                  className="w-full border border-slate-200 rounded-lg p-1.5 bg-white text-slate-800 focus:ring-1 focus:ring-sky-500"
+                                  className="w-full border border-slate-800 rounded-lg p-1.5 bg-[#060a12] text-white placeholder:text-slate-500 focus:ring-1 focus:ring-sky-500/55 outline-none"
                                 />
                               </div>
                               <div className="w-32 relative">
@@ -7232,9 +7026,9 @@ export default function MawridDashboard() {
                                     )
                                   }
                                   placeholder="المبلغ"
-                                  className="w-full border border-slate-200 rounded-lg p-1.5 bg-white font-mono text-left text-slate-900 focus:ring-1 focus:ring-sky-500 pl-8"
+                                  className="w-full border border-slate-800 rounded-lg p-1.5 bg-[#060a12] font-mono text-left text-white focus:ring-1 focus:ring-sky-500/55 outline-none pl-8"
                                 />
-                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-bold">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-450 text-[10px] font-bold">
                                   ج.م
                                 </span>
                               </div>
@@ -7243,7 +7037,7 @@ export default function MawridDashboard() {
                                 onClick={() =>
                                   handleRemoveDiscountRow(index)
                                 }
-                                className="p-1 px-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-colors"
+                                className="p-1 px-1.5 text-slate-400 hover:text-rose-450 hover:bg-rose-500/10 rounded-lg cursor-pointer transition-colors"
                               >
                                 <XCircle className="w-4 h-4" />
                               </button>
@@ -7287,12 +7081,12 @@ export default function MawridDashboard() {
                     const totalAmount = subtotal + vatAmount;
 
                     return (
-                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                      <div className="bg-[#060a12]/50 p-4 rounded-2xl border border-slate-800/60 space-y-3">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                           <div className="flex flex-col gap-2.5 w-full md:w-auto">
                             {/* Toggle between Automatic Percentage and Custom Tax Amount */}
                             <div className="flex items-center gap-2">
-                              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-300 select-none">
                                 <input
                                   type="checkbox"
                                   checked={newInvoice.isCustomVat || false}
@@ -7302,7 +7096,7 @@ export default function MawridDashboard() {
                                       isCustomVat: e.target.checked,
                                     })
                                   }
-                                  className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 w-3.5 h-3.5 cursor-pointer"
+                                  className="rounded border-slate-800 bg-[#060a12] text-[#0284c7] focus:ring-[#0284c7] focus:ring-offset-0 w-3.5 h-3.5 cursor-pointer"
                                 />
                                 <span>
                                   كتابة قيمة ضريبة مخصصة (يدوياً بالجنيه)
@@ -7312,10 +7106,10 @@ export default function MawridDashboard() {
 
                             {!newInvoice.isCustomVat ? (
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-xs text-slate-600 font-bold font-sans">
+                                <span className="text-xs text-slate-400 font-bold font-sans">
                                   ضريبة القيمة المضافة (VAT):
                                 </span>
-                                <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-0.5 shadow-xs">
+                                <div className="flex items-center gap-1.5 bg-[#060a12] border border-slate-800 rounded-lg px-2 py-0.5 shadow-xs">
                                   <input
                                     type="number"
                                     min="0"
@@ -7334,9 +7128,9 @@ export default function MawridDashboard() {
                                         ),
                                       })
                                     }
-                                    className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                                    className="w-10 text-center font-mono font-bold text-white bg-transparent text-xs focus:outline-none"
                                   />
-                                  <span className="text-slate-500 text-xs font-bold font-sans">
+                                  <span className="text-slate-400 text-xs font-bold font-sans">
                                     %
                                   </span>
                                 </div>
@@ -7353,7 +7147,7 @@ export default function MawridDashboard() {
                                           : 14,
                                     })
                                   }
-                                  className="text-[9px] text-sky-600 hover:text-sky-700 font-extrabold bg-sky-50 hover:bg-sky-100/70 px-2.5 py-1 rounded-lg border border-sky-100 cursor-pointer transition-colors"
+                                  className="text-[9px] text-sky-400 hover:text-sky-300 font-extrabold bg-sky-500/10 hover:bg-sky-500/20 px-2.5 py-1 rounded-lg border border-sky-500/20 cursor-pointer transition-colors"
                                 >
                                   {(newInvoice.vatRate !== undefined
                                     ? newInvoice.vatRate
@@ -7364,10 +7158,10 @@ export default function MawridDashboard() {
                               </div>
                             ) : (
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-xs text-slate-600 font-bold font-sans">
+                                <span className="text-xs text-slate-400 font-bold font-sans">
                                   قيمة الضريبة المخصصة:
                                 </span>
-                                <div className="flex items-center gap-1.5 bg-white border border-slate-250 rounded-lg px-2 py-1 shadow-xs">
+                                <div className="flex items-center gap-1.5 bg-[#060a12] border border-slate-800 rounded-lg px-2 py-1 shadow-xs">
                                   <input
                                     type="number"
                                     min="0"
@@ -7397,10 +7191,10 @@ export default function MawridDashboard() {
                                         customVatAmount: rounded,
                                       });
                                     }}
-                                    className="w-24 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                                    className="w-24 text-center font-mono font-bold text-white bg-transparent text-xs focus:outline-none"
                                     placeholder="ادخل القيمة..."
                                   />
-                                  <span className="text-slate-500 text-[10px] font-bold">
+                                  <span className="text-slate-400 text-[10px] font-bold">
                                     ج.م
                                   </span>
                                 </div>
@@ -7409,35 +7203,35 @@ export default function MawridDashboard() {
                           </div>
 
                           <div className="space-y-1 w-full sm:w-auto text-left font-mono">
-                            <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-400 text-[11px] text-right">
                               <span>قيمة الفاتورة الأساسية:</span>
-                              <span className="font-bold">
+                              <span className="font-bold text-slate-200">
                                 {fAmt(invoiceBaseAmount)} ج.م
                               </span>
                             </div>
                             {totalDiscounts > 0 && (
-                              <div className="flex justify-between sm:justify-end gap-6 text-rose-650 text-[11px] text-right">
+                              <div className="flex justify-between sm:justify-end gap-6 text-rose-400 text-[11px] text-right">
                                 <span>إجمالي الخصم المطبق (-):</span>
                                 <span className="font-bold">
                                   {fAmt(totalDiscounts)} ج.م
                                 </span>
                               </div>
                             )}
-                            <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-400 text-[11px] text-right">
                               <span>الإجمالي قبل الضريبة:</span>
-                              <span className="font-bold">
+                              <span className="font-bold text-slate-200">
                                 {fAmt(subtotal)} ج.م
                               </span>
                             </div>
-                            <div className="flex justify-between sm:justify-end gap-6 text-slate-500 text-[11px] text-right">
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-400 text-[11px] text-right">
                               <span>قيمة الضريبة ({vatRateDisplay}%):</span>
-                              <span className="font-bold">
+                              <span className="font-bold text-slate-200">
                                 {fAmt(vatAmount)} ج.م
                               </span>
                             </div>
-                            <div className="flex justify-between sm:justify-end gap-6 text-slate-800 font-black text-xs border-t border-slate-200 pt-1 mt-1 text-right">
+                            <div className="flex justify-between sm:justify-end gap-6 text-slate-200 font-black text-xs border-t border-slate-800 pt-1 mt-1 text-right">
                               <span>الصافي المطلوب للتوريد:</span>
-                              <span className="text-sky-600 font-black text-sm">
+                              <span className="text-sky-400 font-black text-sm">
                                 {fAmt(totalAmount)} ج.م
                               </span>
                             </div>
@@ -7448,17 +7242,17 @@ export default function MawridDashboard() {
                   })()}
 
                   {/* Submission and Action Panel */}
-                  <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                  <div className="flex items-center justify-end gap-2 border-t border-slate-800/60 pt-3">
                     <button
                       type="button"
                       onClick={() => setShowAddInvoiceModal(false)}
-                      className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                      className="bg-slate-800/40 hover:bg-slate-800 text-slate-300 border border-slate-700/50 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer transition-colors"
                     >
                       إلغاء وعودة
                     </button>
                     <button
                       type="submit"
-                      className="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5"
+                      className="bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5 transition-all shadow-md shadow-sky-600/10"
                     >
                       <span>تسجيل وحفظ الفاتورة</span>
                     </button>
@@ -8245,19 +8039,19 @@ export default function MawridDashboard() {
 
       {/* MODAL: EDIT SUPPLIER */}
       {editingSupplier && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800 max-h-[90vh] overflow-y-auto"
+            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/80 space-y-4 max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-950">
+            <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+              <h3 className="text-base font-bold text-white">
                 تعديل بيانات المورد
               </h3>
               <button
                 onClick={() => setEditingSupplier(null)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-slate-800/60 text-slate-450 hover:text-white transition-colors"
               >
                 <XCircle className="w-5 h-5" />
               </button>
@@ -8266,7 +8060,7 @@ export default function MawridDashboard() {
             <form onSubmit={handleUpdateSupplier} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     اسم المورد الكامل *
                   </label>
                   <input
@@ -8279,12 +8073,12 @@ export default function MawridDashboard() {
                         name: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-950 font-semibold placeholder:text-slate-400"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="م. محمد العربي"
                   />
                 </div>
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     اسم الشركة / المؤسسة *
                   </label>
                   <input
@@ -8297,7 +8091,7 @@ export default function MawridDashboard() {
                         company: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-[#f8fafc] text-slate-950 font-semibold placeholder:text-slate-400"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="مجموعة السويدي كابلات"
                   />
                 </div>
@@ -8305,7 +8099,7 @@ export default function MawridDashboard() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     رقم الهاتف التواصل *
                   </label>
                   <input
@@ -8318,12 +8112,12 @@ export default function MawridDashboard() {
                         phone: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-mono text-slate-950 font-semibold placeholder:text-slate-400"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="01012345678"
                   />
                 </div>
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     رقم الحساب البنكي / International IBAN *
                   </label>
                   <input
@@ -8336,14 +8130,14 @@ export default function MawridDashboard() {
                         bankAccount: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-[#f8fafc] font-mono text-[11px] text-slate-950 font-semibold placeholder:text-slate-400"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 font-mono text-[11px] text-white font-semibold placeholder:text-slate-400 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="EG000000000000000000000000000"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-slate-500 block mb-1">
+                <label className="text-slate-400 block mb-1">
                   ملاحظات وشروط إضافية
                 </label>
                 <textarea
@@ -8354,22 +8148,22 @@ export default function MawridDashboard() {
                       notes: e.target.value,
                     })
                   }
-                  className="w-full border border-slate-200 rounded-lg p-2 bg-slate-50 h-20 text-slate-950 font-semibold placeholder:text-slate-400"
+                  className="w-full border border-slate-850 rounded-lg p-2 bg-[#060a12]/85 h-20 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                   placeholder="أدخل أي ملاحظات حول الدفع أو السداد..."
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <div className="flex items-center justify-end gap-2 border-t border-slate-800/60 pt-3">
                 <button
                   type="button"
                   onClick={() => setEditingSupplier(null)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                  className="bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-slate-700/50 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer transition-colors"
                 >
                   إلغاء وعودة
                 </button>
                 <button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5"
+                  className="bg-[#10b981] hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5 transition-all"
                 >
                   <Save className="w-4 h-4" />
                   <span>حفظ التعديلات</span>
@@ -8382,20 +8176,20 @@ export default function MawridDashboard() {
 
       {/* MODAL: ADD CREDIT NOTE */}
       {showAddCreditNoteModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-800"
+            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/80 space-y-4 max-h-[95vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-955">
+            <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+              <h3 className="text-base font-bold text-white">
                 إضافة إشعار دائن جديد للمورد
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAddCreditNoteModal(false)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-slate-800/60 text-slate-450 hover:text-white transition-colors animate-pulse"
               >
                 <XCircle className="w-5 h-5" />
               </button>
@@ -8404,13 +8198,13 @@ export default function MawridDashboard() {
             <form onSubmit={handleAddCreditNote} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     اختر المورد المرتبط
                   </label>
                   <select
                     disabled
                     value={newCreditNote.supplierId}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-100 font-semibold text-slate-700 focus:outline-none cursor-not-allowed"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/60 font-semibold text-slate-500 focus:outline-none cursor-not-allowed"
                   >
                     {suppliers.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -8420,7 +8214,7 @@ export default function MawridDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     رقم الإشعار الدائن الصادر *
                   </label>
                   <input
@@ -8433,7 +8227,7 @@ export default function MawridDashboard() {
                         creditNoteNumber: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-bold text-slate-900"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 font-bold text-white focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="CN-2026-XYZ"
                   />
                 </div>
@@ -8441,7 +8235,7 @@ export default function MawridDashboard() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     تاريخ الاستحقاق المتوقع *
                   </label>
                   <input
@@ -8454,11 +8248,11 @@ export default function MawridDashboard() {
                         dueDate: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-semibold text-slate-900 font-mono"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 font-semibold text-white font-mono focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all cursor-pointer"
                   />
                 </div>
                 <div>
-                  <label className="text-slate-500 block mb-1">
+                  <label className="text-slate-400 block mb-1">
                     البيانات / مذكرات عامة
                   </label>
                   <input
@@ -8470,15 +8264,15 @@ export default function MawridDashboard() {
                         notes: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 text-slate-950 font-semibold"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="خصم ترويجي للمواد الخام الربع السنوي"
                   />
                 </div>
               </div>
 
               {/* Target Invoice Selection (Compulsory/Required) */}
-              <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 space-y-2">
-                <label className="text-slate-700 block font-bold text-xs">
+              <div className="bg-emerald-950/20 p-4 rounded-2xl border border-emerald-900/30 space-y-2">
+                <label className="text-emerald-400 block font-bold text-xs">
                   ربط وتحديد الفاتورة للخصم منها (إجباري) *
                 </label>
                 <select
@@ -8490,9 +8284,9 @@ export default function MawridDashboard() {
                       invoiceId: e.target.value,
                     })
                   }
-                  className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer text-xs"
+                  className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12] font-bold text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer text-xs"
                 >
-                  <option value="">
+                  <option className="bg-[#0e1726]" value="">
                     -- اختر الفاتورة غير المسددة للربط والخصم منها --
                   </option>
                   {invoices
@@ -8505,7 +8299,7 @@ export default function MawridDashboard() {
                       const remaining =
                         i.totalAmount - (i.creditNoteAmount || 0);
                       return (
-                        <option key={i.id} value={i.id}>
+                        <option className="bg-[#0e1726]" key={i.id} value={i.id}>
                           فاتورة رقم {i.invoiceNumber} (قيمة الفاتورة:{" "}
                           {fAmt(i.totalAmount)} ج.م | المتبقي للاستحقاق:{" "}
                           {fAmt(remaining)} ج.م)
@@ -8523,26 +8317,26 @@ export default function MawridDashboard() {
                       selectedInvoice.totalAmount -
                       (selectedInvoice.creditNoteAmount || 0);
                     return (
-                      <div className="bg-white p-3 rounded-xl border border-slate-200 mt-2 space-y-1 font-sans">
-                        <div className="flex justify-between text-slate-500 text-[11px]">
+                      <div className="bg-[#060a12]/80 p-3 rounded-xl border border-slate-800 mt-2 space-y-1 font-sans">
+                        <div className="flex justify-between text-slate-400 text-[11px]">
                           <span>قيمة الفاتورة المحددة الأصلية:</span>
-                          <span className="font-bold text-slate-700">
+                          <span className="font-bold text-slate-200 font-mono">
                             {fAmt(selectedInvoice.totalAmount)} ج.م
                           </span>
                         </div>
-                        <div className="flex justify-between text-slate-500 text-[11px]">
+                        <div className="flex justify-between text-slate-400 text-[11px]">
                           <span>الخصم المطبق مسبقاً بالإشعارات الدائنة:</span>
-                          <span className="font-bold text-amber-600">
+                          <span className="font-bold text-amber-500 font-mono">
                             {selectedInvoice.creditNoteAmount
                               ? `${fAmt(selectedInvoice.creditNoteAmount)} ج.م`
                               : "0.00 ج.م"}
                           </span>
                         </div>
-                        <div className="flex justify-between text-slate-800 text-[11px] font-bold border-t border-slate-100 pt-1 mt-1">
+                        <div className="flex justify-between text-slate-200 text-[11px] font-bold border-t border-slate-800 pt-1 mt-1">
                           <span>
                             الحد الأقصى المسموح به لقيمة الإشعار الدائن:
                           </span>
-                          <span className="text-emerald-700 font-black">
+                          <span className="text-emerald-400 font-black font-mono">
                             {fAmt(remaining)} ج.م
                           </span>
                         </div>
@@ -8556,7 +8350,7 @@ export default function MawridDashboard() {
                     ).length === 0
                   ) {
                     return (
-                      <div className="bg-rose-50 border border-rose-100 text-rose-700 p-3 rounded-xl text-center font-bold text-[11px]">
+                      <div className="bg-red-950/20 border border-red-900/30 text-rose-450 p-3 rounded-xl text-center font-bold text-[11px]">
                         ⚠️ لا توجد فواتير غير مسددة مسجلة لهذا المورد حالياً
                         للخصم منها. يرجى تسجيل فاتورة جديدة له أولاً.
                       </div>
@@ -8572,13 +8366,13 @@ export default function MawridDashboard() {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-slate-500 block font-bold">
+                  <label className="text-slate-300 block font-bold">
                     بنود الإشعار وقائمة التوريد الدائنة:
                   </label>
                   <button
                     type="button"
                     onClick={handleCNAddItemRow}
-                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center gap-1 cursor-pointer"
+                    className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold px-3 py-1.5 rounded-lg border border-emerald-500/20 flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>إضافة بند جديد</span>
@@ -8587,7 +8381,7 @@ export default function MawridDashboard() {
 
                 <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
                   {/* Item Column Headers */}
-                  <div className="flex items-center justify-between px-1 text-slate-500 font-bold mb-1 select-none text-[10px]">
+                  <div className="flex items-center justify-between px-1 text-slate-400 font-bold mb-1 select-none text-[10px]">
                     <div>التسلسل</div>
                     <div className="w-48 text-left pl-6">
                       القيمة الإجمالية للبند (ج.م) *
@@ -8597,9 +8391,9 @@ export default function MawridDashboard() {
                   {newCreditNote.items.map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between gap-3 bg-slate-50 p-2 rounded-lg border border-slate-150"
+                      className="flex items-center justify-between gap-3 bg-[#0e1726]/40 p-2 rounded-lg border border-slate-800/60"
                     >
-                      <span className="text-slate-600 text-xs font-bold font-mono">
+                      <span className="text-slate-300 text-xs font-bold font-mono">
                         البند #{index + 1}
                       </span>
                       <div className="flex items-center gap-2 flex-1 max-w-xs">
@@ -8620,16 +8414,16 @@ export default function MawridDashboard() {
                               handleCNUpdateItemRow(index, "name", "بند إشعار");
                             }
                           }}
-                          className="w-full border border-slate-200 rounded p-1 bg-white text-slate-900 font-mono text-left text-xs focus:ring-1 focus:ring-emerald-500"
+                          className="w-full border border-slate-800 rounded p-1.5 bg-[#060a12] text-white font-mono text-left text-xs focus:ring-1 focus:ring-emerald-500/30 outline-none"
                         />
-                        <span className="text-slate-400 text-[10px] font-bold">
+                        <span className="text-slate-450 text-[10px] font-bold">
                           ج.م
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleCNRemoveItemRow(index)}
-                        className="p-1 text-slate-400 hover:text-red-500 rounded cursor-pointer"
+                        className="p-1 text-slate-400 hover:text-red-400 rounded cursor-pointer hover:bg-red-500/10 transition-colors"
                         title="حذف هذا البند"
                       >
                         <XCircle className="w-4 h-4" />
@@ -8641,17 +8435,17 @@ export default function MawridDashboard() {
 
               {/* Attachment upload */}
               <div>
-                <label className="text-slate-500 block mb-1 font-bold">
+                <label className="text-slate-400 block mb-1 font-bold">
                   مرفق الإشعار الدائن (صورة أو ملف)
                 </label>
                 <div className="flex items-center gap-2">
-                  <label className="flex-1 flex items-center justify-between border border-dashed border-slate-300 hover:border-emerald-500 rounded-lg p-2 bg-slate-50 cursor-pointer transition-colors">
-                    <span className={`text-[11px] truncate max-w-[270px] ${cnAttachment ? "text-black font-bold" : "text-slate-500"}`}>
+                  <label className="flex-1 flex items-center justify-between border border-dashed border-slate-800 hover:border-emerald-500/50 rounded-lg p-2.5 bg-[#060a12]/80 cursor-pointer transition-colors">
+                    <span className={`text-[11px] truncate max-w-[270px] ${cnAttachment ? "text-emerald-400 font-bold" : "text-slate-500"}`}>
                       {cnAttachment
                         ? cnAttachment.name
                         : "اختر ملفاً لإرفاقه بالخصم..."}
                     </span>
-                    <span className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-[10px] font-bold">
+                    <span className="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded text-[10px] font-bold border border-emerald-500/20">
                       تصفح
                     </span>
                     <input
@@ -8665,7 +8459,7 @@ export default function MawridDashboard() {
                     <button
                       type="button"
                       onClick={() => setCnAttachment(null)}
-                      className="p-1.5 text-red-500 hover:bg-rose-50 rounded-lg cursor-pointer"
+                      className="p-1.5 text-red-400 hover:bg-rose-500/10 rounded-lg cursor-pointer transition-colors"
                       title="حذف المرفق"
                     >
                       <XCircle className="w-4.5 h-4.5" />
@@ -8675,11 +8469,11 @@ export default function MawridDashboard() {
               </div>
 
               {/* Total Display */}
-              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex justify-between items-center select-none text-slate-800">
-                <span className="text-emerald-800 font-bold">
+              <div className="bg-emerald-950/20 border border-emerald-900/30 rounded-xl p-3 flex justify-between items-center select-none text-white">
+                <span className="text-emerald-400 font-bold">
                   إجمالي قيمة الإشعار الدائن:
                 </span>
-                <span className="text-emerald-700 text-base font-black font-mono">
+                <span className="text-emerald-300 text-base font-black font-mono">
                   {fAmt(
                     newCreditNote.items.reduce(
                       (sum, item) => sum + item.quantity * item.price,
@@ -8690,17 +8484,17 @@ export default function MawridDashboard() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <div className="flex items-center justify-end gap-2 border-t border-slate-800/60 pt-3">
                 <button
                   type="button"
                   onClick={() => setShowAddCreditNoteModal(false)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer"
+                  className="bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-slate-700/50 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer transition-colors"
                 >
                   إلغاء وعودة
                 </button>
                 <button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer"
+                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer transition-colors"
                 >
                   تسجيل الإشعار الدائن
                 </button>
