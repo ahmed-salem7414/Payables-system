@@ -5039,7 +5039,7 @@ export default function MawridDashboard() {
                     <button
                       type="button"
                       onClick={handlePrintReport}
-                      className="bg-emerald-600 hover:bg-sky-550 active:bg-emerald-700 text-white font-bold text-[11px] h-[40px] px-5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 transition-colors duration-150 shadow-md hover:-translate-y-0.5 active:translate-y-0"
+                      className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-[11px] h-[40px] px-5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 transition-colors duration-150 shadow-md hover:-translate-y-0.5 active:translate-y-0"
                     >
                       <Printer className="w-4 h-4 text-white shrink-0" />
                       طباعة مباشرة / حفظ PDF
@@ -5557,7 +5557,7 @@ export default function MawridDashboard() {
                                           statusText === "تم السداد بتحويل بنكي"
                                         ) {
                                           badgeClass =
-                                            "bg-emerald-100 text-sky-800 border border-emerald-200";
+                                            "bg-teal-100 text-teal-800 border border-teal-200";
                                         } else if (
                                           statusText === "تم السداد بفوري" ||
                                           statusText === "تم السداد بشيك"
