@@ -639,7 +639,7 @@ export default function AuthHelper() {
             <div className="pt-2 space-y-3">
               <div className="text-center">
                 <p className="text-[11px] text-slate-400 font-semibold mb-2 flex items-center justify-center gap-1.5">
-                  <Navigation className="w-3.5 h-3.5 text-emerald-400" />
+                  <Navigation className="w-3.5 h-3.5 text-sky-400" />
                   <span>اضغط على أحد الخيارات أدناه بعد إضافة وتأكيد النطاقات:</span>
                 </p>
               </div>
@@ -648,10 +648,10 @@ export default function AuthHelper() {
                 <button
                   disabled={loading}
                   onClick={handleStartRedirectAuth}
-                  className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg transition-all duration-200 cursor-pointer text-xs"
+                  className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-sky-600 to-blue-700 hover:from-sky-500 hover:to-blue-600 active:scale-[0.98] text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg transition-all duration-200 cursor-pointer text-xs"
                 >
                   <span className="font-extrabold">الخيار 1: إقران مباشر بدون منبثقات</span>
-                  <span className="text-[10px] text-teal-100 font-normal opacity-90">موصى به في متصفحات الجوال وسفاري</span>
+                  <span className="text-[10px] text-sky-100 font-normal opacity-90">موصى به في متصفحات الجوال وسفاري</span>
                 </button>
 
                 <button

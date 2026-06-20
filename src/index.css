@@ -4,13 +4,29 @@
 @theme {
   --font-sans: "Cairo", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Custom palette matching the uploaded blue shades perfectly! */
+  --color-slate-50: #f0f9ff;
+  --color-slate-100: #e0f2fe;
+  --color-slate-200: #bae6fd;
+  --color-slate-300: #7dd3fc;
+  --color-slate-400: #38bdf8;
+  --color-slate-450: #0ea5e9;
+  --color-slate-500: #0284c7;
+  --color-slate-600: #0369a1;
+  --color-slate-650: #045281;
+  --color-slate-700: #075985;
+  --color-slate-800: #0c4a6e;
+  --color-slate-850: #0a1f3d;
+  --color-slate-900: #061226;
+  --color-slate-950: #030814;
 }
 
 html, body {
   font-family: var(--font-sans);
   direction: rtl;
   text-align: right;
-  background-color: #060a12; /* Sleek elegant clinical dark background */
+  background-color: #050c18; /* Elegant midnight blue/navy background */
   color: #f1f5f9;
 }
 
