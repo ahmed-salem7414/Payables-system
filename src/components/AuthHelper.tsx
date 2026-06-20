@@ -62,14 +62,34 @@ export default function AuthHelper() {
         }
       }
 
+      // Pre-process and normalize smart quotes and general characters
+      let extracted = cleaned
+        .replace(/[\u201c\u201d\u201e\u201f]/g, '"') // smart double quotes
+        .replace(/[\u2018\u2019\u201a\u201b]/g, '"') // smart single quotes
+        .replace(/'/g, '"'); // single quotes to double quotes
+
+      // Auto-repair missing commas before subsequent keys
+      extracted = extracted
+        .replace(/(")\s*\n\s*([\w"]+)\s*:/g, '",\n  $2:') // e.g. "val" \n key: -> "val", \n key:
+        .replace(/(')\s*\n\s*([\w"]+)\s*:/g, "',\n  $2:")
+        .replace(/(\d+)\s*\n\s*([\w"]+)\s*:/g, "$1,\n  $2:"); // e.g. 123 \n key: -> 123, \n key:
+
       // Convert standard JS object syntax to valid JSON by quoting unquoted keys
-      // and converting single quotes to double quotes, to be extra robust.
-      let jsonStr = cleaned
-        .replace(/'/g, '"') // Replace single quotes with double quotes
+      let jsonStr = extracted
         .replace(/(\w+)\s*:/g, '"$1":') // Quote unquoted keys
         .replace(/,\s*}/g, "}"); // Remove trailing commas
       
-      parsed = JSON.parse(jsonStr);
+      try {
+        parsed = JSON.parse(jsonStr);
+      } catch (err1) {
+        // Fallback: Use safe evaluation inside `new Function` if standard JSON parsing fails
+        try {
+          const safeEval = new Function(`return (${extracted});`);
+          parsed = safeEval();
+        } catch (err2) {
+          throw err1; // Throw original JSON parse error as it contains line/col info
+        }
+      }
 
       const requiredKeys = ["apiKey", "projectId", "authDomain", "appId"];
       const missingKeys = requiredKeys.filter(k => !parsed[k]);
@@ -508,7 +528,8 @@ export default function AuthHelper() {
                       </label>
                       <textarea
                         rows={7}
-                        className="w-full bg-slate-900 border-2 border-emerald-500/50 rounded-xl p-3 text-xs font-mono text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 focus:outline-none"
+                        dir="ltr"
+                        className="w-full bg-slate-900 border-2 border-emerald-500/50 rounded-xl p-3 text-xs font-mono text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 focus:outline-none text-left"
                         placeholder={`ألصق الكود هنا، مثال:
 {
   "apiKey": "AIzaSy...",
