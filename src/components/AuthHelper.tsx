@@ -253,9 +253,9 @@ export default function AuthHelper() {
   const isUnauthorizedDomainError = error === "unauthorized-domain" || lastAttemptTime > 0;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col items-center justify-center p-4 md:p-6 text-right font-sans selection:bg-sky-500/20" dir="rtl">
+    <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col items-center justify-center p-4 md:p-6 text-right font-sans selection:bg-emerald-500/20" dir="rtl">
       {/* Decorative gradient glowing spots */}
-      <div className="absolute top-10 right-10 w-96 h-96 bg-sky-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-10 right-10 w-96 h-96 bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-10 left-10 w-96 h-96 bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div className={`w-full max-w-2xl bg-[#0b1329]/90 border border-slate-800/90 p-6 md:p-8 rounded-3xl shadow-2xl relative z-10 backdrop-blur-md space-y-6 transition-all duration-300`}>
@@ -263,12 +263,12 @@ export default function AuthHelper() {
         {/* Header Icon */}
         <div className="flex justify-center">
           <div className="relative">
-            <div className={`absolute inset-0 ${isUnauthorizedDomainError ? "bg-amber-500/20" : "bg-sky-500/20"} rounded-full blur-xl animate-pulse`}></div>
+            <div className={`absolute inset-0 ${isUnauthorizedDomainError ? "bg-amber-500/20" : "bg-emerald-500/20"} rounded-full blur-xl animate-pulse`}></div>
             <div className="relative bg-slate-900 border border-slate-700/60 p-5 rounded-2xl flex items-center justify-center">
               {isUnauthorizedDomainError ? (
                 <AlertTriangle className="w-10 h-10 text-amber-400 animate-bounce" />
               ) : (
-                <Cloud className="w-10 h-10 text-sky-400" />
+                <Cloud className="w-10 h-10 text-emerald-400" />
               )}
             </div>
           </div>
@@ -276,7 +276,7 @@ export default function AuthHelper() {
 
         {/* Title and Intro */}
         <div className="text-center space-y-2">
-          <span className="text-[10px] font-bold tracking-widest text-sky-400 uppercase bg-sky-500/10 border border-sky-500/20 px-2.5 py-1 rounded-full">بوابة تفعيل ومزامنة مَورِد</span>
+          <span className="text-[10px] font-bold tracking-widest text-emerald-400 uppercase bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">بوابة تفعيل ومزامنة مَورِد</span>
           <h2 className="text-xl font-extrabold text-white tracking-tight pt-1">
             "حدث خطأ أثناء الربط: Error (auth/unauthorized-domain)"
           </h2>
@@ -338,13 +338,13 @@ export default function AuthHelper() {
             {/* Quick Steps */}
             <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 md:p-5 text-xs text-slate-300 space-y-3.5">
               <h3 className="font-bold text-white text-sm border-b border-slate-800/80 pb-2 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-sky-400" />
+                <Sparkles className="w-4 h-4 text-emerald-400" />
                 <span>كيفية إضافة النطاقات في Firebase الآن:</span>
               </h3>
               
               <ol className="list-decimal list-inside space-y-2 leading-relaxed text-right text-slate-300">
                 <li>
-                  املأ لوحة تحكم مشروعك <span className="text-sky-400 font-bold font-mono">vibrant-continuity-5fbwx</span> بزيارة موقع <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-sky-400 underline hover:text-sky-300 font-bold">Firebase Console ↗</a>
+                  املأ لوحة تحكم مشروعك <span className="text-emerald-400 font-bold font-mono">vibrant-continuity-5fbwx</span> بزيارة موقع <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-emerald-400 underline hover:text-emerald-300 font-bold">Firebase Console ↗</a>
                 </li>
                 <li>
                   اختر قسم <span className="text-white font-bold">Authentication</span> ثم اضغط تبويب <span className="text-white font-bold">Settings (الإعدادات)</span> في الأعلى.
@@ -353,7 +353,7 @@ export default function AuthHelper() {
                   من القائمة الجانبية للإعدادات، اختر <span className="text-white font-bold">Authorized domains</span>.
                 </li>
                 <li>
-                  اضغط على زر <span className="text-sky-400 font-bold">Add domain (إضافة نطاق)</span> وألصق النطاقين التاليين (انسخ واحداً تلو الآخر عبر الأزرار):
+                  اضغط على زر <span className="text-emerald-400 font-bold">Add domain (إضافة نطاق)</span> وألصق النطاقين التاليين (انسخ واحداً تلو الآخر عبر الأزرار):
                 </li>
               </ol>
 
@@ -362,12 +362,12 @@ export default function AuthHelper() {
                 {/* Dev domain */}
                 <div className="flex items-center justify-between bg-slate-950/90 border border-slate-800 p-2.5 rounded-xl">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded font-mono">1</span>
+                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono">1</span>
                     <span className="font-mono text-[11px] select-all break-all text-slate-200">{devDomain}</span>
                   </div>
                   <button 
                     onClick={() => copyToClipboard(devDomain)}
-                    className="p-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-sky-400 rounded-lg transition-all cursor-pointer flex items-center gap-1"
+                    className="p-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 rounded-lg transition-all cursor-pointer flex items-center gap-1"
                     title="نسخ النطاق"
                   >
                     {copiedDomain === devDomain ? (
@@ -387,12 +387,12 @@ export default function AuthHelper() {
                 {/* Pre domain */}
                 <div className="flex items-center justify-between bg-slate-950/90 border border-slate-800 p-2.5 rounded-xl">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded font-mono">2</span>
+                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono">2</span>
                     <span className="font-mono text-[11px] select-all break-all text-slate-200">{preDomain}</span>
                   </div>
                   <button 
                     onClick={() => copyToClipboard(preDomain)}
-                    className="p-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-sky-400 rounded-lg transition-all cursor-pointer flex items-center gap-1"
+                    className="p-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 rounded-lg transition-all cursor-pointer flex items-center gap-1"
                     title="نسخ النطاق"
                   >
                     {copiedDomain === preDomain ? (
@@ -412,20 +412,20 @@ export default function AuthHelper() {
             </div>
 
             {/* CACHING WORKAROUNDS AND SOLUTIONS */}
-            <div className="bg-sky-500/10 border border-sky-500/20 rounded-2xl p-4 md:p-5 space-y-3">
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 md:p-5 space-y-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-sky-400 shrink-0" />
-                <h4 className="font-extrabold text-sm text-sky-300">💡 حل مشكلة التخزين المؤقت (الحل السحري الفوري):</h4>
+                <Sparkles className="w-5 h-5 text-emerald-400 shrink-0" />
+                <h4 className="font-extrabold text-sm text-emerald-300">💡 حل مشكلة التخزين المؤقت (الحل السحري الفوري):</h4>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
                 يقوم متصفح Google Chrome ومتصفحات الويب الأخرى بحفظ حالة التحقق من الهوية القديمة (الكاش) في ذاكرة المتصفح لمدة تصل إلى نصف ساعة. لذلك، حتى بعد إضافتك النطاقات بشكل صحيح، قد يستمر المتصفح في إخبارك بنفس الخطأ. لترقية والالتفاف على هذا وبدء المزامنة فوراً:
               </p>
               
-              <div className="bg-slate-950/50 p-3.5 rounded-xl border border-sky-500/10 space-y-2">
+              <div className="bg-slate-950/50 p-3.5 rounded-xl border border-emerald-500/10 space-y-2">
                 <p className="text-xs font-bold text-white">افتح صفحة البرنامج في وضع التصفح المتخفي (Incognito / Private Window):</p>
                 <div className="text-[11px] text-slate-400 space-y-1.5 leading-relaxed">
                   <p>1. انسخ رابط صفحة "مورِد" الرئيسية في متصفحك.</p>
-                  <p>2. افتح نافذة تصفح متخفية جديدة (افتح القائمة واضغط على <span className="text-sky-300 font-bold">New Incognito Window</span>).</p>
+                  <p>2. افتح نافذة تصفح متخفية جديدة (افتح القائمة واضغط على <span className="text-emerald-300 font-bold">New Incognito Window</span>).</p>
                   <p>3. ألصق الرابط وسجل الدخول هناك ثم اضغط على زر ربط حساب جوجل وسيعمل معك فوراً في ثانية واحدة!</p>
                 </div>
               </div>
@@ -461,32 +461,32 @@ export default function AuthHelper() {
               {showConfigEditor && (
                 <div className="space-y-3.5 animate-fadeIn">
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    يستخدم هذا التطبيق حالياً معرّف مشروع افتراضي هو: <span className="font-mono font-bold text-sky-400 bg-sky-500/5 px-1.5 py-0.5 rounded border border-sky-500/10">{activeFirebaseConfig.projectId}</span>.
+                    يستخدم هذا التطبيق حالياً معرّف مشروع افتراضي هو: <span className="font-mono font-bold text-emerald-400 bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/10">{activeFirebaseConfig.projectId}</span>.
                     <br />
                     إذا كانت لوحة تحكم Firebase التي أضفت إليها النطاق تملك معرّف مشروع مختلفاً، فهذا هو السبب الرئيسي لعدم المزامنة! يمكنك ربط التطبيق بمشروعك الخاص مباشرة وإزالة الخطأ للأبد.
                   </p>
 
                   <div className="bg-slate-950/80 p-3.5 rounded-xl border border-indigo-500/10 space-y-3">
                     <div className="bg-[#0c162d] border border-slate-800 p-4 rounded-xl space-y-4 font-sans text-xs">
-                      <span className="font-bold text-sky-400 block border-b border-slate-800 pb-2">📂 دليل خطوة بخطوة بالصور التعبيرية للوصول للكود:</span>
+                      <span className="font-bold text-emerald-400 block border-b border-slate-800 pb-2">📂 دليل خطوة بخطوة بالصور التعبيرية للوصول للكود:</span>
                       
                       <div className="space-y-3 leading-relaxed text-slate-300">
                         <div className="flex gap-2 items-start">
-                          <span className="w-5 h-5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">1</span>
+                          <span className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">1</span>
                           <p>
-                            افتح منصة <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-sky-400 font-bold underline hover:text-sky-300">Firebase Console ↗</a> واضغط على <strong>مشروعك</strong>.
+                            افتح منصة <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-emerald-400 font-bold underline hover:text-emerald-300">Firebase Console ↗</a> واضغط على <strong>مشروعك</strong>.
                           </p>
                         </div>
 
                         <div className="flex gap-2 items-start">
-                          <span className="w-5 h-5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">2</span>
+                          <span className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">2</span>
                           <p>
                             في القائمة الجانبية باليمين/اليسار، اضغط على أيقونة <strong>الترس (Gear) ⚙️</strong> بجانب كلمة "Project Overview" ثم اختر <strong>Project settings (إعدادات المشروع)</strong>.
                           </p>
                         </div>
 
                         <div className="flex gap-2 items-start">
-                          <span className="w-5 h-5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">3</span>
+                          <span className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">3</span>
                           <div>
                             <p>
                               تأكد أنك في التبويب الأول <strong>General (عام)</strong>، ثم انزل لآخر الصفحة تماماً حتى تجد قسماً يسمى <strong>Your apps (تطبيقاتك)</strong>.
@@ -494,7 +494,7 @@ export default function AuthHelper() {
                             <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[11px] text-amber-300 space-y-1.5 list-none font-sans">
                               <p className="font-bold flex items-center gap-1">⚠️ إذا رأيت رسالة "There are no apps in your project" (مشروعك لا يحتوي على أي تطبيقات):</p>
                               <ul className="list-decimal list-inside space-y-1 pr-1 text-slate-350">
-                                <li>اضغط على أيقونة <strong>الويب <code className="bg-slate-900 px-1.5 py-0.5 rounded text-sky-400 font-mono font-bold">&lt;/&gt;</code></strong> (الدائرة الثالثة في المنتصف التي تظهر في الصورة لديك).</li>
+                                <li>اضغط على أيقونة <strong>الويب <code className="bg-slate-900 px-1.5 py-0.5 rounded text-emerald-400 font-mono font-bold">&lt;/&gt;</code></strong> (الدائرة الثالثة في المنتصف التي تظهر في الصورة لديك).</li>
                                 <li>اكتب اسماً لتطبيقك الجديد (مثلاً: <code className="bg-slate-900 px-1.5 py-0.5 rounded text-pink-400 font-mono">mawrid-app</code>) ثم اضغط على زر <strong>Register app</strong> الأزرق.</li>
                                 <li>ستظهر لك شاشة الكود فوراً وبها الكائن الذي تبحث عنه!</li>
                               </ul>
@@ -503,7 +503,7 @@ export default function AuthHelper() {
                         </div>
 
                         <div className="flex gap-2 items-start">
-                          <span className="w-5 h-5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">4</span>
+                          <span className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">4</span>
                           <p>
                             اضغط على خيار <strong>Config</strong> أو حدد الدائرة المسماة <strong>NPM</strong>، ستظهر لك كود وستجد داخله كائن الإعدادات بالشكل التالي تماماً:
                           </p>
@@ -511,7 +511,7 @@ export default function AuthHelper() {
 
                         <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-400 space-y-1 block max-w-full overflow-x-auto text-left" dir="ltr">
                           <p className="text-slate-500">// انسخ الكود الذي يشبه هذا وضعه في المربع بالأسفل:</p>
-                          <p><span className="text-sky-400">const</span> <span className="text-pink-400">firebaseConfig</span> = {"{"}</p>
+                          <p><span className="text-emerald-400">const</span> <span className="text-pink-400">firebaseConfig</span> = {"{"}</p>
                           <p>&nbsp;&nbsp;apiKey: <span className="text-emerald-400">"AIzaSy..."</span>,</p>
                           <p>&nbsp;&nbsp;authDomain: <span className="text-emerald-400">"..."</span>,</p>
                           <p>&nbsp;&nbsp;projectId: <span className="text-emerald-400">"..."</span>,</p>
@@ -594,7 +594,7 @@ export default function AuthHelper() {
                       <div className="flex gap-2 items-start">
                         <span className="w-4 h-4 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center justify-center font-bold font-mono shrink-0">1</span>
                         <p>
-                          افتح منصة <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-sky-400 font-bold underline hover:text-sky-300">Firebase Console ↗</a> واضغط على مشروعك.
+                          افتح منصة <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-emerald-400 font-bold underline hover:text-emerald-300">Firebase Console ↗</a> واضغط على مشروعك.
                         </p>
                       </div>
 
@@ -639,7 +639,7 @@ export default function AuthHelper() {
             <div className="pt-2 space-y-3">
               <div className="text-center">
                 <p className="text-[11px] text-slate-400 font-semibold mb-2 flex items-center justify-center gap-1.5">
-                  <Navigation className="w-3.5 h-3.5 text-sky-400" />
+                  <Navigation className="w-3.5 h-3.5 text-emerald-400" />
                   <span>اضغط على أحد الخيارات أدناه بعد إضافة وتأكيد النطاقات:</span>
                 </p>
               </div>
@@ -648,25 +648,25 @@ export default function AuthHelper() {
                 <button
                   disabled={loading}
                   onClick={handleStartRedirectAuth}
-                  className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-sky-600 to-blue-700 hover:from-sky-500 hover:to-blue-600 active:scale-[0.98] text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg transition-all duration-200 cursor-pointer text-xs"
+                  className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-extrabold pb-0.5 active:scale-[0.98] text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg transition-all duration-200 cursor-pointer text-xs"
                 >
                   <span className="font-extrabold">الخيار 1: إقران مباشر بدون منبثقات</span>
-                  <span className="text-[10px] text-sky-100 font-normal opacity-90">موصى به في متصفحات الجوال وسفاري</span>
+                  <span className="text-[10px] text-teal-100 font-normal opacity-90">موصى به في متصفحات الجوال وسفاري</span>
                 </button>
 
                 <button
                   disabled={loading}
                   onClick={handleStartPopupAuth}
-                  className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 active:scale-[0.98] text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg transition-all duration-200 cursor-pointer text-xs"
+                  className="w-full flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-lg transition-all duration-200 cursor-pointer text-xs"
                 >
                   <span className="font-extrabold">الخيار 2: استخدام النافذة المنبثقة</span>
-                  <span className="text-[10px] text-sky-100 font-normal opacity-90">دخول سريع عبر نافذة منفصلة</span>
+                  <span className="text-[10px] text-teal-100 font-normal opacity-90">دخول سريع عبر نافذة منفصلة</span>
                 </button>
               </div>
 
               {loading && (
-                <div className="flex items-center justify-center gap-2 text-xs text-sky-400 py-2">
-                  <div className="w-4 h-4 border-2 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex items-center justify-center gap-2 text-xs text-emerald-400 py-2">
+                  <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
                   <span>يجري الاتصال والتحقق مع خوادم جوجل...</span>
                 </div>
               )}
