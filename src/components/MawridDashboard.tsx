@@ -5780,38 +5780,211 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
-              {/* Google Drive Cloud Backup Section - DISABLED PER USER INTENT */}
+              {/* Google Drive Cloud Backup Section - ACTIVE & RE-ENABLED */}
               <div className="bg-[#0f172a]/40 border border-slate-800 p-6 rounded-2xl space-y-4 text-right relative overflow-hidden animate-fadeIn" dir="rtl">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-slate-500/5 rounded-full blur-[80px] pointer-events-none"></div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold tracking-wider text-amber-500 uppercase bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full animate-pulse">
-                      الحالة: تم إلغاء وتعطيل المزامنة وبوابة المزامنة مع Google Drive
+                    <span className="text-[10px] font-bold tracking-wider text-emerald-400 uppercase bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                      {gdriveUser ? "الحالة: متصل بجوجل درايف" : "الحالة: غير متصل"}
                     </span>
-                    <h4 className="font-extrabold text-slate-300 text-sm flex items-center gap-2 pt-1 font-sans">
-                      <Cloud className="w-5 h-5 text-slate-500" />
-                      النسخ السحابي عبر Google Drive الآمن (ملغي ومعطل نهائياً)
+                    <h4 className="font-extrabold text-white text-sm flex items-center gap-2 pt-1 font-sans">
+                      <Cloud className="w-5 h-5 text-sky-400" />
+                      النسخ السحابي عبر Google Drive الآمن
                     </h4>
-                    <p className="text-xs text-slate-400 leading-relaxed max-w-2xl font-sans">
-                      لحماية أمان ومستقريّة حساباتك من انقطاع واجهة الاتصالات أو قيود متصفحات الويب المانعة للنوافذ المنبثقة من جوجل، تم إلغاء وتعطيل جميع إعدادات النسخ السحابي تماماً وبأمان. الآن، جميع البيانات تُحفظ مشفرة في جهازك المحلي لتوفير خصوصية منيعة بنسبة 100%.
+                    <p className="text-xs text-slate-450 leading-relaxed max-w-xl font-sans">
+                      احمِ حساباتك من الفقدان بمزامنة قاعدة البيانات مع حسابك الشخصي لـ Google Drive في بيئة سحابية معتمدة وآمنة بالكامل.
                     </p>
                   </div>
+
+                  {!gdriveUser ? (
+                    <button
+                      onClick={handleGoogleSignIn}
+                      disabled={isSignDriveLoading}
+                      className="bg-white hover:bg-slate-50 text-slate-900 font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 border border-slate-200"
+                    >
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 48 48">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.78 17.74 9.5 24 9.5z"></path>
+                        <path fill="#4285F4" d="M46.5 24c0-1.55-.15-3.24-.47-4.77H24v9.03h12.75c-.55 2.97-2.22 5.5-4.77 7.2l7.35 5.69C43.62 36.88 46.5 31.05 46.5 24z"></path>
+                        <path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"></path>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.35-5.69c-2.07 1.39-4.74 2.25-8.54 2.25-7.1 0-13.11-4.79-15.26-11.23l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                      </svg>
+                      {isSignDriveLoading ? "جاري الاتصال بجوجل..." : "ربط حساب Google Drive"}
+                    </button>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto">
+                      <span className="text-emerald-350 text-xs font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-sans">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        {gdriveUser.email}
+                      </span>
+                      <button
+                        onClick={handleGoogleSignOut}
+                        className="text-slate-400 hover:text-rose-400 bg-slate-800 hover:bg-rose-950/20 border border-slate-700 hover:border-rose-500/30 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                      >
+                        إلغاء الربط
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                <div className="p-4 bg-slate-900/50 border border-slate-800/80 rounded-xl space-y-2.5">
-                  <strong className="text-xs text-slate-205 block font-bold font-sans">💡 كيف تحفظ حساباتك وفواتيرك يدويًا بأمان تام وسرعة فائقة؟</strong>
-                  <ul className="text-[11px] text-slate-400 space-y-2 list-disc list-inside leading-relaxed pr-1 font-sans">
-                    <li>
-                      يمكنك استخدام ميزة <span className="text-emerald-400 font-bold">"تصدير قاعدة البيانات (JSON)"</span> المتوفرة في الأعلى لتحميل نسخة مشفرة كاملة بضغطة زر وحفظها على حاسوبك أو هاتفك.
-                    </li>
-                    <li>
-                      إذا أردت الانتقال لجهاز آخر أو استعادة بياناتك في أي وقت، فقط اضغط على زر <span className="text-sky-400 font-bold">"استيراد قاعدة بيانات (JSON)"</span> وارفع الملف ليعود كل شيء كما كان في جزء من الثانية.
-                    </li>
-                    <li>
-                      يمكنك أيضاً أخذ <span className="text-indigo-400 font-semibold">"نقاط استعادة سريعة يدوية"</span> عبر لقطات التايم لاين بالأسفل للاحتفاظ بنسخ سريعة بالتاريخ والوقت والرجوع لها عند الحاجة.
-                    </li>
-                  </ul>
-                </div>
+                {gdriveUser && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="space-y-6 overflow-hidden"
+                  >
+                    {/* Status Alert for Background Backup */}
+                    {isSilentBackupRunning && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs p-3 rounded-xl flex items-center gap-2 shrink-0 justify-start"
+                      >
+                        <span className="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
+                        <span>جاري إرسال نسخة احتياطية سحابية تلقائية وصامتة إلى Google Drive حالياً...</span>
+                      </motion.div>
+                    )}
+
+                    {/* WhatsApp-Like Backup Box */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Section 1: Last Backup Info */}
+                      <div className="bg-[#0a0f1d] p-4 rounded-xl border border-slate-800/80 space-y-4">
+                        <h5 className="text-[11px] font-bold text-sky-400 uppercase tracking-wider pb-2 border-b border-slate-800">
+                          آخر نسخة احتياطية (Google Drive)
+                        </h5>
+                        
+                        <div className="space-y-2 text-slate-350 text-xs text-right">
+                          <p className="flex justify-between items-center gap-2">
+                            <span className="text-slate-450">النسخة السحابية:</span>
+                            <span className="font-bold text-white font-mono">
+                              {lastBackupTime ? new Date(lastBackupTime).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" }) : "أبداً"}
+                            </span>
+                          </p>
+                          <p className="flex justify-between items-center gap-2">
+                            <span className="text-slate-450">حجم قاعدة البيانات:</span>
+                            <span className="font-bold text-white font-mono">
+                              {(() => {
+                                try {
+                                  return (JSON.stringify({suppliers, invoices, payments, backups, creditNotes, supplierCategories, warehouses, linkedBanks, safeBalance}).length / 1024).toFixed(1) + " KB";
+                                } catch (_) {
+                                  return "0.0 KB";
+                                }
+                              })()}
+                            </span>
+                          </p>
+                        </div>
+
+                        <div className="pt-2">
+                          <button
+                            onClick={handleUploadBackupToDrive}
+                            disabled={isDriveLoading}
+                            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs cursor-pointer select-none transition-all shadow-sm shadow-emerald-950"
+                          >
+                            <CloudLightning className="w-4 h-4 text-emerald-200" />
+                            {isDriveLoading ? "جاري الحفظ والرفع..." : "إجراء نسخ احتياطي سحابي الآن"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Section 2: Drive Settings */}
+                      <div className="bg-[#0a0f1d] p-4 rounded-xl border border-slate-800/80 space-y-4">
+                        <h5 className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider pb-2 border-b border-slate-800">
+                          إعدادات حساب Google Drive
+                        </h5>
+
+                        <div className="space-y-4 text-xs font-sans">
+                          {/* Frequency Rule Selector */}
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-slate-450 block">النسخ الاحتياطي التلقائي:</span>
+                            <select
+                              value={autoBackupFreq}
+                              onChange={(e) => {
+                                const freq = e.target.value;
+                                setAutoBackupFreq(freq);
+                                localStorage.setItem("mawrid_auto_backup_freq", freq);
+                                showToast(`تم ضبط تكرار النسخ التلقائي إلى: ${freq === "daily" ? "يومياً" : freq === "weekly" ? "أسبوعياً" : freq === "monthly" ? "شهرياً" : "معطل"}`, "success");
+                              }}
+                              className="bg-[#0c1626] border border-slate-700 hover:border-slate-600 focus:outline-none rounded-lg px-2 py-1.5 text-xs text-white cursor-pointer select-none"
+                            >
+                              <option value="daily">يومياً (Daily)</option>
+                              <option value="weekly">أسبوعياً (Weekly)</option>
+                              <option value="monthly">شهرياً (Monthly)</option>
+                              <option value="off">أبداً / معطل (Never)</option>
+                            </select>
+                          </div>
+
+                          {/* Account Link */}
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-slate-450">الحساب المرتبط:</span>
+                            <span className="text-slate-200 font-mono text-[11px] font-bold truncate max-w-[160px] sm:max-w-xs">{gdriveUser?.email}</span>
+                          </div>
+
+                          {/* Over Network Setting Indicator */}
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-slate-450">النسخ الاحتياطي عبر:</span>
+                            <span className="text-slate-400 text-[11px]">الواي فاي وبيانات الأجهزة (الكل)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Old Backups File Manager */}
+                    <div className="space-y-2 pt-2 border-t border-slate-800/50">
+                      <span className="text-[11px] font-bold text-slate-400 block uppercase tracking-wider font-sans">
+                        قائمة النسخ السحابية السابقة المتوفرة للاستعادة أو الإدارة:
+                      </span>
+
+                      {isDriveLoading && driveBackups.length === 0 ? (
+                        <div className="text-center py-4 text-slate-400 text-xs animate-pulse font-sans">
+                          جاري جلب قائمة الملفات من Google Drive...
+                        </div>
+                      ) : driveBackups.length === 0 ? (
+                        <div className="text-center py-4 text-slate-500 text-xs italic bg-[#0f172a] rounded-lg border border-dashed border-slate-800 font-sans">
+                          لا توجد أي نسخ احتياطية مرفوعة سحابياً من هذا التطبيق حتى الآن.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-56 overflow-y-auto pr-1">
+                          {driveBackups.map((file) => (
+                            <div
+                              key={file.id}
+                              className="flex items-center justify-between p-3 bg-slate-900/50 border border-slate-800 hover:border-slate-700 rounded-xl transition-colors gap-3"
+                            >
+                              <div className="text-right truncate flex-1">
+                                <span className="text-white text-xs font-bold block truncate max-w-[200px] sm:max-w-xs font-mono" title={file.name}>
+                                  {file.name}
+                                </span>
+                                <span className="text-[10px] text-slate-500 block font-mono mt-0.5">
+                                  {new Date(file.createdTime).toLocaleString("ar")} | {(Number(file.size || 0) / 1024).toFixed(1)} KB
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRestoreFromDriveFile(file.id, file.name)}
+                                  disabled={isDriveLoading}
+                                  className="text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-600 border border-emerald-500/20 hover:border-emerald-500 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer font-sans"
+                                  title="استعادة قاعدة البيانات بالكامل من هذا الملف"
+                                >
+                                  استعادة
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteDriveFile(file.id, file.name)}
+                                  disabled={isDriveLoading}
+                                  className="text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 hover:border-rose-500 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer font-sans"
+                                  title="حذف هذا الملف السحابي نهائياً"
+                                >
+                                  حذف
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
               </div>
 
               {/* Automatic Backup state indicator */}
