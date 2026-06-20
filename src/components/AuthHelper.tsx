@@ -570,11 +570,68 @@ export default function AuthHelper() {
 
             {/* Error Indicator (If any) */}
             {error && error !== "unauthorized-domain" && (
-              <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 text-xs text-rose-300 space-y-1">
-                <p className="font-bold text-rose-400">حدث خطأ آخر أثناء تسجيل الدخول:</p>
-                <p className="font-mono bg-rose-950/20 p-2 rounded-lg border border-rose-500/10 select-all break-all">
-                  {error}
-                </p>
+              <div className="space-y-4">
+                <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 text-xs text-rose-300 space-y-1">
+                  <p className="font-bold text-rose-400">حدث خطأ آخر أثناء تسجيل الدخول:</p>
+                  <p className="font-mono bg-rose-950/20 p-2 rounded-lg border border-rose-500/10 select-all break-all text-left" dir="ltr">
+                    {error}
+                  </p>
+                </div>
+
+                {/* Specific guide for "auth/configuration-not-found" */}
+                {String(error).toLowerCase().includes("configuration-not-found") && (
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 md:p-5 space-y-4 text-right" dir="rtl">
+                    <div className="flex items-center gap-2 border-b border-amber-500/20 pb-2">
+                      <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+                      <h4 className="font-extrabold text-sm text-amber-300">💡 الحل الفوري لخطأ "Configuration-not-found":</h4>
+                    </div>
+                    
+                    <p className="text-xs text-slate-200 leading-relaxed font-sans">
+                      هذا الخطأ يعني أنك لم تقم بتفعيل <strong>موفر تسجيل الدخول عبر Google (Google Sign-In)</strong> في منصة Firebase لمشروعك حتى الآن. لتفعيله في دقيقة واحدة، اتبع الخطوات التالية:
+                    </p>
+
+                    <div className="space-y-3 leading-relaxed text-[11px] text-slate-300">
+                      <div className="flex gap-2 items-start">
+                        <span className="w-4 h-4 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center justify-center font-bold font-mono shrink-0">1</span>
+                        <p>
+                          افتح منصة <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-sky-400 font-bold underline hover:text-sky-300">Firebase Console ↗</a> واضغط على مشروعك.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2 items-start">
+                        <span className="w-4 h-4 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center justify-center font-bold font-mono shrink-0">2</span>
+                        <p>
+                          من القائمة الجانبية، اضغط على <strong>Build (بناء)</strong> ثم اختر <strong>Authentication</strong>.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2 items-start">
+                        <span className="w-4 h-4 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center justify-center font-bold font-mono shrink-0">3</span>
+                        <p>
+                          اضغط على تبويب <strong>Sign-in method (طريقة تسجيل الدخول)</strong> من التبويبات بالأعلى.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2 items-start">
+                        <span className="w-4 h-4 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center justify-center font-bold font-mono shrink-0">4</span>
+                        <p>
+                          اضغط على زر <strong>Add new provider (إضافة موفر جديد)</strong>، ثم اختر موفّر <strong>Google</strong> من القائمة.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2 items-start">
+                        <span className="w-4 h-4 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center justify-center font-bold font-mono shrink-0">5</span>
+                        <p>
+                          قم بتفعيل الخيار (تغيير المفتاح بالأعلى إلى <strong>Enable</strong>)، ثم اختر <strong>البريد الإلكتروني للدعم (Support email)</strong> الخاص بك من القائمة المنسدلة، واضغط على زر <strong>Save (حفظ)</strong> الأزرق بالأسفل.
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-emerald-400 bg-emerald-500/5 p-2 rounded-lg border border-emerald-500/10 font-bold text-center">
+                      ✅ بعد الضغط على "Save" المباشر، ارجع هنا واضغط على أزرار تسجيل الدخول وسيعمل معك فوراً بنجاح!
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
