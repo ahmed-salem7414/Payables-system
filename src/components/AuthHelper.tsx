@@ -483,9 +483,19 @@ export default function AuthHelper() {
 
                         <div className="flex gap-2 items-start">
                           <span className="w-5 h-5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">3</span>
-                          <p>
-                            تأكد أنك في التبويب الأول <strong>General (عام)</strong>، ثم انزل لآخر الصفحة تماماً حتى تجد قسماً يسمى <strong>Your apps (تطبيقاتك)</strong>.
-                          </p>
+                          <div>
+                            <p>
+                              تأكد أنك في التبويب الأول <strong>General (عام)</strong>، ثم انزل لآخر الصفحة تماماً حتى تجد قسماً يسمى <strong>Your apps (تطبيقاتك)</strong>.
+                            </p>
+                            <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[11px] text-amber-300 space-y-1.5 list-none font-sans">
+                              <p className="font-bold flex items-center gap-1">⚠️ إذا رأيت رسالة "There are no apps in your project" (مشروعك لا يحتوي على أي تطبيقات):</p>
+                              <ul className="list-decimal list-inside space-y-1 pr-1 text-slate-350">
+                                <li>اضغط على أيقونة <strong>الويب <code className="bg-slate-900 px-1.5 py-0.5 rounded text-sky-400 font-mono font-bold">&lt;/&gt;</code></strong> (الدائرة الثالثة في المنتصف التي تظهر في الصورة لديك).</li>
+                                <li>اكتب اسماً لتطبيقك الجديد (مثلاً: <code className="bg-slate-900 px-1.5 py-0.5 rounded text-pink-400 font-mono">mawrid-app</code>) ثم اضغط على زر <strong>Register app</strong> الأزرق.</li>
+                                <li>ستظهر لك شاشة الكود فوراً وبها الكائن الذي تبحث عنه!</li>
+                              </ul>
+                            </div>
+                          </div>
                         </div>
 
                         <div className="flex gap-2 items-start">
