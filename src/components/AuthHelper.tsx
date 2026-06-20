@@ -447,22 +447,6 @@ export default function AuthHelper() {
                   </p>
 
                   <div className="bg-slate-950/80 p-3.5 rounded-xl border border-indigo-500/10 space-y-3">
-                    <label className="block text-xs font-bold text-slate-200">
-                      ألصق كود تهيئة Firebase المشروع الخاص بك (JSON):
-                    </label>
-                    <textarea
-                      rows={5}
-                      className="w-full bg-slate-900 border border-slate-700/60 rounded-lg p-2.5 text-[11px] font-mono text-slate-200 placeholder-slate-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                      placeholder={`{
-  "apiKey": "AIzaSy...",
-  "authDomain": "...",
-  "projectId": "...",
-  "appId": "..."
-}`}
-                      value={configText}
-                      onChange={(e) => setConfigText(e.target.value)}
-                    />
-                    
                     <div className="bg-[#0c162d] border border-slate-800 p-4 rounded-xl space-y-4 font-sans text-xs">
                       <span className="font-bold text-sky-400 block border-b border-slate-800 pb-2">📂 دليل خطوة بخطوة بالصور التعبيرية للوصول للكود:</span>
                       
@@ -516,6 +500,25 @@ export default function AuthHelper() {
                           <p>{"};"}</p>
                         </div>
                       </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2">
+                      <label className="block text-xs font-black text-emerald-400 flex items-center gap-1.5">
+                        <span>✍️ ألصق الكود المنسوخ هنا في هذا المربع (المستطيل):</span>
+                      </label>
+                      <textarea
+                        rows={7}
+                        className="w-full bg-slate-900 border-2 border-emerald-500/50 rounded-xl p-3 text-xs font-mono text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30 focus:outline-none"
+                        placeholder={`ألصق الكود هنا، مثال:
+{
+  "apiKey": "AIzaSy...",
+  "authDomain": "...",
+  "projectId": "...",
+  "appId": "..."
+}`}
+                        value={configText}
+                        onChange={(e) => setConfigText(e.target.value)}
+                      />
                     </div>
 
                     {configError && (
