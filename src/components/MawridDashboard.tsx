@@ -700,6 +700,9 @@ export default function MawridDashboard() {
   // Add Modals states
   const [showAddSupplierModal, setShowAddSupplierModal] = useState(false);
   const [showAddInvoiceModal, setShowAddInvoiceModal] = useState(false);
+  const [showAddWarehouseModal, setShowAddWarehouseModal] = useState(false);
+  const [addWarehouseContext, setAddWarehouseContext] = useState<"new" | "edit" | null>(null);
+  const [newWarehouseName, setNewWarehouseName] = useState("");
 
   // New Supplier form state
   const [newSupplier, setNewSupplier] = useState<
@@ -1253,6 +1256,38 @@ export default function MawridDashboard() {
       notes: "",
     });
     showToast(`تمت إضافة المورد ${createdSupplier.name} بنجاح.`);
+  };
+
+  // Add new Warehouse handler
+  const handleSaveNewWarehouse = () => {
+    const trimmed = newWarehouseName.trim();
+    if (!trimmed) {
+      showToast("يرجى إدخال اسم المستودع أولاً للتمكن من الإضافة.", "error");
+      return;
+    }
+
+    if (!warehouses.includes(trimmed)) {
+      const updated = [...warehouses, trimmed];
+      setWarehouses(updated);
+      showToast(`تمت إضافة المخزن "${trimmed}" بنجاح وتحديده.`);
+    } else {
+      showToast("هذا المخزن موجود بالفعل وتم تحديده.", "info");
+    }
+
+    if (addWarehouseContext === "new") {
+      setNewInvoice((prev) => ({
+        ...prev,
+        warehouse: trimmed,
+      }));
+    } else if (addWarehouseContext === "edit") {
+      setEditingInvoice((prev) =>
+        prev ? { ...prev, warehouse: trimmed } : null
+      );
+    }
+
+    setShowAddWarehouseModal(false);
+    setNewWarehouseName("");
+    setAddWarehouseContext(null);
   };
 
   // Delete Supplier handler
@@ -6395,6 +6430,88 @@ export default function MawridDashboard() {
         </div>
       )}
 
+      {/* MODAL: ADD WAREHOUSE */}
+      {showAddWarehouseModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-emerald-50 rounded-xl">
+                  <Warehouse className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    إضافة مخزن جديد للنظام
+                  </h3>
+                  <p className="text-[10px] text-slate-400">
+                    سيتم إدراج هذا المستودع في قائمة الخيارات لجميع الفواتير وتعيينه كوجهة حالية للعملية.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddWarehouseModal(false);
+                  setNewWarehouseName("");
+                  setAddWarehouseContext(null);
+                }}
+                className="p-1.5 rounded-xl hover:bg-slate-150 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-slate-600 block mb-1.5 text-xs font-bold font-sans">
+                  اسم المخزن / المستودع *
+                </label>
+                <input
+                  type="text"
+                  autoFocus
+                  required
+                  value={newWarehouseName}
+                  onChange={(e) => setNewWarehouseName(e.target.value)}
+                  placeholder="مثال: مخزن طنطا الفرعي، مخزن مرسال الرئيسي"
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50 text-slate-950 font-bold placeholder:text-slate-400 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSaveNewWarehouse();
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleSaveNewWarehouse}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 font-sans"
+              >
+                <Plus className="w-4 h-4" />
+                تأكيد الإضافة والتحديد
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddWarehouseModal(false);
+                  setNewWarehouseName("");
+                  setAddWarehouseContext(null);
+                }}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-4 rounded-xl transition-colors cursor-pointer font-sans"
+              >
+                إلغاء
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* MODAL: ADD SUPPLIER */}
       {showAddSupplierModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[60] p-4">
@@ -6628,32 +6745,10 @@ export default function MawridDashboard() {
                       <button
                         type="button"
                         onClick={() => {
-                          const newWh = prompt("أدخل اسم المخزن الجديد:");
-                          if (newWh && newWh.trim()) {
-                            const trimmed = newWh.trim();
-                            if (!warehouses.includes(trimmed)) {
-                              const updated = [...warehouses, trimmed];
-                              setWarehouses(updated);
-                              setNewInvoice((prev) => ({
-                                ...prev,
-                                warehouse: trimmed,
-                              }));
-                              showToast(
-                                `تمت إضافة المخزن "${trimmed}" بنجاح وتحديده.`,
-                              );
-                            } else {
-                              setNewInvoice((prev) => ({
-                                ...prev,
-                                warehouse: trimmed,
-                              }));
-                              showToast(
-                                "هذا المخزن موجود بالفعل وتم تحديده.",
-                                "info",
-                              );
-                            }
-                          }
+                          setAddWarehouseContext("new");
+                          setShowAddWarehouseModal(true);
                         }}
-                        className="text-[10px] text-sky-600 font-bold hover:text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-100 hover:bg-sky-100 transition-colors"
+                        className="text-[10px] text-sky-600 font-bold hover:text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-100 hover:bg-sky-100 transition-colors cursor-pointer"
                       >
                         + مخزن جديد
                       </button>
@@ -7214,30 +7309,10 @@ export default function MawridDashboard() {
                       <button
                         type="button"
                         onClick={() => {
-                          const newWh = prompt("أدخل اسم المخزن الجديد:");
-                          if (newWh && newWh.trim()) {
-                            const trimmed = newWh.trim();
-                            if (!warehouses.includes(trimmed)) {
-                              const updated = [...warehouses, trimmed];
-                              setWarehouses(updated);
-                              setEditingInvoice((prev) =>
-                                prev ? { ...prev, warehouse: trimmed } : null,
-                              );
-                              showToast(
-                                "تمت إضافة المخزن " + trimmed + " بنجاح وتحديده."
-                              );
-                            } else {
-                              setEditingInvoice((prev) =>
-                                prev ? { ...prev, warehouse: trimmed } : null,
-                              );
-                              showToast(
-                                "هذا المخزن موجود بالفعل وتم تحديده.",
-                                "info"
-                              );
-                            }
-                          }
+                          setAddWarehouseContext("edit");
+                          setShowAddWarehouseModal(true);
                         }}
-                        className="text-[10px] text-emerald-600 font-bold hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                        className="text-[10px] text-emerald-600 font-bold hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hover:bg-emerald-100 transition-colors cursor-pointer"
                       >
                         + مخزن جديد
                       </button>
