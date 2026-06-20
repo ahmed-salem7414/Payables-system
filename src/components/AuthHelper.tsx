@@ -463,9 +463,50 @@ export default function AuthHelper() {
                       onChange={(e) => setConfigText(e.target.value)}
                     />
                     
-                    <p className="text-[10px] text-slate-400 leading-relaxed">
-                      * للاستخراج: اذهب لإعدادات مشروعك في Firebase Console ➔ قسم General ➔ انزل لـ "Your apps" ➔ اختر تطبيق الويب NPM ➔ وانسخ الكائن بالكامل.
-                    </p>
+                    <div className="bg-[#0c162d] border border-slate-800 p-4 rounded-xl space-y-4 font-sans text-xs">
+                      <span className="font-bold text-sky-400 block border-b border-slate-800 pb-2">📂 دليل خطوة بخطوة بالصور التعبيرية للوصول للكود:</span>
+                      
+                      <div className="space-y-3 leading-relaxed text-slate-300">
+                        <div className="flex gap-2 items-start">
+                          <span className="w-5 h-5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">1</span>
+                          <p>
+                            افتح منصة <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-sky-400 font-bold underline hover:text-sky-300">Firebase Console ↗</a> واضغط على <strong>مشروعك</strong>.
+                          </p>
+                        </div>
+
+                        <div className="flex gap-2 items-start">
+                          <span className="w-5 h-5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">2</span>
+                          <p>
+                            في القائمة الجانبية باليمين/اليسار، اضغط على أيقونة <strong>الترس (Gear) ⚙️</strong> بجانب كلمة "Project Overview" ثم اختر <strong>Project settings (إعدادات المشروع)</strong>.
+                          </p>
+                        </div>
+
+                        <div className="flex gap-2 items-start">
+                          <span className="w-5 h-5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">3</span>
+                          <p>
+                            تأكد أنك في التبويب الأول <strong>General (عام)</strong>، ثم انزل لآخر الصفحة تماماً حتى تجد قسماً يسمى <strong>Your apps (تطبيقاتك)</strong>.
+                          </p>
+                        </div>
+
+                        <div className="flex gap-2 items-start">
+                          <span className="w-5 h-5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center font-bold font-mono text-[11px] shrink-0">4</span>
+                          <p>
+                            اضغط على خيار <strong>Config</strong> أو حدد الدائرة المسماة <strong>NPM</strong>، ستظهر لك كود وستجد داخله كائن الإعدادات بالشكل التالي تماماً:
+                          </p>
+                        </div>
+
+                        <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-400 space-y-1 block max-w-full overflow-x-auto text-left" dir="ltr">
+                          <p className="text-slate-500">// انسخ الكود الذي يشبه هذا وضعه في المربع بالأسفل:</p>
+                          <p><span className="text-sky-400">const</span> <span className="text-pink-400">firebaseConfig</span> = {"{"}</p>
+                          <p>&nbsp;&nbsp;apiKey: <span className="text-emerald-400">"AIzaSy..."</span>,</p>
+                          <p>&nbsp;&nbsp;authDomain: <span className="text-emerald-400">"..."</span>,</p>
+                          <p>&nbsp;&nbsp;projectId: <span className="text-emerald-400">"..."</span>,</p>
+                          <p>&nbsp;&nbsp;storageBucket: <span className="text-emerald-400">"..."</span>,</p>
+                          <p>&nbsp;&nbsp;appId: <span className="text-emerald-400">"..."</span></p>
+                          <p>{"};"}</p>
+                        </div>
+                      </div>
+                    </div>
 
                     {configError && (
                       <p className="text-xs text-rose-400 font-bold">{configError}</p>
