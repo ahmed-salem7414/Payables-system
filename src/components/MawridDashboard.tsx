@@ -5724,7 +5724,7 @@ export default function MawridDashboard() {
                   {/* Export Full Dataset */}
                   <button
                     onClick={exportAllDataAsJSON}
-                    className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-slate-800 text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all text-center"
+                    className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all text-center"
                     title="تنزيل نسخة بنية الحسابات والعمليات كاملة"
                   >
                     <Download className="w-4 h-4 text-white" />
@@ -5732,7 +5732,7 @@ export default function MawridDashboard() {
                   </button>
 
                   {/* Import Full Dataset */}
-                  <label className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-slate-800 text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all text-center">
+                  <label className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all text-center">
                     <Upload className="w-4 h-4 text-white" />
                     <span>استيراد قاعدة بيانات (JSON)</span>
                     <input
@@ -5840,7 +5840,7 @@ export default function MawridDashboard() {
                         <div className="flex items-center gap-1.5 flex-row-reverse">
                           <button
                             onClick={() => restoreBackupRecord(bc)}
-                            className="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-750 text-slate-900 font-bold text-[11px] px-3.5 py-1.5 rounded-xl shrink-0 cursor-pointer transition-colors"
+                            className="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-750 text-white font-bold text-[11px] px-3.5 py-1.5 rounded-xl shrink-0 cursor-pointer transition-colors"
                           >
                             استرجاع النسخة
                           </button>
