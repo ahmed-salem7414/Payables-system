@@ -3675,12 +3675,12 @@ export default function MawridDashboard() {
                           setInvoiceSearch(sup.name);
                           setActiveTab("invoices");
                         }}
-                        className="bg-white backdrop-blur-xs rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-[0_4px_25px_rgba(16,185,129,0.06)] hover:bg-[#111e33]/90 hover:border-emerald-500/25 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
+                        className="bg-white backdrop-blur-xs rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-[0_4px_25px_rgba(16,185,129,0.08)] hover:bg-slate-50 hover:border-emerald-550/40 hover:border-emerald-550 hover:border-emerald-500/40 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
                       >
                         <div>
                           <div className="flex items-start justify-between">
                             <div>
-                              <span className="text-[10px] font-bold bg-[#14223d]/80 text-[#38bdf8] px-2.5 py-1 rounded-full border border-emerald-500/20">
+                              <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-500/20">
                                 {sup.category}
                               </span>
                               <h3 className="text-base font-bold text-slate-900 mt-1.5 group-hover:text-emerald-600 transition-colors flex items-center gap-1">
@@ -3689,7 +3689,7 @@ export default function MawridDashboard() {
                               <p className="text-xs text-emerald-600 font-semibold mt-0.5">
                                 {sup.company}
                               </p>
-                              <span className="text-[9px] text-slate-600 mt-1 block group-hover:text-emerald-600 group-hover:underline">
+                              <span className="text-[9px] text-slate-500 mt-1 block group-hover:text-emerald-600 group-hover:underline">
                                 👤 اضغط لعرض كشف فواتير المورد
                               </span>
                             </div>
@@ -3887,7 +3887,7 @@ export default function MawridDashboard() {
                                             className={`px-1.5 py-0.5 rounded text-[8px] font-bold border transition-colors cursor-pointer ${
                                               cn.status === "active"
                                                 ? "bg-amber-500/10 border-amber-500/20 text-amber-600 hover:bg-amber-500/25"
-                                                : "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-700"
+                                                : "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200"
                                             }`}
                                             title={
                                               cn.status === "active"
@@ -4107,7 +4107,7 @@ export default function MawridDashboard() {
                   {/* Combined list display */}
                   <div className="space-y-4">
                     {displayedItems.length === 0 ? (
-                      <div className="bg-[#1e293b] rounded-2xl border border-slate-200 p-12 text-center text-slate-600 text-sm">
+                      <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 text-sm shadow-sm">
                         لا توجد فواتير أو إشعارات دائنة مطابقة للبحث والفرز
                         حالياً.
                       </div>
@@ -4122,12 +4122,12 @@ export default function MawridDashboard() {
                           const isDueSoon =
                             inv.status === "unpaid" &&
                             new Date(inv.dueDate).getTime() <=
-                              new Date("2026-06-12").getTime();
+                            new Date("2026-06-12").getTime();
 
                           return (
                             <div
                               key={inv.id}
-                              className={`bg-[#1e293b] rounded-2xl border ${isDueSoon ? "border-rose-500 ring-1 ring-rose-500/10" : "border-slate-200"} p-5 shadow-sm transition-all`}
+                              className={`bg-white rounded-2xl border ${isDueSoon ? "border-rose-500 ring-1 ring-rose-500/10" : "border-slate-200/90"} p-5 shadow-sm hover:shadow-md transition-all`}
                             >
                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="flex items-start gap-3">
@@ -4214,7 +4214,7 @@ export default function MawridDashboard() {
                                         <span className="text-slate-600 block mb-0.5">
                                           صافي القيمة بعد الخصم:
                                         </span>
-                                        <span className="text-sm font-black text-[#34d399] font-mono block">
+                                        <span className="text-sm font-black text-emerald-600 font-mono block">
                                           {fAmt(
                                             inv.totalAmount -
                                               inv.creditNoteAmount,
@@ -4251,7 +4251,7 @@ export default function MawridDashboard() {
                                           inv.attachments,
                                         );
                                       }}
-                                      className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-700 border border-slate-200 text-emerald-600 hover:text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors"
+                                      className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-emerald-600 hover:text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors shadow-xs"
                                       title={`عرض وتنزيل المرفقات (${inv.attachments.length})`}
                                     >
                                       <Paperclip className="w-3.5 h-3.5 shrink-0" />
@@ -4269,7 +4269,7 @@ export default function MawridDashboard() {
                                             inv.attachment!,
                                           ]);
                                         }}
-                                        className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-700 border border-slate-200 text-emerald-600 hover:text-emerald-800 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                        className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-emerald-600 hover:text-emerald-700 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors shadow-xs"
                                         title="عرض المرفق"
                                       >
                                         <Paperclip className="w-3.5 h-3.5" />
@@ -4298,7 +4298,7 @@ export default function MawridDashboard() {
                                       setEditInvoiceBaseAmount(baseVal);
                                       setEditDiscounts(discRows);
                                     }}
-                                    className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-700 active:bg-slate-100/80 border border-slate-200 text-slate-650 hover:text-slate-900 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                    className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-800 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors shadow-xs"
                                     title="تعديل بيانات الفاتورة"
                                   >
                                     <Edit className="w-3.5 h-3.5 text-emerald-600" />
@@ -4312,7 +4312,7 @@ export default function MawridDashboard() {
                                         inv.invoiceNumber,
                                       )
                                     }
-                                    className="flex items-center gap-1.5 bg-slate-100 hover:bg-rose-950 hover:text-rose-600 hover:border-rose-900/50 active:bg-rose-900 border border-slate-200 text-slate-650 hover:text-slate-900 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                    className="flex items-center gap-1.5 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 border border-slate-200 text-slate-600 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors shadow-xs"
                                     title="حذف الفاتورة نهائياً"
                                   >
                                     <Trash2 className="w-3.5 h-3.5 text-rose-500" />
@@ -4324,7 +4324,7 @@ export default function MawridDashboard() {
                                       onClick={() =>
                                         handleInitiateSettleInvoice(inv)
                                       }
-                                      className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-colors"
+                                      className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-colors"
                                     >
                                       <CreditCard className="w-4 h-4" />
                                       <span>سداد وتسوية الفاتورة</span>
@@ -4341,7 +4341,7 @@ export default function MawridDashboard() {
                               {/* Invoice notes without item list display */}
                               {inv.notes && (
                                 <div className="mt-4 pt-4 border-t border-slate-200">
-                                  <p className="text-[11px] text-[#34d399] font-medium">
+                                  <p className="text-[11px] text-slate-650 font-medium">
                                     <strong className="text-slate-700">
                                       ملاحظات الفاتورة:
                                     </strong>{" "}
@@ -4415,16 +4415,16 @@ export default function MawridDashboard() {
                           return (
                             <div
                               key={cn.id}
-                              className="bg-[#1e293b] rounded-2xl border border-emerald-500/30 p-5 shadow-sm transition-all"
+                              className="bg-white rounded-2xl border border-emerald-500/15 p-5 shadow-sm hover:shadow-md transition-all"
                             >
                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="flex items-start gap-3">
-                                  <div className="p-3 rounded-xl bg-emerald-500/15 text-emerald-700 shrink-0">
+                                  <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-600 shrink-0">
                                     <FileText className="w-6 h-6 text-emerald-600" />
                                   </div>
                                   <div>
                                     <div className="flex items-center gap-2">
-                                      <span className="font-bold text-white font-mono text-sm">
+                                      <span className="font-bold text-slate-800 font-mono text-sm">
                                         {cn.creditNoteNumber}
                                       </span>
                                       {cn.attachment && (
@@ -4488,7 +4488,7 @@ export default function MawridDashboard() {
                                           cn.attachment!,
                                         ]);
                                       }}
-                                      className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-700 border border-slate-200 text-emerald-600 hover:text-emerald-800 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                      className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-emerald-600 hover:text-emerald-700 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors shadow-xs"
                                       title="عرض وتنزيل المرفق"
                                     >
                                       <Paperclip className="w-3.5 h-3.5" />
@@ -4502,7 +4502,7 @@ export default function MawridDashboard() {
                                     }
                                     className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
                                       cn.status === "active"
-                                        ? "bg-amber-500/15 border-amber-500/20 text-amber-600 hover:bg-amber-550 hover:bg-amber-500/25"
+                                        ? "bg-amber-500/10 border-amber-500/20 text-amber-600 hover:bg-amber-500/25"
                                         : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
                                     }`}
                                   >
@@ -4515,7 +4515,7 @@ export default function MawridDashboard() {
                                     onClick={() =>
                                       handleInitiateEditCreditNote(cn)
                                     }
-                                    className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-700 active:bg-slate-100/80 border border-slate-200 text-slate-650 hover:text-slate-900 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                    className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-800 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors shadow-xs"
                                     title="تعديل بيانات الإشعار الدائن"
                                   >
                                     <Edit className="w-3.5 h-3.5 text-emerald-600" />
@@ -4529,7 +4529,7 @@ export default function MawridDashboard() {
                                         cn.creditNoteNumber,
                                       )
                                     }
-                                    className="flex items-center gap-1.5 bg-slate-100 hover:bg-rose-950 hover:text-rose-600 hover:border-rose-900/50 active:bg-rose-900 border border-slate-200 text-slate-650 hover:text-slate-900 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors"
+                                    className="flex items-center gap-1.5 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 border border-slate-200 text-slate-600 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors shadow-xs"
                                     title="حذف الإشعار نهائياً"
                                   >
                                     <Trash2 className="w-3.5 h-3.5 text-rose-500" />
@@ -5211,14 +5211,14 @@ export default function MawridDashboard() {
                   <div className="space-y-6">
                     {/* Screen Pagination Controls */}
                     {reportPagesToRender.length > 1 && (
-                      <div className="no-print flex items-center justify-between bg-[#1e293b] border border-slate-200/80 rounded-2xl p-4 max-w-7xl mx-auto mb-4 text-white">
+                      <div className="no-print flex items-center justify-between bg-white border border-slate-200 rounded-2xl p-4 max-w-7xl mx-auto mb-4 shadow-sm text-slate-800">
                         <button
                           type="button"
                           disabled={activeReportPage === 0}
                           onClick={() =>
                             setActiveReportPage((prev) => Math.max(0, prev - 1))
                           }
-                          className="flex items-center gap-1 bg-slate-100 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-100 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs cursor-pointer select-none transition-colors"
+                          className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:hover:bg-slate-100 text-slate-800 font-bold px-4 py-2 rounded-xl text-xs cursor-pointer select-none transition-colors"
                         >
                           <span>&larr;</span> الصفحة السابقة
                         </button>
@@ -5241,7 +5241,7 @@ export default function MawridDashboard() {
                               ),
                             )
                           }
-                          className="flex items-center gap-1 bg-slate-100 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-100 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs cursor-pointer select-none transition-colors"
+                          className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:hover:bg-slate-100 text-slate-800 font-bold px-4 py-2 rounded-xl text-xs cursor-pointer select-none transition-colors"
                         >
                           الصفحة التالية <span>&rarr;</span>
                         </button>
@@ -6301,7 +6301,7 @@ export default function MawridDashboard() {
                 <button
                   type="button"
                   onClick={() => setShowSettleInvoiceModal(false)}
-                  className="bg-slate-100 hover:bg-slate-700 active:bg-slate-200 border border-slate-200 text-slate-700 font-bold px-4 py-3 rounded-xl cursor-pointer"
+                  className="bg-slate-100 hover:bg-slate-200 active:bg-slate-300 border border-slate-200 text-slate-700 font-bold px-4 py-3 rounded-xl cursor-pointer transition-colors"
                 >
                   إلغاء
                 </button>
@@ -8954,7 +8954,7 @@ export default function MawridDashboard() {
                 type="button"
                 disabled={isResettingDb}
                 onClick={() => setShowResetConfirmModal(false)}
-                className="flex-1 bg-slate-100 hover:bg-slate-700 text-slate-700 font-bold px-4 py-2.5 rounded-xl cursor-pointer text-xs text-center transition"
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl cursor-pointer text-xs text-center transition"
               >
                 تراجع وإلغاء
               </button>
@@ -8962,7 +8962,7 @@ export default function MawridDashboard() {
                 type="button"
                 disabled={isResettingDb}
                 onClick={handleResetDbFromScratch}
-                className="flex-1 bg-rose-600 hover:bg-rose-500 text-slate-900 font-bold px-4 py-2.5 rounded-xl cursor-pointer text-xs text-center transition flex items-center justify-center gap-1.5 shadow-lg shadow-rose-900/20"
+                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2.5 rounded-xl cursor-pointer text-xs text-center transition flex items-center justify-center gap-1.5 shadow-lg shadow-rose-900/10"
               >
                 {isResettingDb ? (
                   <>
