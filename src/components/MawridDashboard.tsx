@@ -2592,6 +2592,7 @@ export default function MawridDashboard() {
       invoices,
       payments,
       backups,
+      supplierCategories,
       warehouses,
       safeBalance,
       linkedBanks,
@@ -2633,6 +2634,8 @@ export default function MawridDashboard() {
           setPayments(restored.payments);
         if (restored.backups && Array.isArray(restored.backups))
           setBackups(restored.backups);
+        if (restored.supplierCategories && Array.isArray(restored.supplierCategories))
+          setSupplierCategories(restored.supplierCategories);
         if (restored.warehouses && Array.isArray(restored.warehouses))
           setWarehouses(restored.warehouses);
         if (restored.safeBalance !== undefined)
@@ -5039,7 +5042,7 @@ export default function MawridDashboard() {
                     <button
                       type="button"
                       onClick={handlePrintReport}
-                      className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-[11px] h-[40px] px-5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 transition-colors duration-150 shadow-md hover:-translate-y-0.5 active:translate-y-0"
+                      className="bg-emerald-600 hover:bg-sky-550 active:bg-emerald-700 text-white font-bold text-[11px] h-[40px] px-5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 transition-colors duration-150 shadow-md hover:-translate-y-0.5 active:translate-y-0"
                     >
                       <Printer className="w-4 h-4 text-white shrink-0" />
                       طباعة مباشرة / حفظ PDF
@@ -5557,7 +5560,7 @@ export default function MawridDashboard() {
                                           statusText === "تم السداد بتحويل بنكي"
                                         ) {
                                           badgeClass =
-                                            "bg-teal-100 text-teal-800 border border-teal-200";
+                                            "bg-emerald-100 text-sky-800 border border-emerald-200";
                                         } else if (
                                           statusText === "تم السداد بفوري" ||
                                           statusText === "تم السداد بشيك"
@@ -5734,7 +5737,7 @@ export default function MawridDashboard() {
                   {/* Export Full Dataset */}
                   <button
                     onClick={exportAllDataAsJSON}
-                    className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all text-center"
+                    className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all text-center"
                     title="تنزيل نسخة بنية الحسابات والعمليات كاملة"
                   >
                     <Download className="w-4 h-4 text-white" />
@@ -5742,7 +5745,7 @@ export default function MawridDashboard() {
                   </button>
 
                   {/* Import Full Dataset */}
-                  <label className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all text-center">
+                  <label className="flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all text-center">
                     <Upload className="w-4 h-4 text-white" />
                     <span>استيراد قاعدة بيانات (JSON)</span>
                     <input
