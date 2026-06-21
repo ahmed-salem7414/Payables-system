@@ -3261,7 +3261,7 @@ export default function MawridDashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#060a12] text-[#f1f5f9] font-sans selection:bg-emerald-500/100 selection:text-white pb-10">
+    <div className="min-h-screen flex flex-col bg-[#050c18] text-[#f1f5f9] font-sans selection:bg-emerald-500/100 selection:text-white pb-10">
       {/* Toast Alert */}
       <AnimatePresence>
         {toast && (
@@ -3432,7 +3432,7 @@ export default function MawridDashboard() {
       <main className="max-w-7xl mx-auto px-4 md:px-6 mt-6 flex-1 w-full flex flex-col lg:flex-row gap-6">
         {/* RIGHT SIDEBAR - Tab controller and dynamic Navigation */}
         <aside className="no-print w-full lg:w-64 shrink-0">
-          <div className="bg-[#0e1726]/90 rounded-2xl border border-slate-800/80 p-2.5 lg:p-4 shadow-xl flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible lg:sticky lg:top-24 z-30 w-full no-scrollbar">
+          <div className="bg-[#0a1526]/90 rounded-2xl border border-slate-800/80 p-2.5 lg:p-4 shadow-xl flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible lg:sticky lg:top-24 z-30 w-full no-scrollbar">
             <p className="hidden lg:block text-[11px] font-bold text-slate-500 tracking-wider uppercase px-3 pb-2 border-b border-slate-800/65 mb-2">
               القائمة المالية
             </p>
@@ -3531,7 +3531,7 @@ export default function MawridDashboard() {
         <div className="flex-1 min-w-0">
           {/* Dashboard Summary Statistics Bar (Always rendered at the top of content tabs in screen) */}
           <div className="no-print grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-            <div className="bg-[#0e1726]/60 backdrop-blur-md p-5 rounded-2xl border border-slate-800/80 hover:border-slate-700/80 shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5">
+            <div className="bg-[#0a1526]/60 backdrop-blur-md p-5 rounded-2xl border border-slate-800/80 hover:border-slate-700/80 shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5">
               <div>
                 <p className="text-xs text-slate-400 font-medium">
                   إجمالي المشتريات
@@ -3618,7 +3618,7 @@ export default function MawridDashboard() {
               className="space-y-6"
             >
               {/* Filter controls and add buttons */}
-              <div className="bg-[#0e1726]/85 backdrop-blur-md p-4 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-fadeIn">
+              <div className="bg-[#0a1526]/85 backdrop-blur-md p-4 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-fadeIn">
                 <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
                   {/* Search Bar */}
                   <div className="relative w-full md:w-64">
@@ -3627,7 +3627,7 @@ export default function MawridDashboard() {
                       placeholder="ابحث باسم المورد أو الشركة..."
                       value={supplierSearch}
                       onChange={(e) => setSupplierSearch(e.target.value)}
-                      className="w-full text-xs border border-slate-800/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-[#060a12]/80 text-white transition-all"
+                      className="w-full text-xs border border-slate-800/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-[#050c18]/80 text-white transition-all"
                     />
                     <Users className="w-4 h-4 text-slate-500 absolute right-3 top-3.5" />
                   </div>
@@ -3645,7 +3645,7 @@ export default function MawridDashboard() {
               {/* Grid / List of suppliers */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredSuppliers.length === 0 ? (
-                  <div className="col-span-2 bg-[#0e1726]/50 rounded-2xl border border-slate-800/80 p-12 text-center text-slate-400 text-sm">
+                  <div className="col-span-2 bg-[#0a1526]/50 rounded-2xl border border-slate-800/80 p-12 text-center text-slate-400 text-sm">
                     لا يوجد موردين متوافقين مع معايير البحث الحالية.
                   </div>
                 ) : (
@@ -3672,7 +3672,7 @@ export default function MawridDashboard() {
                           setInvoiceSearch(sup.name);
                           setActiveTab("invoices");
                         }}
-                        className="bg-[#0e1726]/80 backdrop-blur-xs rounded-2xl border border-slate-800/90 p-5 shadow-sm hover:shadow-[0_4px_25px_rgba(16,185,129,0.06)] hover:bg-[#111e33]/90 hover:border-emerald-500/25 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
+                        className="bg-[#0a1526]/80 backdrop-blur-xs rounded-2xl border border-slate-800/90 p-5 shadow-sm hover:shadow-[0_4px_25px_rgba(16,185,129,0.06)] hover:bg-[#0e223f]/90 hover:border-emerald-500/25 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
                       >
                         <div>
                           <div className="flex items-start justify-between">
@@ -4022,7 +4022,7 @@ export default function MawridDashboard() {
                   className="space-y-6"
                 >
                   {/* Search and filter toolbar */}
-                  <div className="bg-[#0e1726]/85 backdrop-blur-md p-4 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-fadeIn">
+                  <div className="bg-[#0a1526]/85 backdrop-blur-md p-4 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-fadeIn">
                     <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
                       {/* Invoice search */}
                       <div className="relative w-full md:w-64">
@@ -4031,7 +4031,7 @@ export default function MawridDashboard() {
                           placeholder="ابحث برقم الفاتورة، الإشعار أو المورد..."
                           value={invoiceSearch}
                           onChange={(e) => setInvoiceSearch(e.target.value)}
-                          className="w-full text-xs border border-slate-800/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-[#060a12]/80 text-white transition-all"
+                          className="w-full text-xs border border-slate-800/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-[#050c18]/80 text-white transition-all"
                         />
                         <Search className="w-4 h-4 text-slate-500 absolute right-3 top-3.5" />
                       </div>
@@ -4043,7 +4043,7 @@ export default function MawridDashboard() {
                           onChange={(e) =>
                             setInvoiceStatusFilter(e.target.value)
                           }
-                          className="w-full text-xs border border-slate-800/80 px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer bg-[#060a12]/80 text-white font-bold transition-all"
+                          className="w-full text-xs border border-slate-800/80 px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer bg-[#050c18]/80 text-white font-bold transition-all"
                         >
                           <option value="all">كل حالات السداد / التطبيق</option>
                           <option value="unpaid">غير مسدد / كإشعار نشط</option>
@@ -4705,7 +4705,7 @@ export default function MawridDashboard() {
               className="space-y-6"
             >
               {/* Bank Integration Panel Intro */}
-              <div className="bg-[#0e1726]/85 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-xl">
+              <div className="bg-[#0a1526]/85 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-xl">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div>
                     <h3 className="text-base font-bold text-white flex items-center gap-2">
@@ -4729,7 +4729,7 @@ export default function MawridDashboard() {
                       key={index}
                       className={`p-4 rounded-xl border transition-all ${
                         bank.isLinked
-                          ? "bg-[#060a12]/85 border-emerald-500/25 shadow-[0_2px_15px_rgba(16,185,129,0.04)]"
+                          ? "bg-[#050c18]/85 border-emerald-500/25 shadow-[0_2px_15px_rgba(16,185,129,0.04)]"
                           : "bg-[#090f1a]/70 border-slate-800/80 opacity-60 hover:opacity-100"
                       }`}
                     >
@@ -4896,7 +4896,7 @@ export default function MawridDashboard() {
               className="space-y-6 animate-fade-in"
             >
               {/* Unified High-Density Single Line Control Panel for reports/portfolio */}
-              <div className="no-print bg-[#0e1726]/85 backdrop-blur-md p-4 rounded-xl border border-slate-800/80 shadow-2xl animate-fadeIn">
+              <div className="no-print bg-[#0a1526]/85 backdrop-blur-md p-4 rounded-xl border border-slate-800/80 shadow-2xl animate-fadeIn">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
                   {/* 1. Supplier Select */}
                   <div className="flex flex-col gap-1 w-full">
@@ -4909,7 +4909,7 @@ export default function MawridDashboard() {
                         setSelectedReportSupplierId(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#060a12]/80 text-[#34d399] border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
+                      className="bg-[#050c18]/80 text-[#34d399] border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="all">جميع الموردين</option>
                       {suppliers.map((s) => (
@@ -4931,7 +4931,7 @@ export default function MawridDashboard() {
                         setReportWarehouseFilter(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#060a12]/80 text-[#34d399] border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
+                      className="bg-[#050c18]/80 text-[#34d399] border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="all">كافة المستودعات</option>
                       {warehouses.map((w) => (
@@ -4955,7 +4955,7 @@ export default function MawridDashboard() {
                         );
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#060a12]/80 text-amber-400 border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
+                      className="bg-[#050c18]/80 text-amber-400 border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="issue_date">🕒 تاريخ الإضافة</option>
                       <option value="due_date">⚠️ تاريخ الاستحقاق</option>
@@ -4974,7 +4974,7 @@ export default function MawridDashboard() {
                         setReportStartDate(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#060a12]/80 text-slate-200 border border-slate-800/80 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
+                      className="bg-[#050c18]/80 text-slate-200 border border-slate-800/80 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
                     />
                   </div>
 
@@ -4990,7 +4990,7 @@ export default function MawridDashboard() {
                         setReportEndDate(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#060a12]/80 text-slate-200 border border-slate-800/80 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
+                      className="bg-[#050c18]/80 text-slate-200 border border-slate-800/80 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
                     />
                   </div>
 
@@ -5007,7 +5007,7 @@ export default function MawridDashboard() {
                         );
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#060a12]/80 text-cyan-400 border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-cyan-500/20 focus:border-cyan-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
+                      className="bg-[#050c18]/80 text-cyan-400 border border-slate-800/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-cyan-500/20 focus:border-cyan-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="summary">📊 تقرير إجمالي</option>
                       <option value="detailed">📝 تقرير تفصيلي</option>
@@ -5693,7 +5693,7 @@ export default function MawridDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-[#0e1726]/85 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-xl space-y-6 text-[#f1f5f9]"
+              className="bg-[#0a1526]/85 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-xl space-y-6 text-[#f1f5f9]"
             >
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
                 <div>
@@ -5719,7 +5719,7 @@ export default function MawridDashboard() {
               </div>
 
               {/* Database State Controllers & JSON Persistence File Actions */}
-              <div className="bg-[#060a12]/60 border border-slate-800/70 p-5 rounded-2xl space-y-4 shadow-sm">
+              <div className="bg-[#050c18]/60 border border-slate-800/70 p-5 rounded-2xl space-y-4 shadow-sm">
                 <div>
                   <h4 className="font-bold text-emerald-400 text-xs flex items-center gap-1.5 uppercase tracking-wider">
                     <Shield className="w-4 h-4 text-emerald-450" />
@@ -5879,7 +5879,7 @@ export default function MawridDashboard() {
               className="space-y-6 animate-fade-in text-[#f1f5f9]"
             >
               {/* Header Box */}
-              <div className="bg-[#0e1726]/85 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="bg-[#0a1526]/85 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <Warehouse className="w-5 h-5 text-emerald-400" />
@@ -5897,7 +5897,7 @@ export default function MawridDashboard() {
                     type="text"
                     id="new-warehouse-input"
                     placeholder="اسم المخزن الجديد (مثال: مخزن طنطا الفرعي)"
-                    className="border border-slate-800 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none text-white font-bold bg-[#060a12]/80 transition-all min-w-[240px]"
+                    className="border border-slate-800 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none text-white font-bold bg-[#050c18]/80 transition-all min-w-[240px]"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         const val = (
@@ -6400,11 +6400,11 @@ export default function MawridDashboard() {
 
       {/* MODAL: ADD WAREHOUSE */}
       {showAddWarehouseModal && (
-        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
+        <div className="fixed inset-0 bg-[#050c18]/75 backdrop-blur-sm flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800/80 space-y-5"
+            className="bg-[#0a1526]/95 backdrop-blur-md text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800/80 space-y-5"
           >
             <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
               <div className="flex items-center gap-2">
@@ -6445,7 +6445,7 @@ export default function MawridDashboard() {
                   value={newWarehouseName}
                   onChange={(e) => setNewWarehouseName(e.target.value)}
                   placeholder="مثال: مخزن طنطا الفرعي، مخزن مرسال الرئيسي"
-                  className="w-full border border-slate-800 rounded-xl p-3 bg-[#060a12]/80 text-white font-bold placeholder:text-slate-500 text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                  className="w-full border border-slate-800 rounded-xl p-3 bg-[#050c18]/80 text-white font-bold placeholder:text-slate-500 text-xs focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       handleSaveNewWarehouse();
@@ -6482,11 +6482,11 @@ export default function MawridDashboard() {
 
       {/* MODAL: CONFIRM DELETE SUPPLIER */}
       {supplierToDelete && (
-        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
+        <div className="fixed inset-0 bg-[#050c18]/75 backdrop-blur-sm flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800/80 space-y-5"
+            className="bg-[#0a1526]/95 backdrop-blur-md text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800/80 space-y-5"
           >
             <div className="flex items-center gap-3 border-b border-slate-800/60 pb-3">
               <div className="p-2 bg-rose-500/10 rounded-xl border border-rose-500/20">
@@ -6538,11 +6538,11 @@ export default function MawridDashboard() {
 
       {/* MODAL: CONFIRM DELETE WAREHOUSE */}
       {warehouseToDelete && (
-        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
+        <div className="fixed inset-0 bg-[#050c18]/75 backdrop-blur-sm flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800/80 space-y-5"
+            className="bg-[#0a1526]/95 backdrop-blur-md text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-800/80 space-y-5"
           >
             <div className="flex items-center gap-3 border-b border-slate-800/60 pb-3">
               <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/25">
@@ -6605,11 +6605,11 @@ export default function MawridDashboard() {
 
       {/* MODAL: ADD SUPPLIER */}
       {showAddSupplierModal && (
-        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-[80] p-4">
+        <div className="fixed inset-0 bg-[#050c18]/75 backdrop-blur-sm flex items-center justify-center z-[80] p-4">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/85 space-y-4 max-h-[90vh] overflow-y-auto"
+            className="bg-[#0a1526]/95 backdrop-blur-md text-white rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/85 space-y-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
               <h3 className="text-base font-extrabold text-white">
@@ -6636,7 +6636,7 @@ export default function MawridDashboard() {
                     onChange={(e) =>
                       setNewSupplier({ ...newSupplier, name: e.target.value })
                     }
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="م. محمد العربي"
                   />
                 </div>
@@ -6654,7 +6654,7 @@ export default function MawridDashboard() {
                         company: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="مجموعة السويدي كابلات"
                   />
                 </div>
@@ -6671,7 +6671,7 @@ export default function MawridDashboard() {
                     onChange={(e) =>
                       setNewSupplier({ ...newSupplier, phone: e.target.value })
                     }
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="01012345678"
                   />
                 </div>
@@ -6688,7 +6688,7 @@ export default function MawridDashboard() {
                         bankAccount: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 font-mono text-[11px] text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/85 font-mono text-[11px] text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="EG000000000000000000000000000"
                   />
                 </div>
@@ -6703,7 +6703,7 @@ export default function MawridDashboard() {
                   onChange={(e) =>
                     setNewSupplier({ ...newSupplier, notes: e.target.value })
                   }
-                  className="w-full border border-slate-850 rounded-lg p-2 bg-[#060a12]/85 h-20 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                  className="w-full border border-slate-850 rounded-lg p-2 bg-[#050c18]/85 h-20 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                   placeholder="أدخل أي ملاحظات حول الدفع أو السداد..."
                 />
               </div>
@@ -6730,11 +6730,11 @@ export default function MawridDashboard() {
 
       {/* MODAL: ADD INVOICE */}
       {showAddInvoiceModal && (
-        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#050c18]/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/80 space-y-4 max-h-[95vh] overflow-y-auto"
+            className="bg-[#0a1526]/95 backdrop-blur-md text-white rounded-3xl max-w-5xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/80 space-y-4 max-h-[95vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
@@ -6752,7 +6752,7 @@ export default function MawridDashboard() {
             <form onSubmit={handleAddInvoice} className="text-xs space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 {/* Right Side Panel: Core Invoice Details */}
-                <div className="lg:col-span-5 bg-[#060a12]/80 p-4 rounded-2xl border border-slate-800/60 space-y-4">
+                <div className="lg:col-span-5 bg-[#050c18]/80 p-4 rounded-2xl border border-slate-800/60 space-y-4">
                   <h4 className="font-bold text-slate-200 border-b border-slate-800/50 pb-2 mb-1">
                     بيانات الشحنة والمورد
                   </h4>
@@ -6781,11 +6781,11 @@ export default function MawridDashboard() {
                           supplierId: e.target.value,
                         })
                       }
-                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12]/90 font-semibold text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/20 transition-all cursor-pointer"
+                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#050c18]/90 font-semibold text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/20 transition-all cursor-pointer"
                     >
-                      <option className="bg-[#0e1726]" value="">-- اضغط للاختيار --</option>
+                      <option className="bg-[#0a1526]" value="">-- اضغط للاختيار --</option>
                       {suppliers.map((s) => (
-                        <option className="bg-[#0e1726]" key={s.id} value={s.id}>
+                        <option className="bg-[#0a1526]" key={s.id} value={s.id}>
                           {s.name} ({s.company})
                         </option>
                       ))}
@@ -6806,7 +6806,7 @@ export default function MawridDashboard() {
                           issueDate: e.target.value,
                         })
                       }
-                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12]/90 font-mono text-white font-semibold focus:ring-1 focus:ring-emerald-500/20 outline-none"
+                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#050c18]/90 font-mono text-white font-semibold focus:ring-1 focus:ring-emerald-500/20 outline-none"
                     />
                   </div>
 
@@ -6824,7 +6824,7 @@ export default function MawridDashboard() {
                           dueDate: e.target.value,
                         })
                       }
-                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12]/90 font-mono text-white font-semibold focus:ring-1 focus:ring-emerald-500/20 outline-none"
+                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#050c18]/90 font-mono text-white font-semibold focus:ring-1 focus:ring-emerald-500/20 outline-none"
                     />
                   </div>
 
@@ -6853,11 +6853,11 @@ export default function MawridDashboard() {
                           warehouse: e.target.value,
                         })
                       }
-                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12]/90 text-white font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500/20 transition-all"
+                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#050c18]/90 text-white font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500/20 transition-all"
                     >
-                      <option className="bg-[#0e1726]" value="">-- اختر المخزن --</option>
+                      <option className="bg-[#0a1526]" value="">-- اختر المخزن --</option>
                       {warehouses.map((wh) => (
-                        <option className="bg-[#0e1726]" key={wh} value={wh}>
+                        <option className="bg-[#0a1526]" key={wh} value={wh}>
                           {wh}
                         </option>
                       ))}
@@ -6874,7 +6874,7 @@ export default function MawridDashboard() {
                       onChange={(e) =>
                         setNewInvoice({ ...newInvoice, notes: e.target.value })
                       }
-                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12]/90 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                      className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#050c18]/90 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
                       placeholder="شحنة التجهيز المقررة لمخازن العاشر"
                     />
                   </div>
@@ -6884,7 +6884,7 @@ export default function MawridDashboard() {
                       مرفقات الفاتورة (يمكنك اختيار ملف أو أكثر) *
                     </label>
                     <div className="space-y-2">
-                      <label className="w-full flex flex-col items-center justify-center border-2 border-dashed border-slate-800 hover:border-emerald-500/80 hover:bg-[#060a12]/80 rounded-2xl p-4 bg-[#060a12]/40 cursor-pointer transition-all duration-200 group text-center">
+                      <label className="w-full flex flex-col items-center justify-center border-2 border-dashed border-slate-800 hover:border-emerald-500/80 hover:bg-[#050c18]/80 rounded-2xl p-4 bg-[#050c18]/40 cursor-pointer transition-all duration-200 group text-center">
                         <Upload className="w-6 h-6 text-emerald-400 group-hover:scale-110 transition-transform mb-1.5" />
                         <span className="text-slate-200 font-bold text-xs">
                           اضغط لتصفح واختيار ملف أو أكثر من جهازك
@@ -6903,14 +6903,14 @@ export default function MawridDashboard() {
                         />
                       </label>
                       {invoiceAttachments.length > 0 && (
-                        <div className="bg-[#060a12]/50 p-2 rounded-xl border border-slate-800 mt-2 space-y-1">
+                        <div className="bg-[#050c18]/50 p-2 rounded-xl border border-slate-800 mt-2 space-y-1">
                           <p className="font-bold text-slate-300 text-[10px] mb-1">
                             المرفقات المختارة ({invoiceAttachments.length}):
                           </p>
                           {invoiceAttachments.map((f, idx) => (
                             <div
                               key={idx}
-                              className="flex items-center justify-between bg-[#111927] text-white p-1.5 rounded border border-slate-800/80 text-[11px]"
+                              className="flex items-center justify-between bg-[#0d1e34] text-white p-1.5 rounded border border-slate-800/80 text-[11px]"
                             >
                               <span
                                 className="font-mono font-bold text-slate-200 truncate max-w-[200px]"
@@ -6942,7 +6942,7 @@ export default function MawridDashboard() {
                 {/* Left Side Panel: Items Row Editor & VAT/Calculations & Credit Note */}
                 <div className="lg:col-span-7 space-y-4">
                   {/* Items header */}
-                  <div className="border border-slate-800/60 p-5 rounded-2xl bg-[#060a12]/80 space-y-4">
+                  <div className="border border-slate-800/60 p-5 rounded-2xl bg-[#050c18]/80 space-y-4">
                     <div>
                       <label className="text-slate-400 block mb-1 font-bold">
                         القيمة الأساسية للفاتورة (قبل الخصم) *
@@ -6960,7 +6960,7 @@ export default function MawridDashboard() {
                             )
                           }
                           placeholder="مثال: 15000"
-                          className="w-full border border-slate-800 rounded-xl p-3 bg-[#060a12] font-mono font-bold text-white text-sm focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                          className="w-full border border-slate-800 rounded-xl p-3 bg-[#050c18] font-mono font-bold text-white text-sm focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
                         />
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs select-none">
                           ج.م
@@ -6993,7 +6993,7 @@ export default function MawridDashboard() {
                           {discounts.map((disc, index) => (
                             <div
                               key={index}
-                              className="flex items-center gap-2 bg-[#0e1726]/40 p-2 rounded-xl border border-slate-800/60"
+                              className="flex items-center gap-2 bg-[#0a1526]/40 p-2 rounded-xl border border-slate-800/60"
                             >
                               <div className="flex-1">
                                 <input
@@ -7008,7 +7008,7 @@ export default function MawridDashboard() {
                                     )
                                   }
                                   placeholder="نوع الخصم (مثال: خصم تعجيل دفع، خصم تجاري...)"
-                                  className="w-full border border-slate-800 rounded-lg p-1.5 bg-[#060a12] text-white placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 outline-none"
+                                  className="w-full border border-slate-800 rounded-lg p-1.5 bg-[#050c18] text-white placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 outline-none"
                                 />
                               </div>
                               <div className="w-32 relative">
@@ -7026,7 +7026,7 @@ export default function MawridDashboard() {
                                     )
                                   }
                                   placeholder="المبلغ"
-                                  className="w-full border border-slate-800 rounded-lg p-1.5 bg-[#060a12] font-mono text-left text-white focus:ring-1 focus:ring-emerald-500/20 outline-none pl-8"
+                                  className="w-full border border-slate-800 rounded-lg p-1.5 bg-[#050c18] font-mono text-left text-white focus:ring-1 focus:ring-emerald-500/20 outline-none pl-8"
                                 />
                                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-450 text-[10px] font-bold">
                                   ج.م
@@ -7081,7 +7081,7 @@ export default function MawridDashboard() {
                     const totalAmount = subtotal + vatAmount;
 
                     return (
-                      <div className="bg-[#060a12]/50 p-4 rounded-2xl border border-slate-800/60 space-y-3">
+                      <div className="bg-[#050c18]/50 p-4 rounded-2xl border border-slate-800/60 space-y-3">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                           <div className="flex flex-col gap-2.5 w-full md:w-auto">
                             {/* Toggle between Automatic Percentage and Custom Tax Amount */}
@@ -7096,7 +7096,7 @@ export default function MawridDashboard() {
                                       isCustomVat: e.target.checked,
                                     })
                                   }
-                                  className="rounded border-slate-800 bg-[#060a12] text-[#0284c7] focus:ring-[#0284c7] focus:ring-offset-0 w-3.5 h-3.5 cursor-pointer"
+                                  className="rounded border-slate-800 bg-[#050c18] text-[#0284c7] focus:ring-[#0284c7] focus:ring-offset-0 w-3.5 h-3.5 cursor-pointer"
                                 />
                                 <span>
                                   كتابة قيمة ضريبة مخصصة (يدوياً بالجنيه)
@@ -7109,7 +7109,7 @@ export default function MawridDashboard() {
                                 <span className="text-xs text-slate-400 font-bold font-sans">
                                   ضريبة القيمة المضافة (VAT):
                                 </span>
-                                <div className="flex items-center gap-1.5 bg-[#060a12] border border-slate-800 rounded-lg px-2 py-0.5 shadow-xs">
+                                <div className="flex items-center gap-1.5 bg-[#050c18] border border-slate-800 rounded-lg px-2 py-0.5 shadow-xs">
                                   <input
                                     type="number"
                                     min="0"
@@ -7161,7 +7161,7 @@ export default function MawridDashboard() {
                                 <span className="text-xs text-slate-400 font-bold font-sans">
                                   قيمة الضريبة المخصصة:
                                 </span>
-                                <div className="flex items-center gap-1.5 bg-[#060a12] border border-slate-800 rounded-lg px-2 py-1 shadow-xs">
+                                <div className="flex items-center gap-1.5 bg-[#050c18] border border-slate-800 rounded-lg px-2 py-1 shadow-xs">
                                   <input
                                     type="number"
                                     min="0"
@@ -8039,11 +8039,11 @@ export default function MawridDashboard() {
 
       {/* MODAL: EDIT SUPPLIER */}
       {editingSupplier && (
-        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#050c18]/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/80 space-y-4 max-h-[90vh] overflow-y-auto"
+            className="bg-[#0a1526]/95 backdrop-blur-md text-white rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/80 space-y-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
               <h3 className="text-base font-bold text-white">
@@ -8073,7 +8073,7 @@ export default function MawridDashboard() {
                         name: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="م. محمد العربي"
                   />
                 </div>
@@ -8091,7 +8091,7 @@ export default function MawridDashboard() {
                         company: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="مجموعة السويدي كابلات"
                   />
                 </div>
@@ -8112,7 +8112,7 @@ export default function MawridDashboard() {
                         phone: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/85 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="01012345678"
                   />
                 </div>
@@ -8130,7 +8130,7 @@ export default function MawridDashboard() {
                         bankAccount: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 font-mono text-[11px] text-white font-semibold placeholder:text-slate-400 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/85 font-mono text-[11px] text-white font-semibold placeholder:text-slate-400 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="EG000000000000000000000000000"
                   />
                 </div>
@@ -8148,7 +8148,7 @@ export default function MawridDashboard() {
                       notes: e.target.value,
                     })
                   }
-                  className="w-full border border-slate-850 rounded-lg p-2 bg-[#060a12]/85 h-20 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                  className="w-full border border-slate-850 rounded-lg p-2 bg-[#050c18]/85 h-20 text-white font-semibold placeholder:text-slate-500 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                   placeholder="أدخل أي ملاحظات حول الدفع أو السداد..."
                 />
               </div>
@@ -8176,11 +8176,11 @@ export default function MawridDashboard() {
 
       {/* MODAL: ADD CREDIT NOTE */}
       {showAddCreditNoteModal && (
-        <div className="fixed inset-0 bg-[#060a12]/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-[#050c18]/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#0e1726]/95 backdrop-blur-md text-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/80 space-y-4 max-h-[95vh] overflow-y-auto"
+            className="bg-[#0a1526]/95 backdrop-blur-md text-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-800/80 space-y-4 max-h-[95vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
               <h3 className="text-base font-bold text-white">
@@ -8204,7 +8204,7 @@ export default function MawridDashboard() {
                   <select
                     disabled
                     value={newCreditNote.supplierId}
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/60 font-semibold text-slate-500 focus:outline-none cursor-not-allowed"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/60 font-semibold text-slate-500 focus:outline-none cursor-not-allowed"
                   >
                     {suppliers.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -8227,7 +8227,7 @@ export default function MawridDashboard() {
                         creditNoteNumber: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 font-bold text-white focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/85 font-bold text-white focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="CN-2026-XYZ"
                   />
                 </div>
@@ -8248,7 +8248,7 @@ export default function MawridDashboard() {
                         dueDate: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 font-semibold text-white font-mono focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all cursor-pointer"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/85 font-semibold text-white font-mono focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all cursor-pointer"
                   />
                 </div>
                 <div>
@@ -8264,7 +8264,7 @@ export default function MawridDashboard() {
                         notes: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#060a12]/85 text-white font-semibold focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full border border-slate-850 rounded-lg p-2.5 bg-[#050c18]/85 text-white font-semibold focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="خصم ترويجي للمواد الخام الربع السنوي"
                   />
                 </div>
@@ -8284,9 +8284,9 @@ export default function MawridDashboard() {
                       invoiceId: e.target.value,
                     })
                   }
-                  className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#060a12] font-bold text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer text-xs"
+                  className="w-full border border-slate-800 rounded-lg p-2.5 bg-[#050c18] font-bold text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer text-xs"
                 >
-                  <option className="bg-[#0e1726]" value="">
+                  <option className="bg-[#0a1526]" value="">
                     -- اختر الفاتورة غير المسددة للربط والخصم منها --
                   </option>
                   {invoices
@@ -8299,7 +8299,7 @@ export default function MawridDashboard() {
                       const remaining =
                         i.totalAmount - (i.creditNoteAmount || 0);
                       return (
-                        <option className="bg-[#0e1726]" key={i.id} value={i.id}>
+                        <option className="bg-[#0a1526]" key={i.id} value={i.id}>
                           فاتورة رقم {i.invoiceNumber} (قيمة الفاتورة:{" "}
                           {fAmt(i.totalAmount)} ج.م | المتبقي للاستحقاق:{" "}
                           {fAmt(remaining)} ج.م)
@@ -8317,7 +8317,7 @@ export default function MawridDashboard() {
                       selectedInvoice.totalAmount -
                       (selectedInvoice.creditNoteAmount || 0);
                     return (
-                      <div className="bg-[#060a12]/80 p-3 rounded-xl border border-slate-800 mt-2 space-y-1 font-sans">
+                      <div className="bg-[#050c18]/80 p-3 rounded-xl border border-slate-800 mt-2 space-y-1 font-sans">
                         <div className="flex justify-between text-slate-400 text-[11px]">
                           <span>قيمة الفاتورة المحددة الأصلية:</span>
                           <span className="font-bold text-slate-200 font-mono">
@@ -8391,7 +8391,7 @@ export default function MawridDashboard() {
                   {newCreditNote.items.map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between gap-3 bg-[#0e1726]/40 p-2 rounded-lg border border-slate-800/60"
+                      className="flex items-center justify-between gap-3 bg-[#0a1526]/40 p-2 rounded-lg border border-slate-800/60"
                     >
                       <span className="text-slate-300 text-xs font-bold font-mono">
                         البند #{index + 1}
@@ -8414,7 +8414,7 @@ export default function MawridDashboard() {
                               handleCNUpdateItemRow(index, "name", "بند إشعار");
                             }
                           }}
-                          className="w-full border border-slate-800 rounded p-1.5 bg-[#060a12] text-white font-mono text-left text-xs focus:ring-1 focus:ring-emerald-500/30 outline-none"
+                          className="w-full border border-slate-800 rounded p-1.5 bg-[#050c18] text-white font-mono text-left text-xs focus:ring-1 focus:ring-emerald-500/30 outline-none"
                         />
                         <span className="text-slate-450 text-[10px] font-bold">
                           ج.م
@@ -8439,7 +8439,7 @@ export default function MawridDashboard() {
                   مرفق الإشعار الدائن (صورة أو ملف)
                 </label>
                 <div className="flex items-center gap-2">
-                  <label className="flex-1 flex items-center justify-between border border-dashed border-slate-800 hover:border-emerald-500/50 rounded-lg p-2.5 bg-[#060a12]/80 cursor-pointer transition-colors">
+                  <label className="flex-1 flex items-center justify-between border border-dashed border-slate-800 hover:border-emerald-500/50 rounded-lg p-2.5 bg-[#050c18]/80 cursor-pointer transition-colors">
                     <span className={`text-[11px] truncate max-w-[270px] ${cnAttachment ? "text-emerald-400 font-bold" : "text-slate-500"}`}>
                       {cnAttachment
                         ? cnAttachment.name
