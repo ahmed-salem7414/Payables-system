@@ -3307,9 +3307,9 @@ export default function MawridDashboard() {
               />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-950 flex items-center gap-2">
+              <h1 className="text-xl font-bold text-slate-950 flex flex-wrap items-center gap-2">
                 مستشفى مرسال للأطفال - Marsal Children's Hospital
-                <span className="text-xs bg-emerald-500/15 text-emerald-600 font-medium px-2 py-0.5 rounded-full border border-emerald-500/20">
+                <span className="inline-flex items-center justify-center text-xs bg-emerald-500/15 text-emerald-600 font-semibold px-2.5 py-1 leading-none rounded-full border border-emerald-500/20 align-middle h-fit">
                   للإصدار المالي
                 </span>
               </h1>
