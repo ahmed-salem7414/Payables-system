@@ -3351,11 +3351,11 @@ export default function MawridDashboard() {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2.5 rounded-xl border border-slate-200 bg-[#1e293b] hover:bg-slate-100 text-slate-700 transition-colors relative"
+                className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors relative shadow-sm cursor-pointer"
               >
                 <Bell className="w-5 h-5 text-slate-600" />
                 {alerts.length > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ring-2 ring-[#1e293b]">
+                  <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ring-2 ring-white shadow-xs">
                     {alerts.length}
                   </span>
                 )}
@@ -3367,26 +3367,26 @@ export default function MawridDashboard() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute left-0 mt-3 w-80 md:w-96 bg-[#1e293b] border border-slate-200 rounded-2xl shadow-xl z-50 p-4"
+                    className="absolute left-0 mt-3 w-80 md:w-96 bg-white border border-slate-200/90 rounded-2xl shadow-xl z-50 p-4 text-right"
                   >
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-3">
+                    <div className="flex items-center justify-between border-b border-slate-200/60 pb-3 mb-3">
                       <span className="font-bold text-slate-800 text-sm">
                         تنبيهات المدفوعات المستحقة
                       </span>
-                      <span className="text-xs text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
+                      <span className="text-xs text-slate-705 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200/50">
                         {alerts.length} تنبيهات
                       </span>
                     </div>
                     <div className="space-y-2 max-h-72 overflow-y-auto">
                       {alerts.length === 0 ? (
-                        <p className="text-xs text-center text-slate-500 py-6">
+                        <p className="text-xs text-center text-slate-400 py-6">
                           لا توجد فواتير معلقة متأخرة حالياً.
                         </p>
                       ) : (
                         alerts.map((al, idx) => (
                           <div
                             key={idx}
-                            className="p-3 rounded-lg bg-rose-500/10 text-rose-700 text-xs border border-rose-500/20 leading-normal"
+                            className="p-3 rounded-lg bg-rose-50 text-rose-800 text-xs border border-rose-100 leading-normal font-sans"
                           >
                             {al}
                           </div>
@@ -3630,7 +3630,7 @@ export default function MawridDashboard() {
                       placeholder="ابحث باسم المورد أو الشركة..."
                       value={supplierSearch}
                       onChange={(e) => setSupplierSearch(e.target.value)}
-                      className="w-full text-xs border border-slate-200/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-[#f8fafc]/80 text-white transition-all"
+                      className="w-full text-xs border border-slate-200/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 border-slate-200 text-slate-800 transition-all"
                     />
                     <Users className="w-4 h-4 text-slate-500 absolute right-3 top-3.5" />
                   </div>
@@ -3754,16 +3754,14 @@ export default function MawridDashboard() {
                               <span className="text-slate-600 block mb-0.5">
                                 رقم الهاتف:
                               </span>
-                              <span className="font-semibold text-white font-mono">
-                                {sup.phone}
+                              <span className="font-semibold text-slate-800 font-mono">{sup.phone}
                               </span>
                             </div>
                             <div>
                               <span className="text-slate-600 block mb-0.5">
                                 البريد الإلكتروني:
                               </span>
-                              <span className="font-semibold text-white break-all">
-                                {sup.email}
+                              <span className="font-semibold text-slate-800 break-all">{sup.email}
                               </span>
                             </div>
                             <div className="col-span-1 sm:col-span-2">
@@ -3835,8 +3833,7 @@ export default function MawridDashboard() {
                                         className="flex items-center justify-between bg-slate-50/60 p-2 rounded-lg border border-slate-200 text-[10px]"
                                       >
                                         <div className="flex flex-col">
-                                          <span className="font-semibold text-white">
-                                            {cn.creditNoteNumber}{" "}
+                                          <span className="font-semibold text-slate-800">{cn.creditNoteNumber}{" "}
                                             <span className="text-slate-500 font-mono text-[9px]">
                                               ({cn.issueDate})
                                             </span>
@@ -3964,8 +3961,7 @@ export default function MawridDashboard() {
                                 <span className="text-slate-600 block mb-0.5">
                                   إجمالي الفواتير / دائنة:
                                 </span>
-                                <span className="font-bold text-white">
-                                  {fAmt(supTotal)}{" "}
+                                <span className="font-bold text-slate-800">{fAmt(supTotal)}{" "}
                                   <span className="text-[10px] text-slate-600">
                                     ج.م
                                   </span>{" "}
@@ -4034,7 +4030,7 @@ export default function MawridDashboard() {
                           placeholder="ابحث برقم الفاتورة، الإشعار أو المورد..."
                           value={invoiceSearch}
                           onChange={(e) => setInvoiceSearch(e.target.value)}
-                          className="w-full text-xs border border-slate-200/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-[#f8fafc]/80 text-white transition-all"
+                          className="w-full text-xs border border-slate-200/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 border-slate-200 text-slate-800 transition-all"
                         />
                         <Search className="w-4 h-4 text-slate-500 absolute right-3 top-3.5" />
                       </div>
@@ -4142,8 +4138,7 @@ export default function MawridDashboard() {
                                   </div>
                                   <div>
                                     <div className="flex items-center gap-2">
-                                      <span className="font-bold text-white font-mono text-sm">
-                                        {inv.invoiceNumber}
+                                      <span className="font-bold text-slate-800 font-mono text-sm">{inv.invoiceNumber}
                                       </span>
                                       {inv.attachments &&
                                       inv.attachments.length > 0 ? (
@@ -4199,8 +4194,7 @@ export default function MawridDashboard() {
                                     <span className="text-slate-600 block mb-0.5">
                                       تاريخ الإصدار:
                                     </span>
-                                    <span className="font-semibold text-white font-mono">
-                                      {inv.issueDate}
+                                    <span className="font-semibold text-slate-700 font-mono">{inv.issueDate}
                                     </span>
                                   </div>
                                   <div>
@@ -4208,7 +4202,7 @@ export default function MawridDashboard() {
                                       تاريخ الاستحقاق:
                                     </span>
                                     <span
-                                      className={`font-semibold font-mono ${inv.status === "unpaid" ? "text-rose-600" : "text-white"}`}
+                                      className={`font-semibold font-mono ${inv.status === "unpaid" ? "text-rose-600" : "text-slate-700"}`}
                                     >
                                       {inv.dueDate}
                                     </span>
@@ -4237,8 +4231,7 @@ export default function MawridDashboard() {
                                         <span className="text-slate-600 block mb-0.5">
                                           القيمة الإجمالية:
                                         </span>
-                                        <span className="text-sm font-black text-white font-mono block">
-                                          {fAmt(inv.totalAmount)} ج.م
+                                        <span className="text-sm font-black text-slate-800 font-mono block">{fAmt(inv.totalAmount)} ج.م
                                         </span>
                                       </>
                                     )}
@@ -4376,8 +4369,7 @@ export default function MawridDashboard() {
                                         >
                                           <div className="flex flex-col gap-0.5">
                                             <div className="flex items-center gap-1.5">
-                                              <span className="font-bold text-white font-mono">
-                                                {cn.creditNoteNumber}
+                                              <span className="font-bold text-slate-800 font-mono">{cn.creditNoteNumber}
                                               </span>
                                               <span className="text-[9px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">
                                                 مُطبّق خصم
@@ -4466,16 +4458,14 @@ export default function MawridDashboard() {
                                     <span className="text-slate-600 block mb-0.5">
                                       تاريخ الإصدار:
                                     </span>
-                                    <span className="font-semibold text-white font-mono">
-                                      {cn.issueDate}
+                                    <span className="font-semibold text-slate-750 font-mono">{cn.issueDate}
                                     </span>
                                   </div>
                                   <div>
                                     <span className="text-slate-600 block mb-0.5">
                                       تاريخ الاستحقاق المتوقع:
                                     </span>
-                                    <span className="font-semibold font-mono text-white">
-                                      {cn.dueDate || "-"}
+                                    <span className="font-semibold font-mono text-slate-750">{cn.dueDate || "-"}
                                     </span>
                                   </div>
                                   <div className="col-span-1 sm:col-span-2 md:col-span-1">
@@ -4658,8 +4648,7 @@ export default function MawridDashboard() {
                             <td className="py-4 px-4 font-bold text-emerald-600 font-mono">
                               {p.id}
                             </td>
-                            <td className="py-4 px-4 font-semibold text-white">
-                              {sup ? sup.name : "مورد محذوف"}
+                            <td className="py-4 px-4 font-semibold text-slate-800">{sup ? sup.name : "مورد محذوف"}
                             </td>
                             <td className="py-4 px-4 font-mono text-slate-600">
                               {inv ? inv.invoiceNumber : "فاتورة كرتونية"}
@@ -4737,8 +4726,7 @@ export default function MawridDashboard() {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-bold text-white">
-                          {bank.bankName}
+                        <span className="text-xs font-bold text-slate-800">{bank.bankName}
                         </span>
                         <button
                           onClick={() => handleToggleBankLinkage(bank.bankName)}
@@ -4754,8 +4742,7 @@ export default function MawridDashboard() {
                       <div className="space-y-1.5 text-xs text-slate-700 font-medium">
                         <div className="flex justify-between">
                           <span>رقم الحساب التسووي:</span>
-                          <span className="font-mono text-white">
-                            {bank.accountNumber}
+                          <span className="font-mono text-slate-700">{bank.accountNumber}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -5788,8 +5775,7 @@ export default function MawridDashboard() {
               <div className="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10 flex items-center gap-3 text-xs text-slate-700">
                 <Shield className="w-5 h-5 text-emerald-600 shrink-0" />
                 <div>
-                  <span className="font-bold text-white block">
-                    حالة الحفظ الذاتي: نشط وتلقائي (Auto-save Enabled)
+                  <span className="font-bold text-slate-800 block">حالة الحفظ الذاتي: نشط وتلقائي (Auto-save Enabled)
                   </span>
                   <span className="text-[11px] text-slate-600">
                     يقوم النظام تلقائياً بتحديث وحفظ أي تعديلات تجريها فورياً
@@ -5981,10 +5967,10 @@ export default function MawridDashboard() {
                   return (
                     <div
                       key={wh}
-                      className="bg-[#1e293b] p-5 rounded-2xl border border-slate-200 shadow-md flex flex-col justify-between hover:border-emerald-500/40 transition-all duration-200 group relative overflow-hidden text-white"
+                      className="bg-white p-5 rounded-2xl border border-slate-200 shadow-md flex flex-col justify-between hover:border-emerald-500/40 transition-all duration-200 group relative overflow-hidden text-slate-800"
                     >
                       {/* Ambient background decoration */}
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-slate-100 rounded-full -mr-6 -mt-6 -z-0 opacity-20 group-hover:bg-slate-700 transition-colors pointer-events-none"></div>
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-slate-100 rounded-full -mr-6 -mt-6 -z-0 opacity-20 group-hover:bg-slate-100 transition-colors pointer-events-none"></div>
 
                       <div className="relative z-10">
                         <div className="flex items-start justify-between">
@@ -6208,7 +6194,7 @@ export default function MawridDashboard() {
                     <select
                       value={selectedPaymentBank}
                       onChange={(e) => setSelectedPaymentBank(e.target.value)}
-                      className="w-full bg-slate-100/80 border border-slate-200 text-xs text-white p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-800 p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold"
                     >
                       {linkedBanks
                         .filter((b) => b.isLinked)
@@ -8230,7 +8216,7 @@ export default function MawridDashboard() {
                         creditNoteNumber: e.target.value,
                       })
                     }
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-[#f8fafc]/85 font-bold text-white focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-bold text-slate-800 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="CN-2026-XYZ"
                   />
                 </div>
