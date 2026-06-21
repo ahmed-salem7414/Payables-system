@@ -3534,52 +3534,52 @@ export default function MawridDashboard() {
         <div className="flex-1 min-w-0">
           {/* Dashboard Summary Statistics Bar (Always rendered at the top of content tabs in screen) */}
           <div className="no-print grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white backdrop-blur-md p-5 rounded-2xl border border-slate-200/80 hover:border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5">
+            <div className="bg-white backdrop-blur-md p-5 rounded-2xl border border-slate-200/80 hover:border-slate-300/80 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(0,0,0,0.08)]">
               <div>
-                <p className="text-xs text-slate-600 font-medium">
+                <p className="text-xs text-slate-500 font-semibold mb-1">
                   إجمالي المشتريات
                 </p>
-                <p className="text-lg md:text-xl font-extrabold text-white mt-1">
+                <p className="text-lg md:text-xl font-extrabold text-slate-800 mt-1">
                   {fAmt(dashboardStats.totalInvoicesAmount)}{" "}
-                  <span className="text-xs text-slate-600 font-normal">ج.م</span>
+                  <span className="text-xs text-slate-500 font-normal">ج.م</span>
                 </p>
-                <div className="flex items-center gap-1 mt-1.5 text-slate-500 text-[10px]">
-                  <Activity className="w-3.5 h-3.5 text-slate-500" />
+                <div className="flex items-center gap-1 mt-1.5 text-slate-400 text-[10px]">
+                  <Activity className="w-3.5 h-3.5 text-slate-400" />
                   <span>تاريخ آخر تحديث اليوم</span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-slate-100/70 flex items-center justify-center text-emerald-600 border border-slate-200/50">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200/50">
                 <Receipt className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="bg-[#0c1f1a]/60 backdrop-blur-md p-5 rounded-2xl border border-emerald-500/20 hover:border-emerald-500/35 shadow-[0_4px_20px_rgba(16,185,129,0.06)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5">
+            <div className="bg-emerald-50/40 backdrop-blur-md p-5 rounded-2xl border border-emerald-200 hover:border-emerald-300 shadow-[0_4px_20px_rgba(16,185,129,0.02)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(16,185,129,0.06)]">
               <div>
-                <p className="text-xs text-emerald-600/90 font-medium">
+                <p className="text-xs text-emerald-700/90 font-semibold mb-1">
                   إجمالي المسدد
                 </p>
                 <p className="text-lg md:text-xl font-extrabold text-emerald-600 mt-1">
                   {fAmt(dashboardStats.paidAmount)}{" "}
-                  <span className="text-xs text-slate-600 font-normal">ج.م</span>
+                  <span className="text-xs text-emerald-700/60 font-normal">ج.م</span>
                 </p>
-                <div className="flex items-center gap-1 mt-1.5 text-emerald-600/80 text-[10px] font-semibold">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                <div className="flex items-center gap-1 mt-1.5 text-emerald-700/80 text-[10px] font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   <span>معدل تسوية {dashboardStats.paymentRatio}%</span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 border border-emerald-500/20">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100/60 flex items-center justify-center text-emerald-600 border border-emerald-200/55">
                 <Check className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="bg-[#241318]/60 backdrop-blur-md p-5 rounded-2xl border border-rose-500/20 hover:border-rose-500/35 shadow-[0_4px_20px_rgba(244,63,94,0.06)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5">
+            <div className="bg-rose-50/40 backdrop-blur-md p-5 rounded-2xl border border-rose-200 hover:border-rose-300 shadow-[0_4px_20px_rgba(244,63,94,0.02)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(244,63,94,0.06)]">
               <div>
-                <p className="text-xs text-rose-450 font-medium">
+                <p className="text-xs text-rose-700 font-semibold mb-1">
                   المديونية المستحقة
                 </p>
                 <p className="text-lg md:text-xl font-extrabold text-rose-600 mt-1">
                   {fAmt(dashboardStats.pendingAmount)}{" "}
-                  <span className="text-xs text-slate-600 font-normal">ج.م</span>
+                  <span className="text-xs text-rose-700/60 font-normal">ج.م</span>
                 </p>
                 <div className="flex items-center gap-1 mt-1.5 text-rose-600 text-[10px] font-semibold">
                   <AlertTriangle className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
@@ -3588,26 +3588,26 @@ export default function MawridDashboard() {
                   </span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-600 border border-rose-500/20">
+              <div className="w-10 h-10 rounded-xl bg-rose-100/60 flex items-center justify-center text-rose-600 border border-rose-200/55">
                 <ShieldAlert className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="bg-[#19152b]/60 backdrop-blur-md p-5 rounded-2xl border border-purple-500/20 hover:border-purple-500/35 shadow-[0_4px_20px_rgba(168,85,247,0.06)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5">
+            <div className="bg-purple-50/40 backdrop-blur-md p-5 rounded-2xl border border-purple-200 hover:border-purple-300 shadow-[0_4px_20px_rgba(168,85,247,0.02)] flex items-center justify-between transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_25px_rgba(168,85,247,0.06)]">
               <div>
-                <p className="text-xs text-purple-300 font-medium">
+                <p className="text-xs text-purple-700 font-semibold mb-1">
                   حساب الموردين
                 </p>
-                <p className="text-lg md:text-xl font-extrabold text-white mt-1">
+                <p className="text-lg md:text-xl font-extrabold text-purple-600 mt-1">
                   {dashboardStats.suppliersCount}{" "}
-                  <span className="text-xs text-slate-600 font-normal">موردين</span>
+                  <span className="text-xs text-purple-700/60 font-normal">موردين</span>
                 </p>
-                <div className="flex items-center gap-1 mt-1.5 text-purple-400/80 text-[10px] font-semibold">
-                  <UserCheck className="w-3.5 h-3.5 text-purple-400" />
+                <div className="flex items-center gap-1 mt-1.5 text-purple-600/80 text-[10px] font-semibold">
+                  <UserCheck className="w-3.5 h-3.5 text-purple-500" />
                   <span>مصنفين حسب الخدمات</span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-[#c084fc] border border-purple-500/20">
+              <div className="w-10 h-10 rounded-xl bg-purple-100/60 flex items-center justify-center text-purple-600 border border-purple-200/55">
                 <Users className="w-5 h-5" />
               </div>
             </div>
