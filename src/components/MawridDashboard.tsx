@@ -3520,7 +3520,7 @@ export default function MawridDashboard() {
               onClick={() => setActiveTab("backups")}
               className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
                 activeTab === "backups"
-                  ? "bg-purple-500/10 text-[#d8b4fe] shadow-[0_2px_12px_rgba(168,85,247,0.08)] border border-purple-500/25"
+                  ? "bg-emerald-500/10 text-emerald-600 shadow-[0_2px_12px_rgba(16,185,129,0.08)] border border-emerald-500/25"
                   : "text-slate-600 hover:bg-slate-100/60 hover:text-slate-900"
               }`}
             >
