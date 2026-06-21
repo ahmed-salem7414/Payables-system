@@ -3638,7 +3638,7 @@ export default function MawridDashboard() {
 
                 <button
                   onClick={() => setShowAddSupplierModal(true)}
-                  className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-slate-800 text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-all duration-200"
+                  className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-all duration-200"
                 >
                   <Plus className="w-4 h-4" />
                   <span>إضافة مورد جديد</span>
@@ -3719,7 +3719,7 @@ export default function MawridDashboard() {
                                   });
                                   setShowAddInvoiceModal(true);
                                 }}
-                                className="bg-emerald-600 hover:bg-emerald-500 text-slate-900 font-bold px-2 py-1 text-[10px] rounded shadow flex items-center gap-1 cursor-pointer transition-colors"
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-1 text-[10px] rounded shadow flex items-center gap-1 cursor-pointer transition-colors"
                                 title="سجّل فاتورة شراء جديدة على هذا المورد"
                               >
                                 <Plus className="w-3 h-3" />
@@ -4055,7 +4055,7 @@ export default function MawridDashboard() {
 
                     <button
                       onClick={() => setShowAddInvoiceModal(true)}
-                      className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-slate-800 text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-all duration-200"
+                      className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-all duration-200"
                     >
                       <Plus className="w-4 h-4" />
                       <span>تسجيل فاتورة جديدة</span>
@@ -4596,7 +4596,7 @@ export default function MawridDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-[#1e293b] p-6 rounded-2xl border border-slate-200 shadow-lg space-y-6"
+              className="bg-white p-6 rounded-2xl border border-slate-200 shadow-md space-y-6 text-slate-800"
             >
               <div>
                 <h3 className="text-base font-bold text-slate-900">
@@ -4658,12 +4658,12 @@ export default function MawridDashboard() {
                             </td>
                             <td className="py-4 px-4 font-semibold">
                               <span
-                                className={`px-2 py-0.5 rounded-full ${
+                                className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${
                                   p.method === "bank_transfer"
-                                    ? "bg-slate-100/70lue-500/10 text-blue-300 border border-blue-500/20"
+                                    ? "bg-blue-50 text-blue-700 border-blue-200"
                                     : p.method === "fawry"
-                                      ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
-                                      : "bg-purple-500/10 text-purple-300 border border-purple-500/20"
+                                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                                      : "bg-purple-50 text-purple-700 border-purple-200"
                                 }`}
                               >
                                 {p.method === "bank_transfer"
@@ -4861,7 +4861,7 @@ export default function MawridDashboard() {
                                       onClick={() =>
                                         handleInitiateSettleInvoice(inv)
                                       }
-                                      className="bg-emerald-600 hover:bg-emerald-500 text-slate-900 font-bold text-[10px] px-3 py-1.5 rounded-lg whitespace-nowrap cursor-pointer transition-colors"
+                                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg whitespace-nowrap cursor-pointer transition-colors"
                                     >
                                       تشغيل السداد والتسوية
                                     </button>
@@ -5020,7 +5020,7 @@ export default function MawridDashboard() {
                     <button
                       type="button"
                       onClick={handleExportReportToExcel}
-                      className="bg-emerald-600/95 hover:bg-emerald-500 text-slate-900 font-bold text-[11px] h-[40px] px-5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 transition-colors duration-150 shadow-md hover:-translate-y-0.5 active:translate-y-0"
+                      className="bg-emerald-600/95 hover:bg-emerald-500 text-white font-bold text-[11px] h-[40px] px-5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 transition-colors duration-150 shadow-md hover:-translate-y-0.5 active:translate-y-0"
                     >
                       <span className="text-sm">📊</span> تصدير Excel (.csv)
                     </button>
@@ -5029,7 +5029,7 @@ export default function MawridDashboard() {
                     <button
                       type="button"
                       onClick={handlePrintReport}
-                      className="bg-emerald-600 hover:bg-sky-550 active:bg-emerald-700 text-slate-900 font-bold text-[11px] h-[40px] px-5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 transition-colors duration-150 shadow-md hover:-translate-y-0.5 active:translate-y-0"
+                      className="bg-emerald-600 hover:bg-sky-550 active:bg-emerald-700 text-white font-bold text-[11px] h-[40px] px-5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-2 transition-colors duration-150 shadow-md hover:-translate-y-0.5 active:translate-y-0"
                     >
                       <Printer className="w-4 h-4 text-white shrink-0" />
                       طباعة مباشرة / حفظ PDF
@@ -5700,7 +5700,7 @@ export default function MawridDashboard() {
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button
                     onClick={triggerManualBackup}
-                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-colors cursor-pointer"
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-colors cursor-pointer"
                   >
                     <Plus className="w-4 h-4 text-white" />
                     <span>إنشاء نقطة استعادة جديدة</span>
@@ -7241,7 +7241,7 @@ export default function MawridDashboard() {
                     </button>
                     <button
                       type="submit"
-                      className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-slate-900 font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5 transition-all shadow-md shadow-emerald-600/10"
+                      className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5 transition-all shadow-md shadow-emerald-600/10"
                     >
                       <span>تسجيل وحفظ الفاتورة</span>
                     </button>
