@@ -4656,9 +4656,9 @@ export default function MawridDashboard() {
                             <td className="py-4 px-4 font-mono text-slate-600">
                               {p.paymentDate}
                             </td>
-                            <td className="py-4 px-4 font-semibold">
+                            <td className="py-4 px-4 font-semibold whitespace-nowrap">
                               <span
-                                className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${
+                                className={`px-2 py-0.5 rounded-full border text-[10px] font-bold whitespace-nowrap inline-block ${
                                   p.method === "bank_transfer"
                                     ? "bg-blue-50 text-blue-700 border-blue-200"
                                     : p.method === "fawry"
@@ -5518,9 +5518,9 @@ export default function MawridDashboard() {
                                           <td className={`py-2.5 px-3 font-mono font-black text-center ${tc.accentText}`}>
                                             {fAmt(item.totalNet)} ج.م
                                           </td>
-                                          <td className="py-2.5 px-3 text-center">
+                                          <td className="py-2.5 px-3 text-center whitespace-nowrap">
                                             <span
-                                              className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${item.badgeClass}`}
+                                              className={`px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap inline-block ${item.badgeClass}`}
                                             >
                                               {item.overallStatusText}
                                             </span>
@@ -5600,9 +5600,9 @@ export default function MawridDashboard() {
                                             <td className={`py-2.5 px-3 font-mono font-black text-center ${tc.invoiceText}`}>
                                               {fAmt(item.payableAmount)} ج.م
                                             </td>
-                                            <td className="py-2.5 px-3 text-center">
+                                            <td className="py-2.5 px-3 text-center whitespace-nowrap">
                                               <span
-                                                className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${badgeClass}`}
+                                                className={`px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap inline-block ${badgeClass}`}
                                               >
                                                 {statusText}
                                               </span>
@@ -5935,7 +5935,7 @@ export default function MawridDashboard() {
                         );
                       }
                     }}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-slate-900 font-bold text-xs px-4 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     إضافة مخزن جديد
@@ -6448,7 +6448,7 @@ export default function MawridDashboard() {
               <button
                 type="button"
                 onClick={handleSaveNewWarehouse}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-slate-800 text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 font-sans"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 font-sans"
               >
                 <Plus className="w-4 h-4" />
                 تأكيد الإضافة والتحديد
