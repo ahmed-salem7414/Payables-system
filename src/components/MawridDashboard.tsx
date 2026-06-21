@@ -4890,7 +4890,7 @@ export default function MawridDashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
                   {/* 1. Supplier Select */}
                   <div className="flex flex-col gap-1 w-full">
-                    <label className="text-[10px] text-slate-600 font-bold font-sans flex items-center gap-1">
+                    <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
                       <span>👤</span> المورد:
                     </label>
                     <select
@@ -4899,7 +4899,7 @@ export default function MawridDashboard() {
                         setSelectedReportSupplierId(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#f8fafc]/80 text-[#34d399] border border-slate-200/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
+                      className="bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="all">جميع الموردين</option>
                       {suppliers.map((s) => (
@@ -4912,7 +4912,7 @@ export default function MawridDashboard() {
 
                   {/* 2. Warehouse Select */}
                   <div className="flex flex-col gap-1 w-full">
-                    <label className="text-[10px] text-slate-600 font-bold font-sans flex items-center gap-1">
+                    <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
                       <span>🏭</span> المستودع:
                     </label>
                     <select
@@ -4921,7 +4921,7 @@ export default function MawridDashboard() {
                         setReportWarehouseFilter(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#f8fafc]/80 text-[#34d399] border border-slate-200/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
+                      className="bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="all">كافة المستودعات</option>
                       {warehouses.map((w) => (
@@ -4934,7 +4934,7 @@ export default function MawridDashboard() {
 
                   {/* 3. Date Type Selection */}
                   <div className="flex flex-col gap-1 w-full">
-                    <label className="text-[10px] text-slate-600 font-bold font-sans flex items-center gap-1">
+                    <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
                       <span>📅</span> التاريخ بـ:
                     </label>
                     <select
@@ -4945,7 +4945,7 @@ export default function MawridDashboard() {
                         );
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#f8fafc]/80 text-amber-600 border border-slate-200/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
+                      className="bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="issue_date">🕒 تاريخ الإضافة</option>
                       <option value="due_date">⚠️ تاريخ الاستحقاق</option>
@@ -4954,7 +4954,7 @@ export default function MawridDashboard() {
 
                   {/* 4. Start Date Input */}
                   <div className="flex flex-col gap-1 w-full">
-                    <label className="text-[10px] text-slate-600 font-bold font-sans flex items-center gap-1">
+                    <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
                       <span>📅</span> من تاريخ:
                     </label>
                     <input
@@ -4964,13 +4964,13 @@ export default function MawridDashboard() {
                         setReportStartDate(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#f8fafc]/80 text-slate-800 border border-slate-200/80 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
+                      className="bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
                     />
                   </div>
 
                   {/* 5. End Date Input */}
                   <div className="flex flex-col gap-1 w-full">
-                    <label className="text-[10px] text-slate-600 font-bold font-sans flex items-center gap-1">
+                    <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
                       <span>📅</span> إلى تاريخ:
                     </label>
                     <input
@@ -4980,13 +4980,13 @@ export default function MawridDashboard() {
                         setReportEndDate(e.target.value);
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#f8fafc]/80 text-slate-800 border border-slate-200/80 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
+                      className="bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
                     />
                   </div>
 
                   {/* 6. Report View Type Select */}
                   <div className="flex flex-col gap-1 w-full">
-                    <label className="text-[10px] text-slate-600 font-bold font-sans flex items-center gap-1">
+                    <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
                       <span>📝</span> نوع التقرير:
                     </label>
                     <select
@@ -4997,7 +4997,7 @@ export default function MawridDashboard() {
                         );
                         setActiveReportPage(0);
                       }}
-                      className="bg-[#f8fafc]/80 text-cyan-400 border border-slate-200/80 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-cyan-500/20 focus:border-cyan-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
+                      className="bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-cyan-500/20 focus:border-cyan-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
                     >
                       <option value="summary">📊 تقرير إجمالي</option>
                       <option value="detailed">📝 تقرير تفصيلي</option>
