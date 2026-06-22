@@ -6601,7 +6601,7 @@ export default function MawridDashboard() {
             className="bg-white backdrop-blur-md text-slate-800 rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200/80 space-y-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
-              <h3 className="text-base font-extrabold text-white">
+              <h3 className="text-base font-extrabold text-black">
                 إضافة مورد جديد
               </h3>
               <button
@@ -6707,7 +6707,7 @@ export default function MawridDashboard() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-slate-900 font-bold px-5 py-2.5 rounded-lg cursor-pointer transition-all"
+                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer transition-all"
                 >
                   حفظ المورد
                 </button>
