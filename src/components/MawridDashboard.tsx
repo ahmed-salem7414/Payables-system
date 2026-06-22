@@ -6098,30 +6098,30 @@ export default function MawridDashboard() {
 
             <div className="space-y-4 text-xs">
               {/* Invoice details summary */}
-              <div className="bg-[#1e293b] rounded-xl p-4 border border-slate-200 space-y-2">
-                <div className="flex justify-between items-center text-slate-700">
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2">
+                <div className="flex justify-between items-center text-slate-600">
                   <span>المورّد المستحق:</span>
-                  <span className="font-bold text-white">
+                  <span className="font-bold text-slate-900">
                     {suppliers.find((s) => s.id === invoiceToSettle.supplierId)
                       ?.company || "مورد غير معروف"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-slate-700">
+                <div className="flex justify-between items-center text-slate-600">
                   <span>تاريخ الاستحقاق:</span>
-                  <span className="font-mono text-white">
+                  <span className="font-mono text-slate-900 font-bold">
                     {invoiceToSettle.dueDate}
                   </span>
                 </div>
                 {invoiceToSettle.creditNoteAmount &&
                 invoiceToSettle.creditNoteAmount > 0 ? (
                   <>
-                    <div className="flex justify-between items-center text-slate-600">
+                    <div className="flex justify-between items-center text-slate-500">
                       <span>القيمة الأصلية للفاتورة:</span>
-                      <span className="font-mono">
+                      <span className="font-mono text-slate-800">
                         {fAmt(invoiceToSettle.totalAmount)} ج.م
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-rose-450 text-rose-600">
+                    <div className="flex justify-between items-center text-rose-600">
                       <span>خصم الإشعار الدائن:</span>
                       <span className="font-mono font-bold">
                         - {fAmt(invoiceToSettle.creditNoteAmount)} ج.م
@@ -6130,10 +6130,10 @@ export default function MawridDashboard() {
                   </>
                 ) : null}
                 <div className="flex justify-between items-center border-t border-slate-200 pt-2">
-                  <span className="text-slate-800 font-bold">
+                  <span className="text-slate-900 font-bold">
                     صافي القيمة المطلوبة للسداد:
                   </span>
-                  <span className="text-base font-black text-[#34d399] font-mono">
+                  <span className="text-base font-black text-emerald-600 font-mono">
                     {fAmt(
                       invoiceToSettle.totalAmount -
                         (invoiceToSettle.creditNoteAmount || 0),
@@ -6154,8 +6154,8 @@ export default function MawridDashboard() {
                     onClick={() => setSelectedPaymentMethod("bank_transfer")}
                     className={`p-3.5 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
                       selectedPaymentMethod === "bank_transfer"
-                        ? "bg-emerald-600/20 border-emerald-500 text-slate-900 font-bold ring-2 ring-emerald-500/10"
-                        : "bg-slate-850 border-slate-200 text-slate-405 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                        ? "bg-emerald-500/10 border-emerald-500 text-emerald-700 font-bold ring-2 ring-emerald-500/10"
+                        : "bg-white border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-50"
                     }`}
                   >
                     <Building className="w-5 h-5 text-emerald-600" />
@@ -6167,8 +6167,8 @@ export default function MawridDashboard() {
                     onClick={() => setSelectedPaymentMethod("cash")}
                     className={`p-3.5 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
                       selectedPaymentMethod === "cash"
-                        ? "bg-amber-600/20 border-amber-500 text-slate-900 font-bold ring-2 ring-amber-500/10"
-                        : "bg-slate-850 border-slate-200 text-slate-405 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                        ? "bg-amber-500/10 border-amber-500 text-amber-700 font-bold ring-2 ring-amber-500/10"
+                        : "bg-white border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-50"
                     }`}
                   >
                     <Wallet className="w-5 h-5 text-amber-600" />
