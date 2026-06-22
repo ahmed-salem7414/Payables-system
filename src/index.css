@@ -48,7 +48,7 @@ html, body {
   overflow: hidden !important;
   background: #ffffff !important;
   color: #0f172a !important;
-  border: 1px solid #cbd5e1 !important;
+  border: 6px double rgba(4, 120, 87, 0.6) !important; /* Retain double emerald border */
   border-radius: 1.5rem !important; /* rounded-3xl */
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
   margin: 1.5rem auto !important; /* spacing of pages in preview flow */
@@ -72,8 +72,8 @@ html, body {
 
 @media print {
   @page {
-    size: A4 landscape !important;
-    margin: 0 !important;
+    size: A4 landscape; /* Recommended standard landscape orientation */
+    margin: 10mm !important; /* Professional printable margins */
   }
   
   /* Force exact colors and backgrounds on all printed elements */
@@ -92,7 +92,7 @@ html, body {
     color: #0f172a !important;
     margin: 0 !important;
     padding: 0 !important;
-    width: 297mm !important;
+    width: 100% !important;
     height: auto !important;
     box-shadow: none !important;
   }
@@ -102,8 +102,8 @@ html, body {
     margin: 0 !important;
     padding: 0 !important;
     display: block !important;
-    width: 297mm !important;
-    max-width: 297mm !important;
+    width: 100% !important;
+    max-width: 100% !important;
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
@@ -113,7 +113,7 @@ html, body {
   #printable-report-content {
     margin: 0 auto !important;
     padding: 0 !important;
-    width: 297mm !important;
+    width: 100% !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
     box-shadow: none !important;
@@ -153,31 +153,33 @@ html, body {
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important; /* Keep tables at the top of the page in print */
-    gap: 1rem !important;
+    gap: 1.5rem !important;
     page-break-after: always !important;
     break-after: page !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    margin: 0 !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    margin: 0 auto 20px auto !important;
+    border: 6px double rgba(4, 120, 87, 0.6) !important; /* Retain double emerald border exactly like preview */
+    border-radius: 1.5rem !important; /* Retain beautiful rounded corners */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important; /* Retain subtle shadow */
     box-sizing: border-box !important;
     overflow: hidden !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
     
-    /* Strict physical dimensions per sheet matching standard landscape A4 with safety margin */
-    width: 297mm !important;
-    height: 209mm !important;
-    min-height: 209mm !important;
-    max-height: 209mm !important;
-    padding: 12mm !important;
+    /* Fluid width to fit Portrait or Landscape seamlessly without spilling or splitting */
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    padding: 2.5rem !important;
   }
   
   .printable-report-page:last-child {
     page-break-after: avoid !important;
     break-after: avoid !important;
+    margin-bottom: 0 !important;
   }
   
   table {
