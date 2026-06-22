@@ -73,7 +73,7 @@ html, body {
 @media print {
   @page {
     size: A4 landscape; /* Recommended standard landscape orientation */
-    margin: 10mm !important; /* Professional printable margins */
+    margin: 6mm !important; /* Professional printable margins */
   }
   
   /* Force exact colors and backgrounds on all printed elements */
@@ -167,12 +167,12 @@ html, body {
     background: #ffffff !important;
     background-color: #ffffff !important;
     
-    /* Perfect physical constraints mapping exactly to standard A4 landscape sheet */
-    width: 277mm !important;
-    height: 190mm !important;
-    min-height: 190mm !important;
-    max-height: 190mm !important;
-    padding: 8mm 10mm !important;
+    /* Perfect physical constraints mapping exactly to standard A4 landscape sheet with 6mm safe page margin */
+    width: 285mm !important;
+    height: 198mm !important;
+    min-height: 198mm !important;
+    max-height: 198mm !important;
+    padding: 8mm 12mm !important;
   }
   
   .printable-report-page:last-child {

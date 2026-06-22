@@ -5270,7 +5270,7 @@ export default function MawridDashboard() {
 
                             <div className="relative z-10 space-y-6">
                               {/* Printed Header Banner */}
-                              <div className="border-b-2 border-emerald-650 pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                              <div className="border-b-2 border-emerald-650 pb-4 flex flex-row items-center justify-between gap-4 w-full">
                                 <div className="text-right">
                                   <h2 className="text-xl font-extrabold text-slate-950 font-sans tracking-tight">
                                     مستشفى مرسال للأطفال - Marsal Children's Hospital
