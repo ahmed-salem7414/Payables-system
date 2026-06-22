@@ -153,27 +153,26 @@ html, body {
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important; /* Keep tables at the top of the page in print */
-    gap: 1.5rem !important;
+    gap: 1rem !important;
     page-break-after: always !important;
     break-after: page !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    margin: 0 auto 20px auto !important;
+    margin: 0 !important;
     border: 6px double rgba(4, 120, 87, 0.6) !important; /* Retain double emerald border exactly like preview */
     border-radius: 1.5rem !important; /* Retain beautiful rounded corners */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important; /* Retain subtle shadow */
+    box-shadow: none !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
     
-    /* Fluid width to fit Portrait or Landscape seamlessly without spilling or splitting */
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
-    max-height: none !important;
-    padding: 2.5rem !important;
+    /* Perfect physical constraints mapping exactly to standard A4 landscape sheet */
+    width: 277mm !important;
+    height: 190mm !important;
+    min-height: 190mm !important;
+    max-height: 190mm !important;
+    padding: 8mm 10mm !important;
   }
   
   .printable-report-page:last-child {

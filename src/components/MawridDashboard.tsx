@@ -5308,22 +5308,22 @@ export default function MawridDashboard() {
 
                               {/* Report specs indicators (ONLY ON FIRST PAGE: pageIdx === 0) */}
                               {pageIdx === 0 && (
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border border-emerald-200 bg-emerald-500/15 rounded-2xl p-5 shadow-sm relative z-10 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-emerald-100">
-                                  <div className="text-center flex flex-col justify-between items-center font-bold pb-2 md:pb-0">
+                                <div className="grid grid-cols-4 gap-4 border border-emerald-200 bg-emerald-500/15 rounded-2xl p-4 shadow-sm relative z-10 divide-x divide-x-reverse divide-emerald-100">
+                                  <div className="text-center flex flex-col justify-between items-center font-bold pb-0">
                                     <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
                                       📅 فترة ومعايير التدقيق المالي
                                     </span>
-                                    <span className="text-xs text-slate-800 font-bold block leading-relaxed font-sans text-center">
-                                      من: <span className="font-mono">{reportStartDate}</span> <br/>
-                                      إلى: <span className="font-mono">{reportEndDate}</span>
+                                    <span className="text-[11px] text-slate-800 font-bold block leading-relaxed font-sans text-center">
+                                      من: <span className="font-mono text-slate-900">{reportStartDate}</span> <br/>
+                                      إلى: <span className="font-mono text-slate-900">{reportEndDate}</span>
                                     </span>
                                   </div>
                                   
-                                  <div className="text-center flex flex-col justify-between items-center font-bold pt-2 md:pt-0 md:px-4">
+                                  <div className="text-center flex flex-col justify-between items-center font-bold px-2">
                                     <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
                                       👤 نطاق البحث والمورد المختار
                                     </span>
-                                    <span className="text-xs text-emerald-950 font-black block leading-snug font-sans text-center max-w-full break-words">
+                                    <span className="text-[11px] text-emerald-950 font-black block leading-snug font-sans text-center max-w-full break-words">
                                       {selectedReportSupplierId === "all" 
                                         ? "جميع الموردين المسجلين بالمستشفى" 
                                         : suppliers.find((s) => s.id === selectedReportSupplierId)?.name}
@@ -5333,20 +5333,20 @@ export default function MawridDashboard() {
                                     </span>
                                   </div>
 
-                                  <div className="text-center flex flex-col justify-between items-center font-bold pt-2 md:pt-0 md:px-4">
+                                  <div className="text-center flex flex-col justify-between items-center font-bold px-2">
                                     <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
                                       💰 مجموع المطالبات الصافية
                                     </span>
-                                    <strong className="text-sm text-emerald-800 font-black block font-mono text-center">
+                                    <strong className="text-xs text-emerald-800 font-black block font-mono text-center">
                                       {fAmt(getSelectedReportFinancials().total)} ج.م
                                     </strong>
                                   </div>
 
-                                  <div className="text-center flex flex-col justify-between items-center font-bold pt-2 md:pt-0">
+                                  <div className="text-center flex flex-col justify-between items-center font-bold">
                                     <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
                                       🚨 القيمة المتبقية للمديونية
                                     </span>
-                                    <strong className="text-sm text-rose-700 font-black block font-mono text-center">
+                                    <strong className="text-xs text-rose-700 font-black block font-mono text-center">
                                       {fAmt(getSelectedReportFinancials().pending)} ج.م
                                     </strong>
                                   </div>
