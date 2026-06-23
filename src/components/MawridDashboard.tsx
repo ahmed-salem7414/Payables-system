@@ -562,10 +562,14 @@ export default function MawridDashboard() {
   });
 
   useEffect(() => {
-    localStorage.setItem(
-      "mawrid_supplier_categories",
-      JSON.stringify(supplierCategories),
-    );
+    try {
+      localStorage.setItem(
+        "mawrid_supplier_categories",
+        JSON.stringify(supplierCategories),
+      );
+    } catch (e) {
+      console.error("Local storage sync error for categories:", e);
+    }
   }, [supplierCategories]);
 
   const [warehouses, setWarehouses] = useState<string[]>(() => {
@@ -587,7 +591,11 @@ export default function MawridDashboard() {
   });
 
   useEffect(() => {
-    localStorage.setItem("mawrid_warehouses", JSON.stringify(warehouses));
+    try {
+      localStorage.setItem("mawrid_warehouses", JSON.stringify(warehouses));
+    } catch (e) {
+      console.error("Local storage sync error for warehouses:", e);
+    }
   }, [warehouses]);
 
   const [supplierCategoryFilter, setSupplierCategoryFilter] = useState("all");
@@ -675,7 +683,11 @@ export default function MawridDashboard() {
   });
 
   useEffect(() => {
-    localStorage.setItem("mawrid_safe_balance", safeBalance.toString());
+    try {
+      localStorage.setItem("mawrid_safe_balance", safeBalance.toString());
+    } catch (e) {
+      console.error("Local storage sync error for safe_balance:", e);
+    }
   }, [safeBalance]);
 
   const [showSafeDepositModal, setShowSafeDepositModal] = useState(false);
@@ -1117,42 +1129,84 @@ export default function MawridDashboard() {
 
   // Sync state to LocalStorage
   useEffect(() => {
-    localStorage.setItem("mawrid_suppliers", JSON.stringify(suppliers));
+    try {
+      localStorage.setItem("mawrid_suppliers", JSON.stringify(suppliers));
+    } catch (e) {
+      console.error("Local storage sync error for suppliers:", e);
+    }
   }, [suppliers]);
 
   useEffect(() => {
-    localStorage.setItem("mawrid_invoices", JSON.stringify(invoices));
+    try {
+      localStorage.setItem("mawrid_invoices", JSON.stringify(invoices));
+    } catch (e: any) {
+      console.error("Local storage sync error for invoices:", e);
+      if (e.name === "QuotaExceededError" || e.code === 22) {
+        showToast("تنبيه: حجم المرفق كبير جداً وتجاوز حد المتصفح. تم حفظ التغييرات على خادم البيانات السحابي بأمان، ولكن قد لا يُعرض المرفق محلياً بالكامل.", "info");
+      }
+    }
   }, [invoices]);
 
   useEffect(() => {
-    localStorage.setItem("mawrid_payments", JSON.stringify(payments));
+    try {
+      localStorage.setItem("mawrid_payments", JSON.stringify(payments));
+    } catch (e) {
+      console.error("Local storage sync error for payments:", e);
+    }
   }, [payments]);
 
   useEffect(() => {
-    localStorage.setItem("mawrid_backups", JSON.stringify(backups));
+    try {
+      localStorage.setItem("mawrid_backups", JSON.stringify(backups));
+    } catch (e) {
+      console.error("Local storage sync error for backups:", e);
+    }
   }, [backups]);
 
   useEffect(() => {
-    localStorage.setItem("mawrid_doctors", JSON.stringify(doctors));
+    try {
+      localStorage.setItem("mawrid_doctors", JSON.stringify(doctors));
+    } catch (e) {
+      console.error("Local storage sync error for doctors:", e);
+    }
   }, [doctors]);
 
   useEffect(() => {
-    localStorage.setItem("mawrid_user_role", currentRole);
+    try {
+      localStorage.setItem("mawrid_user_role", currentRole);
+    } catch (e) {
+      console.error("Local storage sync error for user_role:", e);
+    }
   }, [currentRole]);
 
   useEffect(() => {
-    localStorage.setItem(
-      "mawrid_chat_history",
-      JSON.stringify(supportMessages),
-    );
+    try {
+      localStorage.setItem(
+        "mawrid_chat_history",
+        JSON.stringify(supportMessages),
+      );
+    } catch (e) {
+      console.error("Local storage sync error for chat history:", e);
+    }
   }, [supportMessages]);
 
   useEffect(() => {
-    localStorage.setItem("mawrid_linked_banks", JSON.stringify(linkedBanks));
+    try {
+      localStorage.setItem("mawrid_linked_banks", JSON.stringify(linkedBanks));
+    } catch (e) {
+      console.error("Local storage sync error for linked_banks:", e);
+    }
   }, [linkedBanks]);
 
   useEffect(() => {
-    localStorage.setItem("mawrid_credit_notes", JSON.stringify(creditNotes));
+    try {
+      localStorage.setItem("mawrid_credit_notes", JSON.stringify(creditNotes));
+    } catch (e: any) {
+      console.error("Local storage sync error for credit_notes:", e);
+      if (e.name === "QuotaExceededError" || e.code === 22) {
+        showToast("تنبيه: حجم المرفق كبير جداً وتجاوز حد المتصفح. تم حفظ التغييرات على خادم البيانات السحابي بأمان، ولكن قد لا يُعرض المرفق محلياً بالكامل.", "info");
+      }
+    }
   }, [creditNotes]);
 
   // Reset active report page back to 0 when report parameters change
