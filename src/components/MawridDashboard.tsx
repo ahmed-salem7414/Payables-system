@@ -5172,7 +5172,7 @@ export default function MawridDashboard() {
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="ابحث باسم المورد..."
+                        placeholder="ابحث باسم المورد"
                         value={
                           isReportSupplierDropdownOpen
                             ? reportSupplierSearchQuery
@@ -7492,7 +7492,7 @@ export default function MawridDashboard() {
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="ابحث باسم المورد المُرتبط..."
+                        placeholder="ابحث باسم المورد المُرتبط"
                         value={
                           isNewInvoiceSupplierDropdownOpen
                             ? newInvoiceSupplierSearchQuery
@@ -8080,7 +8080,7 @@ export default function MawridDashboard() {
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="ابحث باسم المورد المُرتبط..."
+                        placeholder="ابحث باسم المورد المُرتبط"
                         value={
                           isEditInvoiceSupplierDropdownOpen
                             ? editInvoiceSupplierSearchQuery
