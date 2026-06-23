@@ -12,6 +12,7 @@ export enum UserRole {
 export interface Doctor {
   id: string;
   name: string;             // الاسم
+  doctorCode?: string;      // كود الطبيب
   specialty: string;        // التخصص
   bankAccountName: string;  // الاسم طبقا للحساب البنكي
   bankAccount: string;      // رقم الحساب البنكي / IBAN

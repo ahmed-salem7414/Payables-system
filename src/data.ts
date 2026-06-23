@@ -5,6 +5,7 @@ export const INITIAL_DOCTORS: Doctor[] = [
   {
     id: "doc-1",
     name: "د. أحمد حازم الحسيني",
+    doctorCode: "DOC-101",
     specialty: "طب الأطفال وجراحة القلب",
     bankAccountName: "Hazem El Husseiny",
     bankAccount: "EG12000300010020030040051",
@@ -14,6 +15,7 @@ export const INITIAL_DOCTORS: Doctor[] = [
   {
     id: "doc-2",
     name: "د. هالة منى الشاذلي",
+    doctorCode: "DOC-102",
     specialty: "العناية المركزة للأطفال حديثي الولادة",
     bankAccountName: "Mona El Shazly",
     bankAccount: "EG45000400020030040050062",

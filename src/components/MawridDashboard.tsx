@@ -785,6 +785,7 @@ export default function MawridDashboard() {
 
   const [newDoctor, setNewDoctor] = useState<Omit<Doctor, "id" | "createdAt">>({
     name: "",
+    doctorCode: "",
     specialty: "",
     bankAccountName: "",
     bankAccount: "",
@@ -1412,6 +1413,7 @@ export default function MawridDashboard() {
     setShowAddDoctorModal(false);
     setNewDoctor({
       name: "",
+      doctorCode: "",
       specialty: "",
       bankAccountName: "",
       bankAccount: "",
@@ -3175,6 +3177,7 @@ export default function MawridDashboard() {
   const filteredDoctors = doctors.filter((d) => {
     return (
       d.name.toLowerCase().includes(doctorSearch.toLowerCase()) ||
+      (d.doctorCode && d.doctorCode.toLowerCase().includes(doctorSearch.toLowerCase())) ||
       d.specialty.toLowerCase().includes(doctorSearch.toLowerCase()) ||
       (d.bankAccount && d.bankAccount.includes(doctorSearch)) ||
       (d.bankAccountName && d.bankAccountName.toLowerCase().includes(doctorSearch.toLowerCase())) ||
@@ -4180,8 +4183,13 @@ export default function MawridDashboard() {
                           {/* Header section */}
                           <div className="flex items-start justify-between mb-4">
                             <div>
-                              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5 font-sans">
+                              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5 font-sans flex-wrap">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                                {doc.doctorCode && (
+                                  <span className="text-[10px] font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">
+                                    {doc.doctorCode}
+                                  </span>
+                                )}
                                 {doc.name}
                               </h3>
                               <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full inline-block mt-1 font-sans">
@@ -6921,6 +6929,23 @@ export default function MawridDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
+                    كود الطبيب
+                  </label>
+                  <input
+                    type="text"
+                    value={newDoctor.doctorCode || ""}
+                    onChange={(e) =>
+                      setNewDoctor({
+                        ...newDoctor,
+                        doctorCode: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="DOC-101"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-600 block mb-1">
                     اسم الطبيب الكامل *
                   </label>
                   <input
@@ -6934,6 +6959,9 @@ export default function MawridDashboard() {
                     placeholder="د. أحمد الشافعي"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
                     التخصص الطبي *
@@ -6952,9 +6980,6 @@ export default function MawridDashboard() {
                     placeholder="طب الأطفال وحديثي الولادة"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
                     الاسم طبقا للحساب البنكي
@@ -6969,6 +6994,9 @@ export default function MawridDashboard() {
                     placeholder="Ahmed El Shafei"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
                     رقم الحساب البنكي / International IBAN
@@ -6986,9 +7014,6 @@ export default function MawridDashboard() {
                     placeholder="EG000000000000000000000000000"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
                     SWIFT CODE
@@ -7056,6 +7081,23 @@ export default function MawridDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
+                    كود الطبيب
+                  </label>
+                  <input
+                    type="text"
+                    value={editingDoctor.doctorCode || ""}
+                    onChange={(e) =>
+                      setEditingDoctor({
+                        ...editingDoctor,
+                        doctorCode: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="DOC-101"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-600 block mb-1">
                     اسم الطبيب الكامل *
                   </label>
                   <input
@@ -7068,6 +7110,9 @@ export default function MawridDashboard() {
                     className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
                     التخصص الطبي *
@@ -7085,9 +7130,6 @@ export default function MawridDashboard() {
                     className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
                     الاسم طبقا للحساب البنكي
@@ -7101,6 +7143,9 @@ export default function MawridDashboard() {
                     className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
                     رقم الحساب البنكي / International IBAN
@@ -7117,9 +7162,6 @@ export default function MawridDashboard() {
                     className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-[11px] text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
                     SWIFT CODE
