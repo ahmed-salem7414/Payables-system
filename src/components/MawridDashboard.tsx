@@ -717,6 +717,8 @@ export default function MawridDashboard() {
     phone: "",
     email: "",
     bankAccount: "",
+    bankAccountName: "",
+    swiftCode: "",
     category: "تجهيزات ومستلزمات",
     address: "",
     notes: "",
@@ -1255,6 +1257,8 @@ export default function MawridDashboard() {
       phone: "",
       email: "",
       bankAccount: "",
+      bankAccountName: "",
+      swiftCode: "",
       category: "تجهيزات ومستلزمات",
       address: "",
       notes: "",
@@ -2345,7 +2349,7 @@ export default function MawridDashboard() {
           wait: 1900,
         },
         {
-          text: `📥 جاري إرسال المستحقات لحساب المورد: ${supplier.company} (حساب IBAN: ${supplier.bankAccount})...`,
+          text: `📥 جاري إرسال المستحقات لحساب المورد: ${supplier.company} (حساب IBAN: ${supplier.bankAccount}${supplier.bankAccountName ? ` - الاسم: ${supplier.bankAccountName}` : ""}${supplier.swiftCode ? ` - Code: ${supplier.swiftCode}` : ""})...`,
           progress: 80,
           wait: 2400,
         },
@@ -3768,9 +3772,25 @@ export default function MawridDashboard() {
                               <span className="text-slate-600 block mb-0.5">
                                 رقم الحساب البنكي / IBAN:
                               </span>
-                              <span className="font-mono text-slate-700 text-[11px] block bg-slate-50/60 p-1 px-2 rounded border border-slate-200">
+                              <span className="font-mono text-slate-700 text-[11px] block bg-slate-50/60 p-1 px-2 rounded border border-slate-200 mb-1">
                                 {sup.bankAccount}
                               </span>
+                              {(sup.bankAccountName || sup.swiftCode) && (
+                                <div className="grid grid-cols-2 gap-2 mt-1.5">
+                                  {sup.bankAccountName && (
+                                    <div className="bg-slate-50/70 p-1 px-2 rounded border border-slate-200/50">
+                                      <span className="text-slate-500 font-sans text-[10px] block font-bold">الاسم بالبنك:</span>
+                                      <span className="font-extrabold text-slate-800 text-[10px]">{sup.bankAccountName}</span>
+                                    </div>
+                                  )}
+                                  {sup.swiftCode && (
+                                    <div className="bg-slate-50/70 p-1 px-2 rounded border border-slate-200/50 font-mono">
+                                      <span className="text-slate-500 font-sans text-[10px] block font-bold">SWIFT CODE:</span>
+                                      <span className="font-extrabold text-slate-800 text-[10px]">{sup.swiftCode}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             <div className="col-span-1 sm:col-span-2">
                               <span className="text-slate-600 block mb-0.5">
@@ -6683,6 +6703,43 @@ export default function MawridDashboard() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    الاسم طبقا للحساب البنكي
+                  </label>
+                  <input
+                    type="text"
+                    value={newSupplier.bankAccountName || ""}
+                    onChange={(e) =>
+                      setNewSupplier({
+                        ...newSupplier,
+                        bankAccountName: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="أحمد الشافعي البنكي"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    SWIFT CODE
+                  </label>
+                  <input
+                    type="text"
+                    value={newSupplier.swiftCode || ""}
+                    onChange={(e) =>
+                      setNewSupplier({
+                        ...newSupplier,
+                        swiftCode: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="NBEGEGCX"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="text-slate-600 block mb-1">
                   ملاحظات وشروط إضافية
@@ -8121,6 +8178,43 @@ export default function MawridDashboard() {
                     }
                     className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-[11px] text-slate-800 font-semibold placeholder:text-slate-600 focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                     placeholder="EG000000000000000000000000000"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    الاسم طبقا للحساب البنكي
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSupplier.bankAccountName || ""}
+                    onChange={(e) =>
+                      setEditingSupplier({
+                        ...editingSupplier,
+                        bankAccountName: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="أحمد الشافعي البنكي"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    SWIFT CODE
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSupplier.swiftCode || ""}
+                    onChange={(e) =>
+                      setEditingSupplier({
+                        ...editingSupplier,
+                        swiftCode: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="NBEGEGCX"
                   />
                 </div>
               </div>

@@ -16,6 +16,8 @@ export interface Supplier {
   phone: string;       // رقم الهاتف
   email: string;       // البريد الإلكتروني
   bankAccount: string; // رقم الحساب البنكي / IBAN
+  bankAccountName?: string; // الاسم طبقا للحساب البنكي
+  swiftCode?: string;       // SWIFT CODE
   category: string;    // فئة الموردين (مواد خام، خدمات، لوجستيات، إلخ)
   address: string;     // العنوان
   notes?: string;      // مذكرات إضافية
