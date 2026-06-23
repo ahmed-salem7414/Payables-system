@@ -750,6 +750,20 @@ export default function MawridDashboard() {
   // Edit Invoice form state
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
 
+  const [newInvoiceSupplierSearchQuery, setNewInvoiceSupplierSearchQuery] = useState("");
+  const [isNewInvoiceSupplierDropdownOpen, setIsNewInvoiceSupplierDropdownOpen] = useState(false);
+  const [editInvoiceSupplierSearchQuery, setEditInvoiceSupplierSearchQuery] = useState("");
+  const [isEditInvoiceSupplierDropdownOpen, setIsEditInvoiceSupplierDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (editingInvoice) {
+      const supplier = suppliers.find((s) => s.id === editingInvoice.supplierId);
+      setEditInvoiceSupplierSearchQuery(supplier ? supplier.name : "");
+    } else {
+      setEditInvoiceSupplierSearchQuery("");
+    }
+  }, [editingInvoice, suppliers]);
+
   // Credit Note inside Edit Invoice Modal State
   const [showEditInvoiceCNSection, setShowEditInvoiceCNSection] =
     useState(false);
@@ -5197,31 +5211,18 @@ export default function MawridDashboard() {
                         </button>
                       )}
                       
-                      {isReportSupplierDropdownOpen && (
-                        <div className="absolute right-0 left-0 mt-1 bg-white border border-slate-250 rounded-xl shadow-2xl max-h-60 overflow-y-auto no-print z-[9999]">
-                          {/* "جميع الموردين" Option */}
-                          <div
-                            onClick={() => {
-                              setSelectedReportSupplierId("all");
-                              setReportSupplierSearchQuery("");
-                              setIsReportSupplierDropdownOpen(false);
-                              setActiveReportPage(0);
-                            }}
-                            className={`cursor-pointer px-3 py-2 text-xs font-bold font-sans text-right hover:bg-emerald-50/50 transition-colors ${
-                              selectedReportSupplierId === "all" ? "bg-emerald-50 text-emerald-700 font-extrabold" : "text-slate-700"
-                            }`}
-                          >
-                            جميع الموردين
-                          </div>
+                      {isReportSupplierDropdownOpen && reportSupplierSearchQuery.trim().length > 0 && (
+                        <div className="absolute right-0 left-0 mt-1 bg-white border border-slate-250 rounded-xl shadow-2xl max-h-60 overflow-y-auto no-print z-[9999] divide-y divide-slate-100 bg-white">
                           
                           {/* Filtered list of Suppliers */}
                           {(() => {
                             const filtered = suppliers.filter((s) =>
-                              s.name.toLowerCase().includes(reportSupplierSearchQuery.toLowerCase())
+                              s.name.toLowerCase().includes(reportSupplierSearchQuery.toLowerCase()) ||
+                              (s.company && s.company.toLowerCase().includes(reportSupplierSearchQuery.toLowerCase()))
                             );
                             if (filtered.length === 0) {
                               return (
-                                <div className="px-3 py-2 text-xs text-slate-400 text-right font-sans">
+                                <div className="px-3 py-2 text-xs text-slate-400 text-right font-sans bg-white">
                                   لا يوجد نتائج مطابقة
                                 </div>
                               );
@@ -5235,11 +5236,11 @@ export default function MawridDashboard() {
                                   setIsReportSupplierDropdownOpen(false);
                                   setActiveReportPage(0);
                                 }}
-                                className={`cursor-pointer px-3 py-2 text-xs font-bold font-sans text-right hover:bg-emerald-50/50 transition-colors ${
+                                className={`cursor-pointer px-3 py-2.5 text-xs font-bold font-sans text-right hover:bg-emerald-50 hover:text-emerald-700 transition-colors bg-white ${
                                   selectedReportSupplierId === s.id ? "bg-emerald-50 text-emerald-700 font-extrabold" : "text-slate-700"
                                 }`}
                               >
-                                {s.name}
+                                {s.name} <span className="text-[10px] text-slate-400 font-normal">({s.company})</span>
                               </div>
                             ));
                           })()}
@@ -7488,24 +7489,87 @@ export default function MawridDashboard() {
                         <span>مورد جديد</span>
                       </button>
                     </div>
-                    <select
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="ابحث باسم المورد المُرتبط..."
+                        value={
+                          isNewInvoiceSupplierDropdownOpen
+                            ? newInvoiceSupplierSearchQuery
+                            : (suppliers.find((s) => s.id === newInvoice.supplierId)?.name || "")
+                        }
+                        onFocus={() => {
+                          setIsNewInvoiceSupplierDropdownOpen(true);
+                          setNewInvoiceSupplierSearchQuery("");
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => {
+                            setIsNewInvoiceSupplierDropdownOpen(false);
+                          }, 250);
+                        }}
+                        onChange={(e) => {
+                          setNewInvoiceSupplierSearchQuery(e.target.value);
+                          setIsNewInvoiceSupplierDropdownOpen(true);
+                        }}
+                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 pr-3 pl-12 text-right transition-all"
+                      />
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+                      
+                      {newInvoice.supplierId && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNewInvoice({ ...newInvoice, supplierId: "" });
+                            setNewInvoiceSupplierSearchQuery("");
+                          }}
+                          className="absolute left-9 top-3.5 text-slate-400 hover:text-slate-600 font-bold text-xs"
+                          title="مسح الاختيار"
+                        >
+                          ✕
+                        </button>
+                      )}
+
+                      {/* Suggestions list: ONLY visible when typing (length > 0) */}
+                      {isNewInvoiceSupplierDropdownOpen && newInvoiceSupplierSearchQuery.trim().length > 0 && (
+                        <div className="absolute right-0 left-0 mt-1 bg-white border border-slate-250 rounded-xl shadow-2xl max-h-52 overflow-y-auto no-print z-[999] divide-y divide-slate-100 bg-white">
+                          {(() => {
+                            const filtered = suppliers.filter((s) =>
+                              s.name.toLowerCase().includes(newInvoiceSupplierSearchQuery.toLowerCase()) ||
+                              (s.company && s.company.toLowerCase().includes(newInvoiceSupplierSearchQuery.toLowerCase()))
+                            );
+                            if (filtered.length === 0) {
+                              return (
+                                <div className="px-3 py-2.5 text-xs text-slate-400 text-right font-sans bg-white">
+                                  لا يوجد نتائج مطابقة
+                                </div>
+                              );
+                            }
+                            return filtered.map((s) => (
+                              <div
+                                key={s.id}
+                                onClick={() => {
+                                  setNewInvoice({ ...newInvoice, supplierId: s.id });
+                                  setNewInvoiceSupplierSearchQuery(s.name);
+                                  setIsNewInvoiceSupplierDropdownOpen(false);
+                                }}
+                                className={`cursor-pointer px-3 py-2.5 text-xs font-bold font-sans text-right hover:bg-emerald-50 hover:text-emerald-700 transition-colors bg-white ${
+                                  newInvoice.supplierId === s.id ? "bg-emerald-50 text-emerald-700 font-extrabold" : "text-slate-700"
+                                }`}
+                              >
+                                {s.name} <span className="text-[10px] text-slate-400 font-normal">({s.company})</span>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                    {/* Native validation anchor */}
+                    <input
+                      type="hidden"
                       required
                       value={newInvoice.supplierId}
-                      onChange={(e) =>
-                        setNewInvoice({
-                          ...newInvoice,
-                          supplierId: e.target.value,
-                        })
-                      }
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 transition-all cursor-pointer"
-                    >
-                      <option className="bg-white" value="">-- اضغط للاختيار --</option>
-                      {suppliers.map((s) => (
-                        <option className="bg-white" key={s.id} value={s.id}>
-                          {s.name} ({s.company})
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
 
                   <div>
@@ -8013,24 +8077,87 @@ export default function MawridDashboard() {
                     <label className="text-slate-505 block mb-1">
                       اختر المورد المرتبط *
                     </label>
-                    <select
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="ابحث باسم المورد المُرتبط..."
+                        value={
+                          isEditInvoiceSupplierDropdownOpen
+                            ? editInvoiceSupplierSearchQuery
+                            : (suppliers.find((s) => s.id === editingInvoice.supplierId)?.name || "")
+                        }
+                        onFocus={() => {
+                          setIsEditInvoiceSupplierDropdownOpen(true);
+                          setEditInvoiceSupplierSearchQuery("");
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => {
+                            setIsEditInvoiceSupplierDropdownOpen(false);
+                          }, 250);
+                        }}
+                        onChange={(e) => {
+                          setEditInvoiceSupplierSearchQuery(e.target.value);
+                          setIsEditInvoiceSupplierDropdownOpen(true);
+                        }}
+                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-semibold text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 pr-3 pl-12 text-right transition-all"
+                      />
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
+                      
+                      {editingInvoice.supplierId && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingInvoice({ ...editingInvoice, supplierId: "" });
+                            setEditInvoiceSupplierSearchQuery("");
+                          }}
+                          className="absolute left-9 top-3.5 text-slate-400 hover:text-slate-600 font-bold text-xs"
+                          title="مسح الاختيار"
+                        >
+                          ✕
+                        </button>
+                      )}
+
+                      {/* Suggestions list: ONLY visible when typing (length > 0) */}
+                      {isEditInvoiceSupplierDropdownOpen && editInvoiceSupplierSearchQuery.trim().length > 0 && (
+                        <div className="absolute right-0 left-0 mt-1 bg-white border border-slate-250 rounded-xl shadow-2xl max-h-52 overflow-y-auto no-print z-[999] divide-y divide-slate-100 bg-white">
+                          {(() => {
+                            const filtered = suppliers.filter((s) =>
+                              s.name.toLowerCase().includes(editInvoiceSupplierSearchQuery.toLowerCase()) ||
+                              (s.company && s.company.toLowerCase().includes(editInvoiceSupplierSearchQuery.toLowerCase()))
+                            );
+                            if (filtered.length === 0) {
+                              return (
+                                <div className="px-3 py-2.5 text-xs text-slate-400 text-right font-sans bg-white">
+                                  لا يوجد نتائج مطابقة
+                                </div>
+                              );
+                            }
+                            return filtered.map((s) => (
+                              <div
+                                key={s.id}
+                                onClick={() => {
+                                  setEditingInvoice({ ...editingInvoice, supplierId: s.id });
+                                  setEditInvoiceSupplierSearchQuery(s.name);
+                                  setIsEditInvoiceSupplierDropdownOpen(false);
+                                }}
+                                className={`cursor-pointer px-3 py-2.5 text-xs font-bold font-sans text-right hover:bg-emerald-50 hover:text-emerald-700 transition-colors bg-white ${
+                                  editingInvoice.supplierId === s.id ? "bg-emerald-50 text-emerald-700 font-extrabold" : "text-slate-700"
+                                }`}
+                              >
+                                {s.name} <span className="text-[10px] text-slate-400 font-normal">({s.company})</span>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                    {/* Native validation anchor */}
+                    <input
+                      type="hidden"
                       required
                       value={editingInvoice.supplierId}
-                      onChange={(e) =>
-                        setEditingInvoice({
-                          ...editingInvoice,
-                          supplierId: e.target.value,
-                        })
-                      }
-                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-semibold text-slate-900 focus:outline-none"
-                    >
-                      <option value="">-- اضغط للاختيار --</option>
-                      {suppliers.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name} ({s.company})
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
 
                   <div>
@@ -8445,7 +8572,7 @@ export default function MawridDashboard() {
                                         ),
                                       })
                                     }
-                                    className="w-10 text-center font-mono font-bold text-slate-800 text-xs focus:outline-none"
+                                    className="w-10 text-center font-mono font-bold text-black text-xs focus:outline-none"
                                   />
                                   <span className="text-slate-500 text-xs font-bold font-sans">
                                     %
