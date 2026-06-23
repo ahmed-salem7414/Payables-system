@@ -1318,10 +1318,15 @@ export default function MawridDashboard() {
         (sum, curr) => sum + (curr.totalAmount - (curr.creditNoteAmount || 0)),
         0,
       );
+    const targetVat = targetInvoices.reduce(
+      (sum, curr) => sum + (curr.vatAmount || 0),
+      0,
+    );
 
     return {
       total: targetTotal,
       pending: targetPending,
+      vat: targetVat,
     };
   };
 
@@ -3177,7 +3182,7 @@ export default function MawridDashboard() {
     } else {
       // Detailed Excel format (row-by-row invoice details)
       csvContent +=
-        "المورد,الشركة,رقم الفاتورة,تاريخ الإضافة,تاريخ الاستحقاق,المخزن المستلم,قيمة الفاتورة الأصلية,خصم الإشعارات الدائنة,صافي المطلوب سداده,حالة السداد\n";
+        "المورد,الشركة,رقم الفاتورة,تاريخ الإضافة,تاريخ الاستحقاق,المخزن المستلم,قيمة الفاتورة الأصلية,قيمة الضريبة,خصم الإشعارات الدائنة,صافي المطلوب سداده,حالة السداد\n";
 
       reportSuppliers.forEach((sup) => {
         const supInvoices = invoices.filter((i) => {
@@ -3201,8 +3206,9 @@ export default function MawridDashboard() {
           const company = sup.company.replace(/,/g, " ");
           const invoiceNum = inv.invoiceNumber.replace(/,/g, " ");
           const warehouseName = (inv.warehouse || "").replace(/,/g, " ");
+          const vatVal = inv.vatAmount || 0;
 
-          csvContent += `"${name}","${company}","${invoiceNum}","${inv.issueDate || ""}","${inv.dueDate}","${warehouseName}",${inv.totalAmount},${inv.creditNoteAmount || 0},${payableAmount},"${statusText}"\n`;
+          csvContent += `"${name}","${company}","${invoiceNum}","${inv.issueDate || ""}","${inv.dueDate}","${warehouseName}",${inv.totalAmount},${vatVal},${inv.creditNoteAmount || 0},${payableAmount},"${statusText}"\n`;
         });
       });
     }
@@ -5687,7 +5693,7 @@ export default function MawridDashboard() {
 
                               {/* Report specs indicators (ONLY ON FIRST PAGE: pageIdx === 0) */}
                               {pageIdx === 0 && (
-                                <div className="grid grid-cols-4 gap-4 border border-emerald-200 bg-emerald-500/15 rounded-2xl p-4 shadow-sm relative z-10 divide-x divide-x-reverse divide-emerald-100">
+                                <div className="grid grid-cols-5 gap-3 border border-emerald-200 bg-emerald-500/15 rounded-2xl p-4 shadow-sm relative z-10 divide-x divide-x-reverse divide-emerald-100">
                                   <div className="text-center flex flex-col justify-between items-center font-bold pb-0">
                                     <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
                                       📅 فترة ومعايير التدقيق المالي
@@ -5718,6 +5724,15 @@ export default function MawridDashboard() {
                                     </span>
                                     <strong className="text-xs text-emerald-800 font-black block font-mono text-center">
                                       {fAmt(getSelectedReportFinancials().total)} ج.م
+                                    </strong>
+                                  </div>
+
+                                  <div className="text-center flex flex-col justify-between items-center font-bold px-2">
+                                    <span className="text-slate-500 text-[10px] font-bold block mb-1 font-sans">
+                                      🧾 إجمالي قيمة الضريبة
+                                    </span>
+                                    <strong className="text-xs text-teal-800 font-black block font-mono text-center">
+                                      {fAmt(getSelectedReportFinancials().vat || 0)} ج.م
                                     </strong>
                                   </div>
 
@@ -5760,7 +5775,7 @@ export default function MawridDashboard() {
                                     <tr className={`print-only-tr border-b-2 ${tc.headerTr}`}>
                                       <th
                                         colSpan={
-                                          reportViewType === "summary" ? 6 : 7
+                                          reportViewType === "summary" ? 6 : (reportViewType === "detailed" ? 8 : 7)
                                         }
                                         className="py-3 px-3 text-right bg-slate-50 border border-slate-350"
                                       >
@@ -5813,6 +5828,9 @@ export default function MawridDashboard() {
                                         <th className="py-2.5 px-3 text-center font-semibold">
                                           قيمة الفاتورة الأصلية
                                         </th>
+                                        <th className="py-2.5 px-3 text-center font-semibold text-teal-800">
+                                          قيمة الضريبة
+                                        </th>
                                         <th className="py-2.5 px-3 text-center font-semibold">
                                           خصم الإشعار الدائن
                                         </th>
@@ -5854,7 +5872,7 @@ export default function MawridDashboard() {
                                       <tr>
                                         <td
                                           colSpan={
-                                            reportViewType === "summary" ? 6 : 7
+                                            reportViewType === "summary" ? 6 : (reportViewType === "detailed" ? 8 : 7)
                                           }
                                           className="py-12 text-center text-slate-600 italic font-sans"
                                         >
@@ -5969,6 +5987,9 @@ export default function MawridDashboard() {
                                             <td className="py-2.5 px-3 font-mono text-center font-medium">
                                               {fAmt(item.invoice.totalAmount)}{" "}
                                               ج.م
+                                            </td>
+                                            <td className="py-2.5 px-3 font-mono text-center text-teal-700 font-bold bg-teal-50/20">
+                                              {fAmt(item.invoice.vatAmount || 0)} ج.م
                                             </td>
                                             <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-center">
                                               {item.invoice.creditNoteAmount &&
@@ -8886,7 +8907,7 @@ export default function MawridDashboard() {
                           <button
                             type="button"
                             onClick={handleSaveCNFromEditInvoice}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-slate-900 font-bold text-xs px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1 shadow-sm"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1 shadow-sm"
                           >
                             <Check className="w-4 h-4" />
                             <span>تأكيد وتسجيل كإشعار دائن</span>
@@ -8907,7 +8928,7 @@ export default function MawridDashboard() {
                     </button>
                     <button
                       type="submit"
-                      className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-slate-900 font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5"
+                      className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5"
                     >
                       <Save className="w-4 h-4" />
                       <span>حفظ التعديلات الحالية</span>
