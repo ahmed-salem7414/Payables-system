@@ -3556,8 +3556,8 @@ export default function MawridDashboard() {
       {/* Main Container Layout */}
       <main className="max-w-7xl mx-auto px-4 md:px-6 mt-6 flex-1 w-full flex flex-col lg:flex-row gap-6">
         {/* RIGHT SIDEBAR - Tab controller and dynamic Navigation */}
-        <aside className="no-print w-full lg:w-64 shrink-0">
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-2.5 lg:p-4 shadow-xl flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible lg:sticky lg:top-24 z-30 w-full no-scrollbar">
+        <aside className="no-print w-full lg:w-64 shrink-0 lg:self-start">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-2.5 lg:p-4 shadow-xl flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible lg:sticky lg:top-[125px] z-30 w-full no-scrollbar">
             <p className="hidden lg:block text-[11px] font-bold text-slate-500 tracking-wider uppercase px-3 pb-2 border-b border-slate-200/65 mb-2">
               القائمة المالية
             </p>
