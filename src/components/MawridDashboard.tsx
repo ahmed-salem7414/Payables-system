@@ -604,6 +604,8 @@ export default function MawridDashboard() {
   const [reportEndDate, setReportEndDate] = useState<string>("2026-06-30");
   const [selectedReportSupplierId, setSelectedReportSupplierId] =
     useState<string>("all");
+  const [reportSupplierSearchQuery, setReportSupplierSearchQuery] = useState("");
+  const [isReportSupplierDropdownOpen, setIsReportSupplierDropdownOpen] = useState(false);
   const [reportWarehouseFilter, setReportWarehouseFilter] =
     useState<string>("all");
   const [reportDateType, setReportDateType] = useState<
@@ -5148,26 +5150,102 @@ export default function MawridDashboard() {
               {/* Unified High-Density Single Line Control Panel for reports/portfolio */}
               <div className="no-print bg-white backdrop-blur-md p-4 rounded-xl border border-slate-200/80 shadow-2xl animate-fadeIn">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
-                  {/* 1. Supplier Select */}
-                  <div className="flex flex-col gap-1 w-full">
+                  {/* 1. Supplier Search with Autocomplete */}
+                  <div className="flex flex-col gap-1 w-full relative z-[60]">
                     <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
                       <span>👤</span> المورد:
                     </label>
-                    <select
-                      value={selectedReportSupplierId}
-                      onChange={(e) => {
-                        setSelectedReportSupplierId(e.target.value);
-                        setActiveReportPage(0);
-                      }}
-                      className="bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2.5 py-2.5 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold cursor-pointer font-sans w-full h-[42px] transition-all"
-                    >
-                      <option value="all">جميع الموردين</option>
-                      {suppliers.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="ابحث باسم المورد..."
+                        value={
+                          isReportSupplierDropdownOpen
+                            ? reportSupplierSearchQuery
+                            : (selectedReportSupplierId === "all"
+                                ? "جميع الموردين"
+                                : suppliers.find((s) => s.id === selectedReportSupplierId)?.name || "")
+                        }
+                        onFocus={() => {
+                          setIsReportSupplierDropdownOpen(true);
+                          setReportSupplierSearchQuery("");
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => {
+                            setIsReportSupplierDropdownOpen(false);
+                          }, 250);
+                        }}
+                        onChange={(e) => {
+                          setReportSupplierSearchQuery(e.target.value);
+                          setIsReportSupplierDropdownOpen(true);
+                        }}
+                        className="bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2.5 py-2.5 pl-8 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-sans w-full h-[42px] transition-all text-right"
+                      />
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-[14px] pointer-events-none" />
+                      {selectedReportSupplierId !== "all" && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedReportSupplierId("all");
+                            setReportSupplierSearchQuery("");
+                          }}
+                          className="absolute right-2.5 top-[14px] text-slate-400 hover:text-slate-600 font-bold text-xs"
+                          title="مسح الاختيار"
+                        >
+                          ✕
+                        </button>
+                      )}
+                      
+                      {isReportSupplierDropdownOpen && (
+                        <div className="absolute right-0 left-0 mt-1 bg-white border border-slate-250 rounded-xl shadow-2xl max-h-60 overflow-y-auto no-print z-[9999]">
+                          {/* "جميع الموردين" Option */}
+                          <div
+                            onClick={() => {
+                              setSelectedReportSupplierId("all");
+                              setReportSupplierSearchQuery("");
+                              setIsReportSupplierDropdownOpen(false);
+                              setActiveReportPage(0);
+                            }}
+                            className={`cursor-pointer px-3 py-2 text-xs font-bold font-sans text-right hover:bg-emerald-50/50 transition-colors ${
+                              selectedReportSupplierId === "all" ? "bg-emerald-50 text-emerald-700 font-extrabold" : "text-slate-700"
+                            }`}
+                          >
+                            جميع الموردين
+                          </div>
+                          
+                          {/* Filtered list of Suppliers */}
+                          {(() => {
+                            const filtered = suppliers.filter((s) =>
+                              s.name.toLowerCase().includes(reportSupplierSearchQuery.toLowerCase())
+                            );
+                            if (filtered.length === 0) {
+                              return (
+                                <div className="px-3 py-2 text-xs text-slate-400 text-right font-sans">
+                                  لا يوجد نتائج مطابقة
+                                </div>
+                              );
+                            }
+                            return filtered.map((s) => (
+                              <div
+                                key={s.id}
+                                onClick={() => {
+                                  setSelectedReportSupplierId(s.id);
+                                  setReportSupplierSearchQuery(s.name);
+                                  setIsReportSupplierDropdownOpen(false);
+                                  setActiveReportPage(0);
+                                }}
+                                className={`cursor-pointer px-3 py-2 text-xs font-bold font-sans text-right hover:bg-emerald-50/50 transition-colors ${
+                                  selectedReportSupplierId === s.id ? "bg-emerald-50 text-emerald-700 font-extrabold" : "text-slate-700"
+                                }`}
+                              >
+                                {s.name}
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* 2. Warehouse Select */}
@@ -7766,7 +7844,7 @@ export default function MawridDashboard() {
                                         ),
                                       })
                                     }
-                                    className="w-10 text-center font-mono font-bold text-white bg-transparent text-xs focus:outline-none"
+                                    className="w-10 text-center font-mono font-bold text-black bg-transparent text-xs focus:outline-none"
                                   />
                                   <span className="text-slate-600 text-xs font-bold font-sans">
                                     %
