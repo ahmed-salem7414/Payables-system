@@ -69,6 +69,7 @@ import {
   BankConfig,
   SupportMessage,
   CreditNote,
+  Doctor,
 } from "../types";
 import {
   INITIAL_SUPPLIERS,
@@ -76,6 +77,7 @@ import {
   INITIAL_PAYMENTS,
   INITIAL_BACKUPS,
   LOCAL_BANKS_SELECTION,
+  INITIAL_DOCTORS,
 } from "../data";
 import { MersalLogo } from "./MersalLogo";
 import {
@@ -116,6 +118,11 @@ export default function MawridDashboard() {
   const [backups, setBackups] = useState<BackupRecord[]>(() => {
     const saved = localStorage.getItem("mawrid_backups");
     return saved ? JSON.parse(saved) : INITIAL_BACKUPS;
+  });
+
+  const [doctors, setDoctors] = useState<Doctor[]>(() => {
+    const saved = localStorage.getItem("mawrid_doctors");
+    return saved ? JSON.parse(saved) : INITIAL_DOCTORS;
   });
 
   // Current Active User Context & Permissions Role
@@ -769,6 +776,21 @@ export default function MawridDashboard() {
   // Edit Supplier form state
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
 
+  // Doctor state variables
+  const [doctorSearch, setDoctorSearch] = useState("");
+  const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
+  const [showEditDoctorModal, setShowEditDoctorModal] = useState(false);
+  const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
+  const [doctorToDelete, setDoctorToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  const [newDoctor, setNewDoctor] = useState<Omit<Doctor, "id" | "createdAt">>({
+    name: "",
+    specialty: "",
+    bankAccountName: "",
+    bankAccount: "",
+    swiftCode: "",
+  });
+
   // Edit Credit Note states
   const [editingCreditNote, setEditingCreditNote] = useState<CreditNote | null>(
     null,
@@ -1094,6 +1116,10 @@ export default function MawridDashboard() {
   }, [backups]);
 
   useEffect(() => {
+    localStorage.setItem("mawrid_doctors", JSON.stringify(doctors));
+  }, [doctors]);
+
+  useEffect(() => {
     localStorage.setItem("mawrid_user_role", currentRole);
   }, [currentRole]);
 
@@ -1364,6 +1390,69 @@ export default function MawridDashboard() {
     );
     setEditingSupplier(null);
     showToast(`تم تعديل بيانات المورد ${editingSupplier.name} بنجاح.`);
+  };
+
+  // Add new Doctor handler
+  const handleAddDoctor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!checkPermission("create")) return;
+
+    if (!newDoctor.name || !newDoctor.specialty) {
+      showToast("يرجى إدخال اسم الطبيب والتخصص على الأقل.", "error");
+      return;
+    }
+
+    const createdDoctor: Doctor = {
+      ...newDoctor,
+      id: "doc-" + Date.now(),
+      createdAt: new Date().toISOString(),
+    };
+
+    setDoctors([...doctors, createdDoctor]);
+    setShowAddDoctorModal(false);
+    setNewDoctor({
+      name: "",
+      specialty: "",
+      bankAccountName: "",
+      bankAccount: "",
+      swiftCode: "",
+    });
+    showToast(`تمت إضافة الطبيب ${createdDoctor.name} بنجاح.`);
+  };
+
+  // Update Doctor handler
+  const handleUpdateDoctor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!checkPermission("write")) return;
+
+    if (!editingDoctor) return;
+
+    if (!editingDoctor.name || !editingDoctor.specialty) {
+      showToast("يرجى إدخال اسم الطبيب والتخصص على الأقل.", "error");
+      return;
+    }
+
+    setDoctors(
+      doctors.map((d) => (d.id === editingDoctor.id ? editingDoctor : d)),
+    );
+    setShowEditDoctorModal(false);
+    setEditingDoctor(null);
+    showToast(`تم تعديل بيانات الطبيب ${editingDoctor.name} بنجاح.`);
+  };
+
+  // Delete Doctor request handler
+  const handleDeleteDoctor = (id: string, name: string) => {
+    if (!checkPermission("delete")) return;
+    setDoctorToDelete({ id, name });
+  };
+
+  // Execute Doctor deletion
+  const executeDeleteDoctor = () => {
+    if (!doctorToDelete) return;
+    const { id, name } = doctorToDelete;
+    setDoctors(doctors.filter((d) => d.id !== id));
+    showToast(`تم حذف الطبيب ${name} بنجاح.`);
+    setDoctorToDelete(null);
   };
 
   // Submit new credit note handler
@@ -3083,6 +3172,16 @@ export default function MawridDashboard() {
     return matchesSearch && matchesCategory;
   });
 
+  const filteredDoctors = doctors.filter((d) => {
+    return (
+      d.name.toLowerCase().includes(doctorSearch.toLowerCase()) ||
+      d.specialty.toLowerCase().includes(doctorSearch.toLowerCase()) ||
+      (d.bankAccount && d.bankAccount.includes(doctorSearch)) ||
+      (d.bankAccountName && d.bankAccountName.toLowerCase().includes(doctorSearch.toLowerCase())) ||
+      (d.swiftCode && d.swiftCode.toLowerCase().includes(doctorSearch.toLowerCase()))
+    );
+  });
+
   const filteredInvoices = invoices.filter((i) => {
     const supplier = suppliers.find((s) => s.id === i.supplierId);
     const matchesSearch =
@@ -3454,6 +3553,18 @@ export default function MawridDashboard() {
             >
               <Users className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
               <span>إدارة الموردين ({suppliers.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("doctors")}
+              className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
+                activeTab === "doctors"
+                  ? "bg-emerald-500/10 text-emerald-600 shadow-[0_2px_12px_rgba(16,185,129,0.08)] border border-emerald-500/25"
+                  : "text-slate-600 hover:bg-slate-100/60 hover:text-slate-900"
+              }`}
+            >
+              <UserCheck className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
+              <span>قائمة الأطباء ({doctors.length})</span>
             </button>
 
             <button
@@ -4006,6 +4117,127 @@ export default function MawridDashboard() {
                             </div>
                           );
                         })()}
+                      </motion.div>
+                    );
+                  })
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* VIEW: DOCTORS */}
+          {activeTab === "doctors" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              {/* Filter controls and add buttons */}
+              <div className="bg-white backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                  {/* Search Bar */}
+                  <div className="relative w-full md:w-64 font-sans">
+                    <input
+                      type="text"
+                      placeholder="ابحث باسم الطبيب، التخصص، أو الحساب..."
+                      value={doctorSearch}
+                      onChange={(e) => setDoctorSearch(e.target.value)}
+                      className="w-full text-xs border border-slate-200/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 border-slate-200 text-slate-800 transition-all font-sans"
+                    />
+                    <Search className="w-4 h-4 text-slate-500 absolute right-3 top-3.5" />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowAddDoctorModal(true)}
+                  className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-all duration-200"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>إضافة طبيب جديد</span>
+                </button>
+              </div>
+
+              {/* Grid / List of Doctors */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredDoctors.length === 0 ? (
+                  <div className="col-span-2 bg-slate-50/50 rounded-2xl border border-slate-200/80 p-12 text-center text-slate-600 text-sm">
+                    لا يوجد أطباء متوافقين مع معايير البحث الحالية.
+                  </div>
+                ) : (
+                  filteredDoctors.map((doc) => {
+                    return (
+                      <motion.div
+                        key={doc.id}
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="bg-white p-5 rounded-2xl border border-slate-200 shadow-[0_4px_25px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_30px_rgba(16,185,129,0.05)] transition-all relative overflow-hidden group flex flex-col justify-between"
+                      >
+                        {/* Decorative Accent line */}
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-emerald-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right"></div>
+
+                        <div>
+                          {/* Header section */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div>
+                              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5 font-sans">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                                {doc.name}
+                              </h3>
+                              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full inline-block mt-1 font-sans">
+                                {doc.specialty}
+                              </span>
+                            </div>
+                            
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => {
+                                  setEditingDoctor(doc);
+                                  setShowEditDoctorModal(true);
+                                }}
+                                className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                                title="تعديل بيانات الطبيب"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDoctor(doc.id, doc.name)}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                title="حذف الطبيب"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Bank details card box mapping to the specified properties */}
+                          <div className="bg-slate-50/70 rounded-xl p-3 border border-slate-100/85 space-y-2 font-sans mb-3 text-xs text-slate-700">
+                            <div className="flex items-center justify-between py-1 border-b border-slate-100">
+                              <span className="text-slate-500 font-semibold">الاسم البنكي:</span>
+                              <span className="font-bold text-slate-800">{doc.bankAccountName || "—"}</span>
+                            </div>
+                            <div className="flex flex-col py-1 border-b border-slate-100">
+                              <span className="text-slate-500 font-semibold mb-1">رقم الحساب / IBAN:</span>
+                              <span className="font-mono font-bold text-slate-800 text-[11px] select-all bg-slate-100/60 p-1 rounded border border-slate-200/50 block text-right rtl:text-left">{doc.bankAccount || "—"}</span>
+                            </div>
+                            <div className="flex items-center justify-between py-1">
+                              <span className="text-slate-500 font-semibold">SWIFT CODE:</span>
+                              <span className="font-mono font-bold text-slate-800 text-[11px]">{doc.swiftCode || "—"}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-sans mt-2 pt-2 border-t border-slate-100">
+                          <span>تاريخ التسجيل:</span>
+                          <span className="font-mono text-slate-500">
+                            {new Date(doc.createdAt).toLocaleDateString("ar-EG", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
                       </motion.div>
                     );
                   })
@@ -6608,6 +6840,324 @@ export default function MawridDashboard() {
                 تراجع
               </button>
             </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: CONFIRM DELETE DOCTOR */}
+      {doctorToDelete && (
+        <div className="fixed inset-0 bg-slate-950/45 backdrop-blur-sm flex items-center justify-center z-[70] p-4 font-sans" dir="rtl">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white backdrop-blur-md text-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200/80 space-y-5"
+          >
+            <div className="flex items-center gap-3 border-b border-slate-200/60 pb-3">
+              <div className="p-2 bg-red-500/10 rounded-xl border border-red-500/25">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-800 font-sans">
+                  حذف ملف الطبيب نهائياً
+                </h3>
+                <p className="text-[10px] text-slate-500 font-sans">
+                  استبعاد وإلغاء تسجيل ملف الطبيب من النظام.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-rose-500/5 rounded-2xl border border-rose-500/20 text-xs leading-relaxed space-y-2 font-sans">
+              <span className="font-bold block text-rose-650 flex items-center gap-1.5 font-sans">
+                <AlertTriangle className="w-4 h-4 text-rose-600" />
+                تحذير حذف نهائي:
+              </span>
+              <p className="font-sans font-medium text-slate-705">
+                هل أنت متأكد من رغبتك في حذف ملف الطبيب <span className="text-rose-600 font-extrabold">"{doctorToDelete.name}"</span> وكافة بياناته البنكية المرتبطة به؟ هذه العملية لا يمكن التراجع عنها.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={executeDeleteDoctor}
+                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 font-sans"
+              >
+                <Trash2 className="w-4 h-4" />
+                نعم، احذف الطبيب فوراً
+              </button>
+              <button
+                type="button"
+                onClick={() => setDoctorToDelete(null)}
+                className="bg-slate-100/60 hover:bg-slate-100 text-slate-700 border border-slate-200/60 text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer font-sans"
+              >
+                التراجع والإلغاء
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: ADD DOCTOR */}
+      {showAddDoctorModal && (
+        <div className="fixed inset-0 bg-slate-950/45 backdrop-blur-sm flex items-center justify-center z-[80] p-4" dir="rtl">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white backdrop-blur-md text-slate-800 rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200/80 space-y-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
+              <h3 className="text-base font-extrabold text-black">
+                إضافة طبيب جديد
+              </h3>
+              <button
+                onClick={() => setShowAddDoctorModal(false)}
+                className="p-1 rounded-lg hover:bg-slate-100/70 text-slate-605 hover:text-slate-900 transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddDoctor} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    اسم الطبيب الكامل *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newDoctor.name}
+                    onChange={(e) =>
+                      setNewDoctor({ ...newDoctor, name: e.target.value })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="د. أحمد الشافعي"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    التخصص الطبي *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newDoctor.specialty}
+                    onChange={(e) =>
+                      setNewDoctor({
+                        ...newDoctor,
+                        specialty: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-450 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="طب الأطفال وحديثي الولادة"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    الاسم طبقا للحساب البنكي
+                  </label>
+                  <input
+                    type="text"
+                    value={newDoctor.bankAccountName}
+                    onChange={(e) =>
+                      setNewDoctor({ ...newDoctor, bankAccountName: e.target.value })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="Ahmed El Shafei"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    رقم الحساب البنكي / International IBAN
+                  </label>
+                  <input
+                    type="text"
+                    value={newDoctor.bankAccount}
+                    onChange={(e) =>
+                      setNewDoctor({
+                        ...newDoctor,
+                        bankAccount: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-[11px] text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="EG000000000000000000000000000"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    SWIFT CODE
+                  </label>
+                  <input
+                    type="text"
+                    value={newDoctor.swiftCode}
+                    onChange={(e) =>
+                      setNewDoctor({
+                        ...newDoctor,
+                        swiftCode: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="NBEGEGCX"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-slate-200/60 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAddDoctorModal(false)}
+                  className="bg-slate-100/60 hover:bg-slate-100 text-slate-700 border border-slate-200/60 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer transition-colors"
+                >
+                  إلغاء وعودة
+                </button>
+                <button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5 transition-all"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>إضافة الطبيب الجديد</span>
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT DOCTOR */}
+      {showEditDoctorModal && editingDoctor && (
+        <div className="fixed inset-0 bg-slate-950/45 backdrop-blur-sm flex items-center justify-center z-[80] p-4" dir="rtl">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white backdrop-blur-md text-slate-800 rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200/80 space-y-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
+              <h3 className="text-base font-extrabold text-black">
+                تعديل بيانات الطبيب
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEditDoctorModal(false);
+                  setEditingDoctor(null);
+                }}
+                className="p-1 rounded-lg hover:bg-slate-100/70 text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateDoctor} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    اسم الطبيب الكامل *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingDoctor.name}
+                    onChange={(e) =>
+                      setEditingDoctor({ ...editingDoctor, name: e.target.value })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    التخصص الطبي *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingDoctor.specialty}
+                    onChange={(e) =>
+                      setEditingDoctor({
+                        ...editingDoctor,
+                        specialty: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    الاسم طبقا للحساب البنكي
+                  </label>
+                  <input
+                    type="text"
+                    value={editingDoctor.bankAccountName || ""}
+                    onChange={(e) =>
+                      setEditingDoctor({ ...editingDoctor, bankAccountName: e.target.value })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    رقم الحساب البنكي / International IBAN
+                  </label>
+                  <input
+                    type="text"
+                    value={editingDoctor.bankAccount || ""}
+                    onChange={(e) =>
+                      setEditingDoctor({
+                        ...editingDoctor,
+                        bankAccount: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-[11px] text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    SWIFT CODE
+                  </label>
+                  <input
+                    type="text"
+                    value={editingDoctor.swiftCode || ""}
+                    onChange={(e) =>
+                      setEditingDoctor({
+                        ...editingDoctor,
+                        swiftCode: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-slate-200/60 pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditDoctorModal(false);
+                    setEditingDoctor(null);
+                  }}
+                  className="bg-slate-100/60 hover:bg-slate-100 text-slate-700 border border-slate-200/60 font-bold px-4 py-2.5 rounded-lg select-none cursor-pointer transition-colors"
+                >
+                  إلغاء وعودة
+                </button>
+                <button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5 transition-all"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>حفظ التعديلات</span>
+                </button>
+              </div>
+            </form>
           </motion.div>
         </div>
       )}

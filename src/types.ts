@@ -9,6 +9,16 @@ export enum UserRole {
   VIEWER = 'viewer'      // مراقب مالي (عرض وتقارير فقط، لا يمكنه التعديل أو الحذف)
 }
 
+export interface Doctor {
+  id: string;
+  name: string;             // الاسم
+  specialty: string;        // التخصص
+  bankAccountName: string;  // الاسم طبقا للحساب البنكي
+  bankAccount: string;      // رقم الحساب البنكي / IBAN
+  swiftCode: string;        // SWIFT CODE
+  createdAt: string;        // تاريخ التسجيل
+}
+
 export interface Supplier {
   id: string;
   name: string;        // اسم المورد

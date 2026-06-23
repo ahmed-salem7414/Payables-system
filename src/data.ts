@@ -1,4 +1,26 @@
-import { Supplier, Invoice, Payment, BackupRecord, UserRole } from "./types";
+import { Supplier, Invoice, Payment, BackupRecord, UserRole, Doctor } from "./types";
+
+// Preseeded list of doctors with bank details
+export const INITIAL_DOCTORS: Doctor[] = [
+  {
+    id: "doc-1",
+    name: "د. أحمد حازم الحسيني",
+    specialty: "طب الأطفال وجراحة القلب",
+    bankAccountName: "Hazem El Husseiny",
+    bankAccount: "EG12000300010020030040051",
+    swiftCode: "NBEGEGCX",
+    createdAt: "2026-01-20T10:00:00Z"
+  },
+  {
+    id: "doc-2",
+    name: "د. هالة منى الشاذلي",
+    specialty: "العناية المركزة للأطفال حديثي الولادة",
+    bankAccountName: "Mona El Shazly",
+    bankAccount: "EG45000400020030040050062",
+    swiftCode: "BMISGEGCX",
+    createdAt: "2026-02-15T11:30:00Z"
+  }
+];
 
 // Preseeded list of Egyptian/Arab custom suppliers
 export const INITIAL_SUPPLIERS: Supplier[] = [
