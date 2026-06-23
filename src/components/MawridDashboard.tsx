@@ -5253,9 +5253,28 @@ export default function MawridDashboard() {
                           setReportSupplierSearchQuery(e.target.value);
                           setIsReportSupplierDropdownOpen(true);
                         }}
-                        className="bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2.5 py-2.5 pl-8 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-sans w-full h-[42px] transition-all text-right"
+                        className={`bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2.5 py-2.5 ${selectedReportSupplierId !== "all" ? "pl-12" : "pl-8"} rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-sans w-full h-[42px] transition-all text-right`}
                       />
                       <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-[14px] pointer-events-none" />
+                      
+                      {selectedReportSupplierId !== "all" && (
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            // Use onMouseDown to prevent blur before click executes
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedReportSupplierId("all");
+                            setReportSupplierSearchQuery("");
+                            setIsReportSupplierDropdownOpen(false);
+                            setActiveReportPage(0);
+                          }}
+                          className="absolute left-8 top-[14px] text-slate-400 hover:text-slate-600 font-bold text-xs cursor-pointer select-none z-10"
+                          title="مسح الاختيار والرجوع للكل"
+                        >
+                          ✕
+                        </button>
+                      )}
                       
                       {isReportSupplierDropdownOpen && reportSupplierSearchQuery.trim().length > 0 && (
                         <div className="absolute right-0 left-0 mt-1 bg-white border border-slate-250 rounded-xl shadow-2xl max-h-60 overflow-y-auto no-print z-[9999] divide-y divide-slate-100 bg-white">
