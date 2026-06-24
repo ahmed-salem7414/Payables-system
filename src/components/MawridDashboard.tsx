@@ -7374,6 +7374,15 @@ export default function MawridDashboard() {
       {/* MODAL: PRINT DOCTOR FILE */}
       {printingDoctor && (
         <div className="fixed inset-0 bg-slate-950/55 backdrop-blur-sm flex flex-col items-center justify-center z-[150] p-4 overflow-y-auto doctor-print-modal-wrapper">
+          {/* Dynamic Print CSS Injector for Portrait Mode specifically */}
+          <style dangerouslySetInnerHTML={{ __html: `
+            @media print {
+              @page {
+                size: A4 portrait !important;
+                margin: 0 !important;
+              }
+            }
+          `}} />
           {/* Controls Bar */}
           <div className="flex items-center justify-between max-w-4xl w-full bg-slate-900 text-white px-6 py-4 rounded-t-3xl border border-b-0 border-slate-800 shadow-2xl no-print">
             <div className="flex items-center gap-2">
