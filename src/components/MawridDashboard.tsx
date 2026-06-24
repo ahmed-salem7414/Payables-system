@@ -7402,14 +7402,14 @@ export default function MawridDashboard() {
           <div id="printable-report-content" className="w-full max-w-4xl">
             <div className="bg-white rounded-b-3xl border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page relative overflow-hidden text-right select-none">
               {/* Background Watermark Logo with high transparency */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0">
+              <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0 doctor-print-watermark">
                 <MersalLogo width={450} height={450} isDarkBackground={false} />
               </div>
 
               <div className="relative z-10 space-y-6 flex flex-col justify-between h-full">
                 {/* Header Section */}
                 <div>
-                  <div className="border-b-2 border-emerald-650 pb-4 flex flex-row items-center justify-between gap-4 w-full">
+                  <div className="border-b-2 border-emerald-600 pb-4 flex flex-row items-center justify-between gap-4 w-full">
                     <div className="text-right">
                       <h2 className="text-lg font-extrabold text-slate-950 font-sans tracking-tight">
                         مستشفى مرسال للأطفال - Marsal Children's Hospital
