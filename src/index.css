@@ -227,7 +227,7 @@ html, body {
     box-sizing: border-box !important;
   }
 
-  .print-mode-doctor {
+  .print-mode-doctor, .print-mode-supplier {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
@@ -243,8 +243,9 @@ html, body {
     box-sizing: border-box !important;
   }
 
-  /* Hide absolutely everything else when printing doctor card */
-  .print-mode-doctor > *:not(.doctor-print-modal-wrapper) {
+  /* Hide absolutely everything else when printing doctor or supplier card */
+  .print-mode-doctor > *:not(.doctor-print-modal-wrapper),
+  .print-mode-supplier > *:not(.supplier-print-modal-wrapper) {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
@@ -252,7 +253,8 @@ html, body {
   }
 
   /* Reset modal positioning in print to cover the exact page area */
-  .print-mode-doctor .doctor-print-modal-wrapper {
+  .print-mode-doctor .doctor-print-modal-wrapper,
+  .print-mode-supplier .supplier-print-modal-wrapper {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
@@ -270,7 +272,8 @@ html, body {
   }
 
   /* Center the content container perfectly in the exact physical A4 portrait limits */
-  .print-mode-doctor #printable-report-content {
+  .print-mode-doctor #printable-report-content,
+  .print-mode-supplier #printable-supplier-report-content {
     width: 210mm !important;
     height: 297mm !important;
     max-width: none !important;
@@ -285,7 +288,8 @@ html, body {
   }
 
   /* Refined dimensions of the card to perfectly fit A4 portrait canvas with beautiful borders */
-  .print-mode-doctor .printable-report-page {
+  .print-mode-doctor .printable-report-page,
+  .print-mode-supplier .printable-report-page {
     width: 186mm !important; /* Leaves exactly 12mm on left and right */
     height: 273mm !important; /* Leaves exactly 12mm on top and bottom */
     min-height: 273mm !important;
