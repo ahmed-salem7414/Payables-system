@@ -3447,7 +3447,7 @@ export default function MawridDashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc] text-slate-850 font-sans selection:bg-emerald-500 selection:text-white pb-10">
+    <div className={`min-h-screen flex flex-col bg-[#f8fafc] text-slate-850 font-sans selection:bg-emerald-500 selection:text-white pb-10 ${printingDoctor ? "print-mode-doctor" : ""}`}>
       {/* Toast Alert */}
       <AnimatePresence>
         {toast && (
@@ -7373,7 +7373,7 @@ export default function MawridDashboard() {
 
       {/* MODAL: PRINT DOCTOR FILE */}
       {printingDoctor && (
-        <div className="fixed inset-0 bg-slate-950/55 backdrop-blur-sm flex flex-col items-center justify-center z-[150] p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-950/55 backdrop-blur-sm flex flex-col items-center justify-center z-[150] p-4 overflow-y-auto doctor-print-modal-wrapper">
           {/* Controls Bar */}
           <div className="flex items-center justify-between max-w-4xl w-full bg-slate-900 text-white px-6 py-4 rounded-t-3xl border border-b-0 border-slate-800 shadow-2xl no-print">
             <div className="flex items-center gap-2">
@@ -7421,9 +7421,33 @@ export default function MawridDashboard() {
                         جهة التوثيق: مكتب مراجعة شؤون المدفوعات والتعاقدات
                       </p>
                     </div>
-                    <div className="text-left flex flex-col items-end">
-                      <MersalLogo width={85} height={40} isDarkBackground={false} />
-                      <span className="text-[9px] font-mono font-bold text-slate-400 mt-1"> Marsal System v2.4 </span>
+                    
+                    {/* Barcode and Logo */}
+                    <div className="text-left flex flex-row items-center gap-6">
+                      <div className="flex flex-col items-center justify-center gap-1 bg-slate-50 p-2 rounded-xl border border-slate-200/50">
+                        <div className="flex items-end gap-[1px] h-6">
+                          <div className="w-[1px] bg-slate-800 h-full"></div>
+                          <div className="w-[2px] bg-slate-800 h-full"></div>
+                          <div className="w-[1px] bg-slate-800 h-full"></div>
+                          <div className="w-[3px] bg-slate-800 h-full"></div>
+                          <div className="w-[1px] bg-slate-800 h-full"></div>
+                          <div className="w-[1px] bg-slate-800 h-full"></div>
+                          <div className="w-[4px] bg-slate-800 h-full"></div>
+                          <div className="w-[2px] bg-slate-800 h-full"></div>
+                          <div className="w-[1px] bg-slate-800 h-full"></div>
+                          <div className="w-[3px] bg-slate-800 h-full"></div>
+                          <div className="w-[1px] bg-slate-800 h-full"></div>
+                          <div className="w-[4px] bg-slate-800 h-full"></div>
+                          <div className="w-[2px] bg-slate-800 h-full"></div>
+                          <div className="w-[1px] bg-slate-800 h-full"></div>
+                        </div>
+                        <span className="text-[7px] font-mono tracking-widest text-slate-500">MCH-{printingDoctor.doctorCode || "DOC"}-AUTH</span>
+                      </div>
+                      
+                      <div className="flex flex-col items-end">
+                        <MersalLogo width={85} height={40} isDarkBackground={false} />
+                        <span className="text-[9px] font-mono font-bold text-slate-400 mt-1"> Marsal System v2.4 </span>
+                      </div>
                     </div>
                   </div>
 
@@ -7443,7 +7467,10 @@ export default function MawridDashboard() {
                     </div>
                     <div>
                       <span className="text-slate-500 block mb-0.5">حالة تفعيل الملف البنكي:</span>
-                      <strong className="text-emerald-700 font-extrabold">مُعتمَد ومُدَقَّق فنيّاً</strong>
+                      <strong className="text-emerald-700 font-extrabold flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        مُعتمَد ومُدَقَّق فنيّاً بنظام مرسال المالي
+                      </strong>
                     </div>
                   </div>
                 </div>
@@ -7490,19 +7517,19 @@ export default function MawridDashboard() {
                   <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100 space-y-4 text-xs font-sans">
                     <div className="grid grid-cols-3 gap-4">
                       <div className="col-span-1 text-slate-500 font-semibold flex items-center">الاسم المعتمد للحساب البنكي:</div>
-                      <div className="col-span-2 font-bold text-slate-900 bg-white p-2.5 rounded-lg border border-slate-200/60">
+                      <div className="col-span-2 font-bold text-slate-900 bg-white p-2.5 rounded-lg border border-slate-200/60 text-sm">
                         {printingDoctor.bankAccountName || "—"}
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       <div className="col-span-1 text-slate-500 font-semibold flex items-center">رقم الحساب أو الآيبان (IBAN):</div>
-                      <div className="col-span-2 font-mono font-bold text-slate-900 bg-white p-2.5 rounded-lg border border-slate-200/60 text-right select-all">
+                      <div className="col-span-2 font-mono font-bold text-slate-900 bg-emerald-50/25 p-2.5 rounded-lg border border-emerald-100 text-right select-all text-sm">
                         {printingDoctor.bankAccount || "—"}
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       <div className="col-span-1 text-slate-500 font-semibold flex items-center">رمز السويفت كود (SWIFT CODE):</div>
-                      <div className="col-span-2 font-mono font-bold text-slate-900 bg-white p-2.5 rounded-lg border border-slate-200/60">
+                      <div className="col-span-2 font-mono font-bold text-slate-900 bg-white p-2.5 rounded-lg border border-slate-200/60 text-sm">
                         {printingDoctor.swiftCode || "—"}
                       </div>
                     </div>

@@ -205,4 +205,49 @@ html, body {
   .printable-report-sheet .rounded-full, .printable-report-page .rounded-full {
     border: 1px solid currentColor !important;
   }
+
+  /* Print doctor modal specifically and hide everything else when print-mode-doctor is active */
+  @page {
+    size: A4 landscape;
+    margin: 8mm 12mm 8mm 12mm !important; /* Perfect margins for landscape printing */
+  }
+
+  /* Defeat all wrapper offsets when printing doctor file */
+  .print-mode-doctor header,
+  .print-mode-doctor main,
+  .print-mode-doctor footer {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Reset modal positioning in print */
+  .doctor-print-modal-wrapper {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    display: block !important;
+    z-index: 99999 !important;
+  }
+
+  /* Refined dimensions of the card to perfectly fit A4 canvas */
+  .print-mode-doctor .printable-report-page {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    border: 6px double rgba(4, 120, 87, 0.6) !important;
+    border-radius: 1.5rem !important;
+    padding: 10mm 15mm !important;
+    box-sizing: border-box !important;
+  }
 }
