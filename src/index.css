@@ -72,8 +72,8 @@ html, body {
 
 @media print {
   @page {
-    size: A4 landscape; /* Recommended standard landscape orientation */
-    margin: 6mm !important; /* Professional printable margins */
+    size: A4 landscape !important; /* Recommended standard landscape orientation */
+    margin: 0 !important; /* Professional printable margins */
   }
   
   /* Force exact colors and backgrounds on all printed elements */
@@ -94,6 +94,8 @@ html, body {
     padding: 0 !important;
     width: 100% !important;
     height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
     box-shadow: none !important;
   }
 
@@ -113,11 +115,15 @@ html, body {
   #printable-report-content {
     margin: 0 auto !important;
     padding: 0 !important;
-    width: 100% !important;
+    width: 297mm !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
     box-shadow: none !important;
     border: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
   }
 
   /* Defeat space-y margins between pages */
@@ -158,21 +164,21 @@ html, body {
     break-after: page !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    margin: 0 !important;
-    border: 6px double rgba(4, 120, 87, 0.6) !important; /* Retain double emerald border exactly like preview */
-    border-radius: 1.5rem !important; /* Retain beautiful rounded corners */
+    margin: 12mm auto !important; /* Perfect physical margins on A4 landscape */
+    border: 6px double rgba(4, 120, 87, 0.8) !important; /* Retain double emerald border exactly like preview */
+    border-radius: 0px !important; /* Retain professional square corners */
     box-shadow: none !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
     background: #ffffff !important;
     background-color: #ffffff !important;
     
-    /* Perfect physical constraints mapping exactly to standard A4 landscape sheet with 6mm safe page margin */
-    width: 285mm !important;
-    height: 198mm !important;
-    min-height: 198mm !important;
-    max-height: 198mm !important;
-    padding: 8mm 12mm !important;
+    /* Perfect physical constraints mapping exactly to standard A4 landscape sheet with 12mm safe page margin */
+    width: 273mm !important; /* 297mm width - 24mm margins */
+    height: 186mm !important; /* 210mm height - 24mm margins */
+    min-height: 186mm !important;
+    max-height: 186mm !important;
+    padding: 10mm 12mm !important;
   }
   
   .printable-report-page:last-child {
@@ -204,27 +210,6 @@ html, body {
   /* Retain original badge color themes with a subtle print border */
   .printable-report-sheet .rounded-full, .printable-report-page .rounded-full {
     border: 1px solid currentColor !important;
-  }
-
-  /* Print doctor modal specifically and hide everything else when print-mode-doctor is active */
-  @page {
-    size: A4 portrait;
-    margin: 0 !important;
-  }
-
-  /* Reset body, html, root and the main print-mode-doctor wrapper */
-  html, body, #root {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    min-width: 100% !important;
-    min-height: 100% !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
-    overflow: hidden !important;
-    background: #ffffff !important;
-    box-sizing: border-box !important;
   }
 
   .print-mode-doctor, .print-mode-supplier {
