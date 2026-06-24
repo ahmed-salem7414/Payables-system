@@ -72,8 +72,8 @@ html, body {
 
 @media print {
   @page {
-    size: A4 landscape !important; /* Recommended standard landscape orientation */
-    margin: 0 !important; /* Professional printable margins */
+    size: A4 landscape; /* Recommended standard landscape orientation */
+    margin: 0; /* Professional printable margins */
   }
   
   /* Force exact colors and backgrounds on all printed elements */
