@@ -7395,7 +7395,7 @@ export default function MawridDashboard() {
             }
           `}} />
           {/* Controls Bar */}
-          <div className="flex items-center justify-between max-w-4xl w-full bg-slate-900 text-white px-6 py-4 rounded-t-3xl border border-b-0 border-slate-800 shadow-2xl no-print">
+          <div className="flex items-center justify-between max-w-4xl w-full bg-slate-900 text-white px-6 py-4 rounded-t-none border border-b-0 border-slate-800 shadow-2xl no-print">
             <div className="flex items-center gap-2">
               <Printer className="w-5 h-5 text-emerald-400" />
               <h3 className="text-sm font-black font-sans">معاينة وطباعة بطاقة الطبيب</h3>
@@ -7420,7 +7420,7 @@ export default function MawridDashboard() {
 
           {/* Printable Sheet */}
           <div id="printable-report-content" className="w-full max-w-4xl">
-            <div className="bg-white rounded-b-3xl border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page relative overflow-hidden text-right select-none">
+            <div className="bg-white rounded-none border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page relative overflow-hidden text-right select-none">
               {/* Background Watermark Logo with high transparency */}
               <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0 doctor-print-watermark">
                 <MersalLogo width={450} height={450} isDarkBackground={false} />
@@ -7581,7 +7581,7 @@ export default function MawridDashboard() {
             }
           `}} />
           {/* Controls Bar */}
-          <div className="flex items-center justify-between max-w-4xl w-full bg-slate-900 text-white px-6 py-4 rounded-t-3xl border border-b-0 border-slate-800 shadow-2xl no-print">
+          <div className="flex items-center justify-between max-w-4xl w-full bg-slate-900 text-white px-6 py-4 rounded-t-none border border-b-0 border-slate-800 shadow-2xl no-print">
             <div className="flex items-center gap-2">
               <Printer className="w-5 h-5 text-emerald-400" />
               <h3 className="text-sm font-black font-sans">معاينة وطباعة بطاقة المورد</h3>
@@ -7606,7 +7606,7 @@ export default function MawridDashboard() {
 
           {/* Printable Sheet */}
           <div id="printable-supplier-report-content" className="w-full max-w-4xl">
-            <div className="bg-white rounded-b-3xl border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page relative overflow-hidden text-right select-none">
+            <div className="bg-white rounded-none border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page relative overflow-hidden text-right select-none">
               {/* Background Watermark Logo with high transparency */}
               <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0 doctor-print-watermark">
                 <MersalLogo width={450} height={450} isDarkBackground={false} />

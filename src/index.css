@@ -296,7 +296,7 @@ html, body {
     max-height: 273mm !important;
     margin: 0 !important; /* Let flexbox do the perfect mathematical centering */
     border: 6px double rgba(4, 120, 87, 0.8) !important; /* Rich double emerald border */
-    border-radius: 1.5rem !important;
+    border-radius: 0px !important;
     padding: 12mm 15mm !important;
     box-sizing: border-box !important;
     background: #ffffff !important;
