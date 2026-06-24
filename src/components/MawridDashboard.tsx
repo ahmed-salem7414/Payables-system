@@ -809,6 +809,7 @@ export default function MawridDashboard() {
   const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
   const [showEditDoctorModal, setShowEditDoctorModal] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
+  const [printingDoctor, setPrintingDoctor] = useState<Doctor | null>(null);
   const [doctorToDelete, setDoctorToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const [newDoctor, setNewDoctor] = useState<Omit<Doctor, "id" | "createdAt">>({
@@ -4276,6 +4277,13 @@ export default function MawridDashboard() {
                             {/* Action Buttons */}
                             <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                               <button
+                                onClick={() => setPrintingDoctor(doc)}
+                                className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                title="طباعة بيانات الطبيب"
+                              >
+                                <Printer className="w-4 h-4" />
+                              </button>
+                              <button
                                 onClick={() => {
                                   setEditingDoctor(doc);
                                   setShowEditDoctorModal(true);
@@ -7360,6 +7368,172 @@ export default function MawridDashboard() {
               </div>
             </form>
           </motion.div>
+        </div>
+      )}
+
+      {/* MODAL: PRINT DOCTOR FILE */}
+      {printingDoctor && (
+        <div className="fixed inset-0 bg-slate-950/55 backdrop-blur-sm flex flex-col items-center justify-center z-[150] p-4 overflow-y-auto">
+          {/* Controls Bar */}
+          <div className="flex items-center justify-between max-w-4xl w-full bg-slate-900 text-white px-6 py-4 rounded-t-3xl border border-b-0 border-slate-800 shadow-2xl no-print">
+            <div className="flex items-center gap-2">
+              <Printer className="w-5 h-5 text-emerald-400" />
+              <h3 className="text-sm font-black font-sans">معاينة وطباعة بطاقة الطبيب</h3>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => window.print()}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer flex items-center gap-1.5 transition-colors"
+              >
+                <Printer className="w-4 h-4" />
+                <span>طباعة المستند</span>
+              </button>
+              <button
+                onClick={() => setPrintingDoctor(null)}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-4 py-2 rounded-xl cursor-pointer flex items-center gap-1 transition-colors"
+              >
+                <XCircle className="w-4 h-4" />
+                <span>إغلاق</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Printable Sheet */}
+          <div id="printable-report-content" className="w-full max-w-4xl">
+            <div className="bg-white rounded-b-3xl border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page relative overflow-hidden text-right select-none">
+              {/* Background Watermark Logo with high transparency */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0">
+                <MersalLogo width={450} height={450} isDarkBackground={false} />
+              </div>
+
+              <div className="relative z-10 space-y-6 flex flex-col justify-between h-full">
+                {/* Header Section */}
+                <div>
+                  <div className="border-b-2 border-emerald-650 pb-4 flex flex-row items-center justify-between gap-4 w-full">
+                    <div className="text-right">
+                      <h2 className="text-lg font-extrabold text-slate-950 font-sans tracking-tight">
+                        مستشفى مرسال للأطفال - Marsal Children's Hospital
+                      </h2>
+                      <p className="text-[10px] text-emerald-800 font-bold font-sans mt-0.5">
+                        إدارة الحسابات العامة وشؤون الأطباء • بطاقة تعريف الطبيب والتحويلات البنكية
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-semibold font-sans mt-0.5">
+                        جهة التوثيق: مكتب مراجعة شؤون المدفوعات والتعاقدات
+                      </p>
+                    </div>
+                    <div className="text-left flex flex-col items-end">
+                      <MersalLogo width={85} height={40} isDarkBackground={false} />
+                      <span className="text-[9px] font-mono font-bold text-slate-400 mt-1"> Marsal System v2.4 </span>
+                    </div>
+                  </div>
+
+                  {/* Print Meta Specs Info */}
+                  <div className="grid grid-cols-2 gap-4 border border-emerald-100 bg-emerald-500/5 rounded-2xl p-4 mt-4 text-xs">
+                    <div>
+                      <span className="text-slate-500 block mb-0.5">تاريخ ووقت طباعة الملف:</span>
+                      <strong className="font-mono text-slate-800">
+                        {new Date().toLocaleString("ar-EG", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block mb-0.5">حالة تفعيل الملف البنكي:</span>
+                      <strong className="text-emerald-700 font-extrabold">مُعتمَد ومُدَقَّق فنيّاً</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Primary Content Grid */}
+                <div className="space-y-6">
+                  <h3 className="text-sm font-bold text-emerald-800 border-b border-emerald-100 pb-2">
+                    أولاً: البيانات الأساسية والمهنية للطبيب
+                  </h3>
+                  <div className="grid grid-cols-3 gap-6 text-xs font-sans">
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                      <span className="text-slate-500 block mb-1 font-semibold">كود الطبيب بالنظام</span>
+                      <strong className="font-mono text-sm text-slate-800">
+                        {printingDoctor.doctorCode || "—"}
+                      </strong>
+                    </div>
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 col-span-2">
+                      <span className="text-slate-500 block mb-1 font-semibold">اسم الطبيب المتعاقد</span>
+                      <strong className="text-sm text-slate-950">
+                        {printingDoctor.name}
+                      </strong>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-6 text-xs font-sans">
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                      <span className="text-slate-500 block mb-1 font-semibold">التخصص الطبي الرئيسي</span>
+                      <strong className="text-slate-800">{printingDoctor.specialty}</strong>
+                    </div>
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                      <span className="text-slate-500 block mb-1 font-semibold">تاريخ التسجيل بالمنظومة الإلكترونية</span>
+                      <strong className="font-mono text-slate-800">
+                        {new Date(printingDoctor.createdAt).toLocaleDateString("ar-EG", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-emerald-800 border-b border-emerald-100 pb-2 pt-2">
+                    ثانياً: البيانات البنكية الرسمية المعتمدة للتحويلات الصادرة
+                  </h3>
+                  <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100 space-y-4 text-xs font-sans">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-1 text-slate-500 font-semibold flex items-center">الاسم المعتمد للحساب البنكي:</div>
+                      <div className="col-span-2 font-bold text-slate-900 bg-white p-2.5 rounded-lg border border-slate-200/60">
+                        {printingDoctor.bankAccountName || "—"}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-1 text-slate-500 font-semibold flex items-center">رقم الحساب أو الآيبان (IBAN):</div>
+                      <div className="col-span-2 font-mono font-bold text-slate-900 bg-white p-2.5 rounded-lg border border-slate-200/60 text-right select-all">
+                        {printingDoctor.bankAccount || "—"}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-1 text-slate-500 font-semibold flex items-center">رمز السويفت كود (SWIFT CODE):</div>
+                      <div className="col-span-2 font-mono font-bold text-slate-900 bg-white p-2.5 rounded-lg border border-slate-200/60">
+                        {printingDoctor.swiftCode || "—"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer and Signatures Area */}
+                <div className="border-t border-slate-200 pt-6 mt-4">
+                  <div className="grid grid-cols-3 gap-4 text-[10px] text-slate-500 text-center font-sans">
+                    <div className="space-y-8">
+                      <span>توقيع مراجع شؤون الأطباء</span>
+                      <div className="h-0.5 w-24 bg-slate-200 mx-auto border-dashed border-b"></div>
+                    </div>
+                    <div className="space-y-8">
+                      <span>توقيع واعتماد الشؤون المالية</span>
+                      <div className="h-0.5 w-24 bg-slate-200 mx-auto border-dashed border-b"></div>
+                    </div>
+                    <div className="space-y-8">
+                      <span>ختم وتصديق مستشفى مرسال</span>
+                      <div className="h-10 w-10 border border-slate-200 rounded-full mx-auto flex items-center justify-center border-dashed text-[8px] text-slate-350 bg-slate-50/50">
+                        الختم
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-center text-[8px] text-slate-400 font-sans mt-6">
+                    المعلومات البنكية سرية للغاية وتُستخدم فقط لغرض صرف مستحقات الأطباء المعتمدة من مستشفى مرسال.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
