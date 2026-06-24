@@ -65,8 +65,29 @@ html, body {
   .printable-report-page {
     display: none !important;
   }
-  .printable-report-page.active-preview-page {
+  .printable-report-page.active-preview-page,
+  .portrait-preview-page {
     display: flex !important;
+  }
+
+  /* Exquisite screen styling for portrait preview pages */
+  .portrait-preview-page {
+    width: 600px !important;
+    max-width: 100% !important;
+    height: 848px !important; /* Perfect A4 Portrait aspect ratio on screen */
+    min-height: 848px !important;
+    max-height: 848px !important;
+    margin: 0 auto !important;
+    padding: 35px !important;
+    border: 6px double rgba(4, 120, 87, 0.7) !important;
+    border-radius: 0px !important; /* Keep it square as requested */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    gap: 1.25rem !important;
   }
 }
 

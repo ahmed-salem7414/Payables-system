@@ -7385,7 +7385,7 @@ export default function MawridDashboard() {
 
       {/* MODAL: PRINT DOCTOR FILE */}
       {printingDoctor && (
-        <div className="fixed inset-0 bg-slate-950/55 backdrop-blur-sm flex flex-col items-center justify-center z-[150] p-4 overflow-y-auto doctor-print-modal-wrapper">
+        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm flex flex-col items-center justify-start overflow-y-auto z-[150] p-4 sm:p-6 md:p-10 doctor-print-modal-wrapper select-none">
           {/* Dynamic Print CSS Injector for Portrait Mode specifically */}
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
@@ -7396,22 +7396,26 @@ export default function MawridDashboard() {
             }
           `}} />
           {/* Controls Bar */}
-          <div className="flex items-center justify-between max-w-4xl w-full bg-slate-900 text-white px-6 py-4 rounded-t-none border border-b-0 border-slate-800 shadow-2xl no-print">
+          <div className="flex items-center justify-between max-w-[620px] w-full bg-slate-900 text-white px-6 py-4 rounded-t-none border border-slate-800 shadow-2xl no-print border-b-0">
             <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
               <Printer className="w-5 h-5 text-emerald-400" />
               <h3 className="text-sm font-black font-sans">معاينة وطباعة بطاقة الطبيب</h3>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <button
                 onClick={() => window.print()}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer flex items-center gap-1.5 transition-colors"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors shadow-lg shadow-emerald-950/20 hover:scale-[1.02] active:scale-[0.98]"
               >
                 <Printer className="w-4 h-4" />
                 <span>طباعة المستند</span>
               </button>
               <button
                 onClick={() => setPrintingDoctor(null)}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-4 py-2 rounded-xl cursor-pointer flex items-center gap-1 transition-colors"
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors"
               >
                 <XCircle className="w-4 h-4" />
                 <span>إغلاق</span>
@@ -7420,8 +7424,8 @@ export default function MawridDashboard() {
           </div>
 
           {/* Printable Sheet */}
-          <div id="printable-report-content" className="w-full max-w-4xl">
-            <div className="bg-white rounded-none border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page relative overflow-hidden text-right select-none">
+          <div id="printable-report-content" className="w-full max-w-[620px]">
+            <div className="bg-white rounded-none border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page portrait-preview-page relative overflow-hidden text-right select-none">
               {/* Background Watermark Logo with high transparency */}
               <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0 doctor-print-watermark">
                 <MersalLogo width={450} height={450} isDarkBackground={false} />
@@ -7571,7 +7575,7 @@ export default function MawridDashboard() {
 
       {/* MODAL: PRINT SUPPLIER FILE */}
       {printingSupplier && (
-        <div className="fixed inset-0 bg-slate-950/55 backdrop-blur-sm flex flex-col items-center justify-center z-[150] p-4 overflow-y-auto supplier-print-modal-wrapper">
+        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm flex flex-col items-center justify-start overflow-y-auto z-[150] p-4 sm:p-6 md:p-10 supplier-print-modal-wrapper select-none">
           {/* Dynamic Print CSS Injector for Portrait Mode specifically */}
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
@@ -7582,22 +7586,26 @@ export default function MawridDashboard() {
             }
           `}} />
           {/* Controls Bar */}
-          <div className="flex items-center justify-between max-w-4xl w-full bg-slate-900 text-white px-6 py-4 rounded-t-none border border-b-0 border-slate-800 shadow-2xl no-print">
+          <div className="flex items-center justify-between max-w-[620px] w-full bg-slate-900 text-white px-6 py-4 rounded-t-none border border-slate-800 shadow-2xl no-print border-b-0">
             <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
               <Printer className="w-5 h-5 text-emerald-400" />
               <h3 className="text-sm font-black font-sans">معاينة وطباعة بطاقة المورد</h3>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <button
                 onClick={() => window.print()}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer flex items-center gap-1.5 transition-colors"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors shadow-lg shadow-emerald-950/20 hover:scale-[1.02] active:scale-[0.98]"
               >
                 <Printer className="w-4 h-4" />
                 <span>طباعة المستند</span>
               </button>
               <button
                 onClick={() => setPrintingSupplier(null)}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-4 py-2 rounded-xl cursor-pointer flex items-center gap-1 transition-colors"
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors"
               >
                 <XCircle className="w-4 h-4" />
                 <span>إغلاق</span>
@@ -7606,8 +7614,8 @@ export default function MawridDashboard() {
           </div>
 
           {/* Printable Sheet */}
-          <div id="printable-supplier-report-content" className="w-full max-w-4xl">
-            <div className="bg-white rounded-none border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page relative overflow-hidden text-right select-none">
+          <div id="printable-supplier-report-content" className="w-full max-w-[620px]">
+            <div className="bg-white rounded-none border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page portrait-preview-page relative overflow-hidden text-right select-none">
               {/* Background Watermark Logo with high transparency */}
               <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0 doctor-print-watermark">
                 <MersalLogo width={450} height={450} isDarkBackground={false} />
