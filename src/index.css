@@ -126,8 +126,8 @@ html, body {
     justify-content: flex-start !important;
   }
 
-  /* Defeat space-y margins between pages */
-  #printable-report-content > * {
+  /* Defeat space-y margins between pages except printable pages */
+  #printable-report-content > *:not(.printable-report-page) {
     margin: 0 !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
@@ -158,8 +158,8 @@ html, body {
   .printable-report-sheet, .printable-report-page {
     display: flex !important;
     flex-direction: column !important;
-    justify-content: flex-start !important; /* Keep tables at the top of the page in print */
-    gap: 1rem !important;
+    justify-content: space-between !important; /* Spaced out beautifully (Header, Details, Footer) */
+    gap: 0 !important;
     page-break-after: always !important;
     break-after: page !important;
     page-break-inside: avoid !important;

@@ -5680,7 +5680,7 @@ export default function MawridDashboard() {
                         return (
                           <div
                             key={pageIdx}
-                            className={`bg-white rounded-3xl border-[6px] border-double border-emerald-700/60 p-10 shadow-xl space-y-6 printable-report-sheet max-w-7xl mx-auto text-slate-900 printable-report-page relative overflow-hidden ${
+                            className={`bg-white rounded-3xl border-[6px] border-double border-emerald-700/60 p-10 shadow-xl printable-report-sheet max-w-7xl mx-auto text-slate-900 printable-report-page relative overflow-hidden flex flex-col justify-between ${
                               isPageActive
                                 ? "active-preview-page"
                                 : "hidden-on-screen"
@@ -5691,44 +5691,45 @@ export default function MawridDashboard() {
                               <MersalLogo width={500} height={500} isDarkBackground={false} />
                             </div>
 
-                            <div className="relative z-10 space-y-6">
-                              {/* Printed Header Banner */}
-                              <div className="border-b-2 border-emerald-650 pb-4 flex flex-row items-center justify-between gap-4 w-full">
-                                <div className="text-right">
-                                  <h2 className="text-xl font-extrabold text-slate-950 font-sans tracking-tight">
-                                    مستشفى مرسال للأطفال - Marsal Children's Hospital
-                                  </h2>
-                                  <p className="text-[10px] text-emerald-800 font-bold font-sans mt-0.5">
-                                    الشؤون المالية والرقابة • إدارة الحسابات العامة ومراجعة فواتير الموردين
-                                  </p>
-                                  <p className="text-[10px] text-slate-500 font-semibold font-sans mt-0.5">
-                                    التقرير المالي التدقيقي للموردين وفواتير الشراء المفتوحة
-                                  </p>
+                            {/* Printed Header Banner */}
+                            <div className="relative z-10 border-b-2 border-emerald-650 pb-4 flex flex-row items-center justify-between gap-4 w-full">
+                              <div className="text-right">
+                                <h2 className="text-xl font-extrabold text-slate-950 font-sans tracking-tight">
+                                  مستشفى مرسال للأطفال - Marsal Children's Hospital
+                                </h2>
+                                <p className="text-[10px] text-emerald-800 font-bold font-sans mt-0.5">
+                                  الشؤون المالية والرقابة • إدارة الحسابات العامة ومراجعة فواتير الموردين
+                                </p>
+                                <p className="text-[10px] text-slate-500 font-semibold font-sans mt-0.5">
+                                  التقرير المالي التدقيقي للموردين وفواتير الشراء المفتوحة
+                                </p>
+                              </div>
+                              <div className="text-left flex flex-col items-end">
+                                <div className="flex items-center gap-2">
+                                  <MersalLogo
+                                    width={80}
+                                    height={80}
+                                    isDarkBackground={false}
+                                    className="h-10 w-auto"
+                                  />
+                                  <div className="border-r border-slate-300 h-8 pl-2"></div>
+                                  <div className="text-left">
+                                    <h3 className="text-sm font-black text-slate-950 font-sans leading-none">
+                                      Mersal Foundation
+                                    </h3>
+                                    <span className="text-[9px] text-slate-500 font-bold block mt-0.5">
+                                      Financial Audit Division
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="text-left flex flex-col items-end">
-                                  <div className="flex items-center gap-2">
-                                    <MersalLogo
-                                      width={80}
-                                      height={80}
-                                      isDarkBackground={false}
-                                      className="h-10 w-auto"
-                                    />
-                                    <div className="border-r border-slate-300 h-8 pl-2"></div>
-                                    <div className="text-left">
-                                      <h3 className="text-sm font-black text-slate-950 font-sans leading-none">
-                                        Mersal Foundation
-                                      </h3>
-                                      <span className="text-[9px] text-slate-500 font-bold block mt-0.5">
-                                        Financial Audit Division
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="text-[9px] text-slate-600 font-mono mt-1">
-                                    تاريخ الطباعة: {new Date().toISOString().split("T")[0]} | المستند: MRL-FIN-{new Date().getFullYear()}-{String(new Date().getMonth() + 1).padStart(2, '0')}
-                                  </div>
+                                <div className="text-[9px] text-slate-600 font-mono mt-1">
+                                  تاريخ الطباعة: {new Date().toISOString().split("T")[0]} | المستند: MRL-FIN-{new Date().getFullYear()}-{String(new Date().getMonth() + 1).padStart(2, '0')}
                                 </div>
                               </div>
+                            </div>
 
+                            {/* Details Wrapper (Indicators + Table) centered vertically */}
+                            <div className="relative z-10 flex-1 flex flex-col justify-center w-full space-y-4 my-auto">
                               {/* Report specs indicators (ONLY ON FIRST PAGE: pageIdx === 0) */}
                               {pageIdx === 0 && (
                                 <div className="grid grid-cols-5 gap-3 border border-emerald-200 bg-emerald-500/15 rounded-2xl p-4 shadow-sm relative z-10 divide-x divide-x-reverse divide-emerald-100">
