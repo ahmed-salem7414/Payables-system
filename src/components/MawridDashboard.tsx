@@ -7556,25 +7556,9 @@ export default function MawridDashboard() {
                   </div>
                 </div>
 
-                {/* Footer and Signatures Area */}
+                {/* Footer Area */}
                 <div className="border-t border-slate-200 pt-6 mt-4">
-                  <div className="grid grid-cols-3 gap-4 text-[10px] text-slate-500 text-center font-sans">
-                    <div className="space-y-8">
-                      <span>توقيع مراجع شؤون الأطباء</span>
-                      <div className="h-0.5 w-24 bg-slate-200 mx-auto border-dashed border-b"></div>
-                    </div>
-                    <div className="space-y-8">
-                      <span>توقيع واعتماد الشؤون المالية</span>
-                      <div className="h-0.5 w-24 bg-slate-200 mx-auto border-dashed border-b"></div>
-                    </div>
-                    <div className="space-y-8">
-                      <span>ختم وتصديق مستشفى مرسال</span>
-                      <div className="h-10 w-10 border border-slate-200 rounded-full mx-auto flex items-center justify-center border-dashed text-[8px] text-slate-350 bg-slate-50/50">
-                        الختم
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-center text-[8px] text-slate-400 font-sans mt-6">
+                  <div className="text-center text-[8px] text-slate-400 font-sans">
                     المعلومات البنكية سرية للغاية وتُستخدم فقط لغرض صرف مستحقات الأطباء المعتمدة من مستشفى مرسال.
                   </div>
                 </div>
@@ -7766,25 +7750,9 @@ export default function MawridDashboard() {
                   </div>
                 </div>
 
-                {/* Footer and Signatures Area */}
+                {/* Footer Area */}
                 <div className="border-t border-slate-200 pt-6 mt-4">
-                  <div className="grid grid-cols-3 gap-4 text-[10px] text-slate-500 text-center font-sans">
-                    <div className="space-y-8">
-                      <span>توقيع مراجع شؤون الموردين</span>
-                      <div className="h-0.5 w-24 bg-slate-200 mx-auto border-dashed border-b"></div>
-                    </div>
-                    <div className="space-y-8">
-                      <span>توقيع واعتماد الشؤون المالية</span>
-                      <div className="h-0.5 w-24 bg-slate-200 mx-auto border-dashed border-b"></div>
-                    </div>
-                    <div className="space-y-8">
-                      <span>ختم وتصديق مستشفى مرسال</span>
-                      <div className="h-10 w-10 border border-slate-200 rounded-full mx-auto flex items-center justify-center border-dashed text-[8px] text-slate-350 bg-slate-50/50">
-                        الختم
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-center text-[8px] text-slate-400 font-sans mt-6">
+                  <div className="text-center text-[8px] text-slate-400 font-sans">
                     المعلومات البنكية سرية للغاية وتُستخدم فقط لغرض صرف مستحقات الموردين المعتمدة من مستشفى مرسال.
                   </div>
                 </div>
