@@ -7702,14 +7702,8 @@ export default function MawridDashboard() {
                   <h3 className="text-sm font-bold text-emerald-800 border-b border-emerald-100 pb-2">
                     أولاً: البيانات الأساسية والتعاقدية للمورد
                   </h3>
-                  <div className="grid grid-cols-3 gap-6 text-xs font-sans">
-                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                      <span className="text-slate-500 block mb-1 font-semibold">فئة التوريد الرئيسية</span>
-                      <strong className="text-sm text-slate-800 font-sans">
-                        {printingSupplier.category || "—"}
-                      </strong>
-                    </div>
-                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 col-span-2">
+                  <div className="text-xs font-sans">
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 w-full">
                       <span className="text-slate-500 block mb-1 font-semibold">اسم الشركة / المورد المتعاقد</span>
                       <strong className="text-sm text-slate-950">
                         {printingSupplier.company || printingSupplier.name}
