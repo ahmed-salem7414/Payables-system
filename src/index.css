@@ -315,3 +315,9 @@ html, body {
     direction: rtl !important;
   }
 }
+
+@media screen {
+  .no-print-screen {
+    display: none !important;
+  }
+}

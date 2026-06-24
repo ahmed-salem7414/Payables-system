@@ -7385,7 +7385,7 @@ export default function MawridDashboard() {
 
       {/* MODAL: PRINT DOCTOR FILE */}
       {printingDoctor && (
-        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm flex flex-col items-center justify-start overflow-y-auto z-[150] p-4 sm:p-6 md:p-10 doctor-print-modal-wrapper select-none">
+        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm flex flex-col items-center justify-center overflow-y-auto z-[150] p-4 sm:p-6 md:p-10 doctor-print-modal-wrapper select-none">
           {/* Dynamic Print CSS Injector for Portrait Mode specifically */}
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
@@ -7395,27 +7395,44 @@ export default function MawridDashboard() {
               }
             }
           `}} />
-          {/* Controls Bar */}
-          <div className="flex items-center justify-between max-w-[620px] w-full bg-slate-900 text-white px-6 py-4 rounded-t-none border border-slate-800 shadow-2xl no-print border-b-0">
-            <div className="flex items-center gap-2">
+          
+          {/* Elegant Screen Dialog Card (Only on Screen) */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative z-10 no-print text-right flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-250">
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-3 justify-between">
+              <div className="flex items-center gap-2">
+                <Printer className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-bold font-sans text-slate-100">طباعة مستند الطبيب</h3>
+              </div>
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <Printer className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-sm font-black font-sans">معاينة وطباعة بطاقة الطبيب</h3>
             </div>
-            <div className="flex items-center gap-2.5">
+            
+            <div className="space-y-2 py-1">
+              <p className="text-slate-300 text-sm font-sans leading-relaxed">
+                أنت على وشك طباعة بطاقة الطبيب الخاصة بـ:
+              </p>
+              <div className="bg-slate-950/50 rounded-xl p-4 border border-slate-800/60">
+                <div className="text-emerald-400 font-extrabold text-base mb-1">{printingDoctor.name}</div>
+                <div className="text-slate-400 text-xs font-semibold">{printingDoctor.specialty} • {printingDoctor.doctorCode || "DOC"}</div>
+              </div>
+              <p className="text-slate-400 text-xs font-sans leading-relaxed">
+                يرجى الضغط على زر <strong className="text-emerald-400 font-bold">طباعة المستند</strong> لبدء عملية الطباعة، أو <strong className="text-slate-300 font-bold">إغلاق</strong> للرجوع.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 mt-1">
               <button
                 onClick={() => window.print()}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors shadow-lg shadow-emerald-950/20 hover:scale-[1.02] active:scale-[0.98]"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-3 px-4 rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-950/20 hover:scale-[1.01] active:scale-[0.99]"
               >
                 <Printer className="w-4 h-4" />
                 <span>طباعة المستند</span>
               </button>
               <button
                 onClick={() => setPrintingDoctor(null)}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors"
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold py-3 px-4 rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-all border border-slate-750"
               >
                 <XCircle className="w-4 h-4" />
                 <span>إغلاق</span>
@@ -7423,8 +7440,8 @@ export default function MawridDashboard() {
             </div>
           </div>
 
-          {/* Printable Sheet */}
-          <div id="printable-report-content" className="w-full max-w-[620px]">
+          {/* Printable Sheet (Hidden on Screen, rendered for Printer) */}
+          <div id="printable-report-content" className="w-full max-w-[620px] no-print-screen">
             <div className="bg-white rounded-none border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page portrait-preview-page relative overflow-hidden text-right select-none">
               {/* Background Watermark Logo with high transparency */}
               <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0 doctor-print-watermark">
@@ -7575,7 +7592,7 @@ export default function MawridDashboard() {
 
       {/* MODAL: PRINT SUPPLIER FILE */}
       {printingSupplier && (
-        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm flex flex-col items-center justify-start overflow-y-auto z-[150] p-4 sm:p-6 md:p-10 supplier-print-modal-wrapper select-none">
+        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm flex flex-col items-center justify-center overflow-y-auto z-[150] p-4 sm:p-6 md:p-10 supplier-print-modal-wrapper select-none">
           {/* Dynamic Print CSS Injector for Portrait Mode specifically */}
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
@@ -7585,27 +7602,44 @@ export default function MawridDashboard() {
               }
             }
           `}} />
-          {/* Controls Bar */}
-          <div className="flex items-center justify-between max-w-[620px] w-full bg-slate-900 text-white px-6 py-4 rounded-t-none border border-slate-800 shadow-2xl no-print border-b-0">
-            <div className="flex items-center gap-2">
+          
+          {/* Elegant Screen Dialog Card (Only on Screen) */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative z-10 no-print text-right flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-250">
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-3 justify-between">
+              <div className="flex items-center gap-2">
+                <Printer className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-bold font-sans text-slate-100">طباعة مستند المورد</h3>
+              </div>
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <Printer className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-sm font-black font-sans">معاينة وطباعة بطاقة المورد</h3>
             </div>
-            <div className="flex items-center gap-2.5">
+            
+            <div className="space-y-2 py-1">
+              <p className="text-slate-300 text-sm font-sans leading-relaxed">
+                أنت على وشك طباعة بطاقة المورد الخاصة بـ:
+              </p>
+              <div className="bg-slate-950/50 rounded-xl p-4 border border-slate-800/60">
+                <div className="text-emerald-400 font-extrabold text-base mb-1">{printingSupplier.company || printingSupplier.name}</div>
+                <div className="text-slate-400 text-xs font-semibold">{printingSupplier.name} • {printingSupplier.phone || "بدون هاتف"}</div>
+              </div>
+              <p className="text-slate-400 text-xs font-sans leading-relaxed">
+                يرجى الضغط على زر <strong className="text-emerald-400 font-bold">طباعة المستند</strong> لبدء عملية الطباعة، أو <strong className="text-slate-300 font-bold">إغلاق</strong> للرجوع.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 mt-1">
               <button
                 onClick={() => window.print()}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors shadow-lg shadow-emerald-950/20 hover:scale-[1.02] active:scale-[0.98]"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-3 px-4 rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-950/20 hover:scale-[1.01] active:scale-[0.99]"
               >
                 <Printer className="w-4 h-4" />
                 <span>طباعة المستند</span>
               </button>
               <button
                 onClick={() => setPrintingSupplier(null)}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors"
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold py-3 px-4 rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-all border border-slate-750"
               >
                 <XCircle className="w-4 h-4" />
                 <span>إغلاق</span>
@@ -7613,8 +7647,8 @@ export default function MawridDashboard() {
             </div>
           </div>
 
-          {/* Printable Sheet */}
-          <div id="printable-supplier-report-content" className="w-full max-w-[620px]">
+          {/* Printable Sheet (Hidden on Screen, rendered for Printer) */}
+          <div id="printable-supplier-report-content" className="w-full max-w-[620px] no-print-screen">
             <div className="bg-white rounded-none border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page portrait-preview-page relative overflow-hidden text-right select-none">
               {/* Background Watermark Logo with high transparency */}
               <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0 doctor-print-watermark">
