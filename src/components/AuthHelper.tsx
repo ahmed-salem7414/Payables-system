@@ -344,7 +344,7 @@ export default function AuthHelper() {
               
               <ol className="list-decimal list-inside space-y-2 leading-relaxed text-right text-slate-700">
                 <li>
-                  املأ لوحة تحكم مشروعك <span className="text-emerald-600 font-bold font-mono">vibrant-continuity-5fbwx</span> بزيارة موقع <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-emerald-600 underline hover:text-emerald-700 font-bold">Firebase Console ↗</a>
+                  املأ لوحة تحكم مشروعك <span className="text-emerald-600 font-bold font-mono">{activeFirebaseConfig.projectId || "payaples-system"}</span> بزيارة موقع <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-emerald-600 underline hover:text-emerald-700 font-bold">Firebase Console ↗</a>
                 </li>
                 <li>
                   اختر قسم <span className="text-slate-900 font-bold">Authentication</span> ثم اضغط تبويب <span className="text-slate-900 font-bold">Settings (الإعدادات)</span> في الأعلى.

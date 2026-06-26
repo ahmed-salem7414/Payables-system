@@ -1022,6 +1022,30 @@ export default function MawridDashboard() {
     }
   };
 
+  const handleClearCacheAndSpeedUp = () => {
+    showToast("جاري تنظيف الذاكرة المؤقتة (Cache) وتسريع أداء التطبيق...", "info");
+    try {
+      // Keep only critical auth and config settings, clear rest of state cache to force re-fetch from database
+      const keysToKeep = ["mawrid_user_role", "mawrid_gdrive_auth", "mawrid_auto_backup_freq", "mawrid_last_backup_time"];
+      const keysToClear: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && !keysToKeep.includes(key)) {
+          keysToClear.push(key);
+        }
+      }
+      keysToClear.forEach(key => localStorage.removeItem(key));
+      
+      showToast("✓ تم تنظيف الذاكرة المؤقتة وتسريع الموقع بنجاح! جاري التحديث...", "success");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err) {
+      console.error("Cache clear failed:", err);
+      showToast("حدث خطأ أثناء تنظيف الذاكرة المؤقتة", "error");
+    }
+  };
+
   // Load initial store from server backend, which persists to PostgreSQL and has local backup file fallback
   useEffect(() => {
     const initializeDataSystem = async () => {
@@ -1087,7 +1111,6 @@ export default function MawridDashboard() {
         creditNotes,
       };
 
-      // Sync to backend store linked to PostgreSQL & local cache file
       try {
         const res = await fetch("/api/save-store", {
           method: "POST",
@@ -3509,16 +3532,25 @@ export default function MawridDashboard() {
               {/* Local Storage Live Status Badge */}
               <div className="flex flex-col items-start gap-0.5 px-2 py-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 " />
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
                   <span className="text-[11px] text-slate-800 font-semibold font-sans">
                     الوضع المحلي نشط ومستقر
                   </span>
                 </div>
-                <span className="text-[9px] text-teal-400 font-sans block leading-none">مزامنة فائقة السرعة</span>
+                <span className="text-[9px] text-emerald-600 font-sans block leading-none">مزامنة فائقة السرعة</span>
               </div>
 
               {/* Action Buttons to Reset */}
-              <div className="flex items-center gap-1 border-r border-slate-200/80 pr-1.5 mr-0.5">
+              <div className="flex items-center gap-1.5 border-r border-slate-200/80 pr-1.5 mr-0.5">
+                <button
+                  type="button"
+                  onClick={handleClearCacheAndSpeedUp}
+                  className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white border border-emerald-200 hover:border-emerald-500 transition-all cursor-pointer shadow-xs relative group flex items-center gap-1 text-[10px] font-bold"
+                  title="تنظيف كاش المتصفح وتسريع النظام"
+                >
+                  <CloudLightning className="w-3.5 h-3.5 animate-pulse text-emerald-600 group-hover:text-white" />
+                  <span className="hidden sm:inline">تنظيف الكاش وتسريع الموقع</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowResetConfirmModal(true)}

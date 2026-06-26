@@ -5,6 +5,8 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import pg from "pg";
+import { initializeApp, getApps } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 import { getDb, isConfigured, getPool } from "./src/db/index.ts";
 import * as schema from "./src/db/schema.ts";
 
@@ -30,6 +32,179 @@ const STORE_FILE = path.join(process.cwd(), "data_store.json");
 
 let isPostgresActive = false;
 let lastPostgresError: string | null = null;
+
+let isFirebaseActive = false;
+let lastFirebaseError: string | null = null;
+let firebaseDbId: string | undefined = undefined;
+
+try {
+  const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
+  if (fs.existsSync(firebaseConfigPath)) {
+    const firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf8"));
+    if (firebaseConfig.projectId) {
+      if (getApps().length === 0) {
+        initializeApp({
+          projectId: firebaseConfig.projectId,
+        });
+      }
+      isFirebaseActive = true;
+      if (firebaseConfig.firestoreDatabaseId) {
+        firebaseDbId = firebaseConfig.firestoreDatabaseId;
+      }
+      console.log(`🔥 Firebase Admin initialized successfully for project: ${firebaseConfig.projectId} (Database ID: ${firebaseDbId || "default"})`);
+    } else {
+      console.warn("⚠️ Warning: projectId not found in firebase-applet-config.json");
+    }
+  } else {
+    console.warn("⚠️ Warning: firebase-applet-config.json not found");
+  }
+} catch (error: any) {
+  isFirebaseActive = false;
+  lastFirebaseError = error?.message || String(error);
+  console.error("❌ Firebase Admin initialization failed:", error);
+}
+
+function getFirestoreDb() {
+  return firebaseDbId ? getFirestore(undefined, firebaseDbId) : getFirestore();
+}
+
+async function loadFromFirestore(): Promise<any> {
+  if (!isFirebaseActive) return null;
+  const db = getFirestoreDb();
+  
+  try {
+    const [suppliersSnap, invoicesSnap, paymentsSnap, backupsSnap, creditNotesSnap] = await Promise.all([
+      db.collection("suppliers").get(),
+      db.collection("invoices").get(),
+      db.collection("payments").get(),
+      db.collection("backups").get(),
+      db.collection("creditNotes").get()
+    ]);
+    
+    const suppliers = suppliersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const invoices = invoicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const payments = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const backups = backupsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const creditNotes = creditNotesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // System config
+    const configDoc = await db.collection("config").doc("system").get();
+    let supplierCategories = ["مواد خام", "خدمات", "أجهزة ومعدات", "مستلزمات مكتبية"];
+    let warehouses = ["المستودع الرئيسي", "مخزن أكتوبر", "مستودع الإسكندرية"];
+    let linkedBanks: any[] = [];
+    let safeBalance = 0;
+    
+    if (configDoc.exists) {
+      const configData = configDoc.data() || {};
+      if (Array.isArray(configData.supplierCategories)) supplierCategories = configData.supplierCategories;
+      if (Array.isArray(configData.warehouses)) warehouses = configData.warehouses;
+      if (Array.isArray(configData.linkedBanks)) linkedBanks = configData.linkedBanks;
+      if (typeof configData.safeBalance === "number") safeBalance = configData.safeBalance;
+    }
+    
+    return {
+      suppliers,
+      invoices,
+      payments,
+      backups,
+      creditNotes,
+      supplierCategories,
+      warehouses,
+      linkedBanks,
+      safeBalance
+    };
+  } catch (error) {
+    console.error("Failed to load from Firestore:", error);
+    throw error;
+  }
+}
+
+async function saveToFirestore(data: any) {
+  if (!isFirebaseActive) return;
+  const db = getFirestoreDb();
+  
+  try {
+    const syncCollection = async (colName: string, items: any[]) => {
+      if (!Array.isArray(items)) return;
+      
+      const existingSnap = await db.collection(colName).get();
+      const existingIds = existingSnap.docs.map(doc => doc.id);
+      const currentIds = new Set(items.map(item => item.id).filter(Boolean));
+      
+      const batch = db.batch();
+      let batchCount = 0;
+      
+      // Delete missing items
+      for (const id of existingIds) {
+        if (!currentIds.has(id)) {
+          batch.delete(db.collection(colName).doc(id));
+          batchCount++;
+          if (batchCount >= 400) {
+            await batch.commit();
+            batchCount = 0;
+          }
+        }
+      }
+      
+      // Upsert current items
+      for (const item of items) {
+        if (item && item.id) {
+          batch.set(db.collection(colName).doc(item.id), item, { merge: true });
+          batchCount++;
+          if (batchCount >= 400) {
+            await batch.commit();
+            batchCount = 0;
+          }
+        }
+      }
+      
+      if (batchCount > 0) {
+        await batch.commit();
+      }
+    };
+    
+    await Promise.all([
+      syncCollection("suppliers", data.suppliers || []),
+      syncCollection("invoices", data.invoices || []),
+      syncCollection("payments", data.payments || []),
+      syncCollection("backups", data.backups || []),
+      syncCollection("creditNotes", data.creditNotes || [])
+    ]);
+    
+    await db.collection("config").doc("system").set({
+      supplierCategories: data.supplierCategories || [],
+      warehouses: data.warehouses || [],
+      linkedBanks: data.linkedBanks || [],
+      safeBalance: typeof data.safeBalance === "number" ? data.safeBalance : 0
+    }, { merge: true });
+    
+    console.log("🔥 Successfully synced state to Firestore.");
+  } catch (error) {
+    console.error("Failed to save to Firestore:", error);
+    throw error;
+  }
+}
+
+async function initializeFirestore() {
+  if (!isFirebaseActive) return;
+  try {
+    const db = getFirestoreDb();
+    console.log("🔥 Verifying Firestore Admin connection and permissions...");
+    const existingSuppliers = await db.collection("suppliers").limit(1).get();
+    console.log("✅ Firestore Admin connected successfully!");
+    
+    if (existingSuppliers.empty && fs.existsSync(STORE_FILE)) {
+      console.log("🔥 Firestore is empty but local file store is present. Seeding data_store.json into Firestore...");
+      const localData = JSON.parse(fs.readFileSync(STORE_FILE, "utf-8"));
+      await saveToFirestore(localData);
+      console.log("🔥 Firestore Seed completed successfully!");
+    }
+  } catch (error: any) {
+    isFirebaseActive = false;
+    lastFirebaseError = error?.message || String(error);
+    console.error("⚠️ Firestore initialization failed due to permissions or configuration. Disabling server-side Firestore operations:", error);
+  }
+}
 
 async function loadFromPostgres(): Promise<any> {
   if (!isConfigured()) return null;
@@ -229,10 +404,29 @@ async function initializeDataStore() {
 // Reconcile on app launch
 initializeDataStore();
 initializePostgres();
+initializeFirestore();
 
 // API endpoint to retrieve stored data
 app.get("/api/get-store", async (req, res) => {
   try {
+    // 1. Try Firebase Firestore
+    if (isFirebaseActive) {
+      try {
+        const data = await loadFromFirestore();
+        if (data) {
+          console.log("✅ Successfully loaded data store from Firestore!");
+          return res.json({
+            ...data,
+            postgresActive: true, // Tell React client connection is healthy
+            postgresError: null,
+          });
+        }
+      } catch (err: any) {
+        console.error("❌ Failed to fetch from Firestore:", err);
+      }
+    }
+
+    // 2. Try PostgreSQL
     if (isPostgresActive) {
       try {
         const data = await loadFromPostgres();
@@ -248,13 +442,14 @@ app.get("/api/get-store", async (req, res) => {
       }
     }
 
+    // 3. Fall back to local file
     if (fs.existsSync(STORE_FILE)) {
       const dataStr = fs.readFileSync(STORE_FILE, "utf-8");
       const data = JSON.parse(dataStr);
       return res.json({ 
         ...data, 
-        postgresActive: isPostgresActive,
-        postgresError: lastPostgresError 
+        postgresActive: isPostgresActive || isFirebaseActive,
+        postgresError: lastPostgresError || lastFirebaseError 
       });
     }
 
@@ -272,8 +467,8 @@ app.get("/api/get-store", async (req, res) => {
     fs.writeFileSync(STORE_FILE, JSON.stringify(pristineState, null, 2), "utf-8");
     return res.json({
       ...pristineState,
-      postgresActive: isPostgresActive,
-      postgresError: lastPostgresError,
+      postgresActive: isPostgresActive || isFirebaseActive,
+      postgresError: lastPostgresError || lastFirebaseError,
     });
   } catch (error: any) {
     console.error("Error reading data store file:", error);
@@ -289,31 +484,49 @@ app.post("/api/save-store", async (req, res) => {
     // Save to local cache file first
     fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2), "utf-8");
 
+    let dbWriteSuccess = false;
+    let dbErrorMsg: string | null = null;
+
+    // 1. Save to Firestore
+    if (isFirebaseActive) {
+      try {
+        await saveToFirestore(data);
+        dbWriteSuccess = true;
+      } catch (err: any) {
+        console.error("Failed to save to Firestore:", err);
+        dbErrorMsg = "Firestore error: " + err.message;
+      }
+    }
+
+    // 2. Save to Postgres
     if (isPostgresActive) {
       try {
         await saveToPostgres(data);
-        return res.json({
-          success: true,
-          message: "Data saved successfully on PostgreSQL and local server backup file.",
-          postgresActive: true,
-          postgresError: null
-        });
+        dbWriteSuccess = true;
       } catch (err: any) {
         console.error("Failed to commit save to Postgres:", err);
-        return res.json({
-          success: true,
-          message: "Saved to local cache, but database write failed: " + err.message,
-          postgresActive: false,
-          postgresError: err.message
-        });
+        if (dbErrorMsg) {
+          dbErrorMsg += " | Postgres error: " + err.message;
+        } else {
+          dbErrorMsg = "Postgres error: " + err.message;
+        }
       }
+    }
+
+    if (dbWriteSuccess) {
+      return res.json({
+        success: true,
+        message: "تم حفظ البيانات بنجاح في قاعدة البيانات السحابية Firebase والملفات المحلية.",
+        postgresActive: true,
+        postgresError: dbErrorMsg
+      });
     }
 
     return res.json({ 
       success: true, 
       message: "Data saved successfully on local secure server file system.",
       postgresActive: false,
-      postgresError: lastPostgresError
+      postgresError: dbErrorMsg || lastPostgresError || lastFirebaseError
     });
   } catch (error: any) {
     console.error("Critical error in save-store endpoint:", error);
@@ -370,13 +583,25 @@ app.post("/api/reset-db", async (req, res) => {
     // Save pristine file locally
     fs.writeFileSync(STORE_FILE, JSON.stringify(pristineState, null, 2), "utf-8");
 
+    if (isFirebaseActive) {
+      try {
+        await saveToFirestore(pristineState);
+      } catch (err) {
+        console.error("Failed to clear Firestore on reset:", err);
+      }
+    }
+
     if (isPostgresActive) {
-      await saveToPostgres(pristineState);
+      try {
+        await saveToPostgres(pristineState);
+      } catch (err) {
+        console.error("Failed to clear Postgres on reset:", err);
+      }
     }
 
     return res.json({
       success: true,
-      postgresActive: isPostgresActive,
+      postgresActive: isPostgresActive || isFirebaseActive,
       postgresError: null,
       message: "تمت إعادة ضبط وتصفير النظام بالكامل وحذف كافة الفواتير والمعاملات من قاعدة البيانات والملفات بنجاح!"
     });
@@ -384,7 +609,7 @@ app.post("/api/reset-db", async (req, res) => {
     console.error("❌ Critical error during reset:", err);
     return res.status(500).json({
       success: false,
-      postgresActive: isPostgresActive,
+      postgresActive: isPostgresActive || isFirebaseActive,
       postgresError: err?.message || String(err),
       message: "فشلت عملية إعادة التهيئة: " + (err?.message || String(err))
     });

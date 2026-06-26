@@ -171,6 +171,11 @@ export async function testConnection(): Promise<boolean> {
 
 // Retrieve complete store from Firestore
 export async function loadFromUserFirestore() {
+  if (!auth.currentUser) {
+    console.log("ℹ️ No authenticated user active; skipping direct Firestore load.");
+    return null;
+  }
+
   const store: any = {
     suppliers: [],
     invoices: [],
@@ -215,6 +220,11 @@ export async function loadFromUserFirestore() {
 
 // Save complete store to user's Firebase instance
 export async function saveToUserFirestore(data: any) {
+  if (!auth.currentUser) {
+    console.log("ℹ️ No authenticated user active; skipping direct Firestore save.");
+    return false;
+  }
+
   try {
     const batch = writeBatch(db);
 

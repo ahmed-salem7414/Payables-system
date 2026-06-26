@@ -321,3 +321,33 @@ html, body {
     display: none !important;
   }
 }
+
+/* Responsive Mobile-Optimized Adjustments for Screens & Previews */
+@media screen and (max-width: 768px) {
+  .printable-report-page, 
+  .portrait-preview-page {
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    padding: 1.25rem !important;
+    margin: 1rem auto !important;
+    border-radius: 1rem !important;
+    border-width: 4px !important;
+  }
+}
+
+@media screen and (max-width: 640px) {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+  
+  /* Smoother scrolling inside custom panels on mobile */
+  .overflow-x-auto, .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
