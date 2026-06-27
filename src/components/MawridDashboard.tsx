@@ -7441,7 +7441,7 @@ export default function MawridDashboard() {
 
           {/* Printable Sheet (Hidden on Screen, rendered for Printer) */}
           <div id="printable-report-content" className="w-full max-w-[620px] no-print-screen">
-            <div className="bg-white rounded-none border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page portrait-preview-page relative overflow-hidden text-right select-none">
+            <div className="bg-white rounded-3xl border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page portrait-preview-page relative overflow-hidden text-right select-none">
               {/* Background Watermark Logo with high transparency */}
               <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0 doctor-print-watermark">
                 <MersalLogo width={450} height={450} isDarkBackground={false} />
@@ -7648,7 +7648,7 @@ export default function MawridDashboard() {
 
           {/* Printable Sheet (Hidden on Screen, rendered for Printer) */}
           <div id="printable-supplier-report-content" className="w-full max-w-[620px] no-print-screen">
-            <div className="bg-white rounded-none border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page portrait-preview-page relative overflow-hidden text-right select-none">
+            <div className="bg-white rounded-3xl border-[6px] border-double border-emerald-700/60 p-10 shadow-2xl text-slate-900 printable-report-sheet printable-report-page portrait-preview-page relative overflow-hidden text-right select-none">
               {/* Background Watermark Logo with high transparency */}
               <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none z-0 doctor-print-watermark">
                 <MersalLogo width={450} height={450} isDarkBackground={false} />
