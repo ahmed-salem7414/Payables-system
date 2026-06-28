@@ -608,8 +608,21 @@ export default function MawridDashboard() {
   >("all");
 
   // Selected Report Parameters
-  const [reportStartDate, setReportStartDate] = useState<string>("2026-04-01");
-  const [reportEndDate, setReportEndDate] = useState<string>("2026-06-30");
+  const [reportStartDate, setReportStartDate] = useState<string>(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}-01`;
+  });
+  const [reportEndDate, setReportEndDate] = useState<string>(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const lastDay = new Date(year, month, 0).getDate();
+    const monthStr = String(month).padStart(2, '0');
+    const lastDayStr = String(lastDay).padStart(2, '0');
+    return `${year}-${monthStr}-${lastDayStr}`;
+  });
   const [selectedReportSupplierId, setSelectedReportSupplierId] =
     useState<string>("all");
   const [reportSupplierSearchQuery, setReportSupplierSearchQuery] = useState("");
