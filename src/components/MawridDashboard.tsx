@@ -5388,36 +5388,37 @@ export default function MawridDashboard() {
                     </select>
                   </div>
 
-                  {/* 4. Start Date Input */}
-                  <div className="flex flex-col gap-1 w-full">
+                  {/* 4. Start & End Date Inputs grouped on one line */}
+                  <div className="col-span-1 sm:col-span-2 md:col-span-1 lg:col-span-2 flex flex-col gap-1 w-full">
                     <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
-                      <span>📅</span> من تاريخ:
+                      <span>📅</span> نطاق التواريخ (من - إلى):
                     </label>
-                    <input
-                      type="date"
-                      value={reportStartDate}
-                      onChange={(e) => {
-                        setReportStartDate(e.target.value);
-                        setActiveReportPage(0);
-                      }}
-                      className="bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
-                    />
-                  </div>
-
-                  {/* 5. End Date Input */}
-                  <div className="flex flex-col gap-1 w-full">
-                    <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
-                      <span>📅</span> إلى تاريخ:
-                    </label>
-                    <input
-                      type="date"
-                      value={reportEndDate}
-                      onChange={(e) => {
-                        setReportEndDate(e.target.value);
-                        setActiveReportPage(0);
-                      }}
-                      className="bg-slate-50 text-slate-800 border border-slate-200 text-xs px-2 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all"
-                    />
+                    <div className="grid grid-cols-2 gap-2 w-full">
+                      <div className="relative">
+                        <span className="absolute right-2.5 top-[13px] text-[9px] font-bold text-slate-400 select-none">من</span>
+                        <input
+                          type="date"
+                          value={reportStartDate}
+                          onChange={(e) => {
+                            setReportStartDate(e.target.value);
+                            setActiveReportPage(0);
+                          }}
+                          className="bg-slate-50 text-slate-800 border border-slate-200 text-xs pr-7 pl-1.5 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all text-right"
+                        />
+                      </div>
+                      <div className="relative">
+                        <span className="absolute right-2.5 top-[13px] text-[9px] font-bold text-slate-400 select-none">إلى</span>
+                        <input
+                          type="date"
+                          value={reportEndDate}
+                          onChange={(e) => {
+                            setReportEndDate(e.target.value);
+                            setActiveReportPage(0);
+                          }}
+                          className="bg-slate-50 text-slate-800 border border-slate-200 text-xs pr-7 pl-1.5 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full align-middle h-[42px] transition-all text-right"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* 6. Report View Type Select */}
