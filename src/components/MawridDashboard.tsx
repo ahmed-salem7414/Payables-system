@@ -5873,10 +5873,10 @@ export default function MawridDashboard() {
                                         <th className="py-2.5 px-3 text-center">
                                           المورد
                                         </th>
-                                        <th className="py-2.5 px-3 text-center font-semibold">
+                                        <th className="py-2.5 px-3 text-center font-semibold whitespace-nowrap">
                                           تاريخ الإضافة
                                         </th>
-                                        <th className="py-2.5 px-3 text-center font-semibold">
+                                        <th className="py-2.5 px-3 text-center font-semibold whitespace-nowrap">
                                           تاريخ الاستحقاق
                                         </th>
                                         <th className="py-2.5 px-3 text-center font-semibold">
@@ -6031,11 +6031,11 @@ export default function MawridDashboard() {
                                                 {item.supplier.name}
                                               </div>
                                             </td>
-                                            <td className="py-2.5 px-3 font-mono text-slate-600 text-center">
+                                            <td className="py-2.5 px-3 font-mono text-slate-600 text-center whitespace-nowrap">
                                               {item.invoice.issueDate ||
                                                 "2026-06-01"}
                                             </td>
-                                            <td className="py-2.5 px-3 font-mono text-slate-500 text-center">
+                                            <td className="py-2.5 px-3 font-mono text-slate-500 text-center whitespace-nowrap">
                                               {item.invoice.dueDate}
                                             </td>
                                             <td className="py-2.5 px-3 font-mono text-center font-medium">
