@@ -3140,7 +3140,7 @@ export default function MawridDashboard() {
         if (supInvoices.length === 0) return;
 
         const totalOriginal = supInvoices.reduce(
-          (sum, inv) => sum + (inv.totalAmount - (inv.vatAmount || 0)),
+          (sum, inv) => sum + inv.totalAmount,
           0,
         );
         const totalCN = supInvoices.reduce(
@@ -3209,8 +3209,8 @@ export default function MawridDashboard() {
           const warehouseName = (inv.warehouse || "").replace(/,/g, " ");
           const vatVal = inv.vatAmount || 0;
 
-          const originalBeforeTax = inv.totalAmount - (inv.vatAmount || 0);
-          csvContent += `"${name}","${company}","${invoiceNum}","${inv.issueDate || ""}","${inv.dueDate}","${warehouseName}",${originalBeforeTax},${vatVal},${inv.creditNoteAmount || 0},${payableAmount},"${statusText}"\n`;
+          const originalWithTax = inv.totalAmount;
+          csvContent += `"${name}","${company}","${invoiceNum}","${inv.issueDate || ""}","${inv.dueDate}","${warehouseName}",${originalWithTax},${vatVal},${inv.creditNoteAmount || 0},${payableAmount},"${statusText}"\n`;
         });
       });
     }
@@ -5523,7 +5523,7 @@ export default function MawridDashboard() {
                     if (supInvoices.length === 0) return;
 
                     const totalOriginal = supInvoices.reduce(
-                      (sum, inv) => sum + (inv.totalAmount - (inv.vatAmount || 0)),
+                      (sum, inv) => sum + inv.totalAmount,
                       0,
                     );
                     const totalCN = supInvoices.reduce(
@@ -5602,13 +5602,12 @@ export default function MawridDashboard() {
                     });
 
                     supInvoices.forEach((inv) => {
-                      const originalBeforeTax = inv.totalAmount - (inv.vatAmount || 0);
-                      const vatAmount = inv.vatAmount || 0;
+                      const originalWithTax = inv.totalAmount;
                       const creditNoteAmount = inv.creditNoteAmount || 0;
                       items.push({
                         supplier: sup,
                         invoice: inv,
-                        payableAmount: originalBeforeTax + vatAmount - creditNoteAmount,
+                        payableAmount: originalWithTax - creditNoteAmount,
                       });
                     });
                   });
@@ -7284,7 +7283,7 @@ export default function MawridDashboard() {
                   <input
                     type="text"
                     required
-                    value={editingDoctor.name}
+                    value={editingDoctor.name || ""}
                     onChange={(e) =>
                       setEditingDoctor({ ...editingDoctor, name: e.target.value })
                     }
@@ -7301,7 +7300,7 @@ export default function MawridDashboard() {
                   <input
                     type="text"
                     required
-                    value={editingDoctor.specialty}
+                    value={editingDoctor.specialty || ""}
                     onChange={(e) =>
                       setEditingDoctor({
                         ...editingDoctor,
@@ -8056,7 +8055,7 @@ export default function MawridDashboard() {
 
                       {/* Suggestions list: ONLY visible when typing (length > 0) */}
                       {isNewInvoiceSupplierDropdownOpen && newInvoiceSupplierSearchQuery.trim().length > 0 && (
-                        <div className="absolute right-0 left-0 mt-1 bg-white border border-slate-250 rounded-xl shadow-2xl max-h-52 overflow-y-auto no-print z-[999] divide-y divide-slate-100 bg-white">
+                        <div className="absolute right-0 left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-52 overflow-y-auto no-print z-[999] divide-y divide-slate-100 bg-white">
                           {(() => {
                             const filtered = suppliers.filter((s) =>
                               s.name.toLowerCase().includes(newInvoiceSupplierSearchQuery.toLowerCase()) ||
@@ -8092,7 +8091,26 @@ export default function MawridDashboard() {
                     <input
                       type="hidden"
                       required
-                      value={newInvoice.supplierId}
+                      value={newInvoice.supplierId || ""}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-600 block mb-1 font-bold">
+                      رقم الفاتورة الصادر *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="FT-2026-X"
+                      value={newInvoice.invoiceNumber || ""}
+                      onChange={(e) =>
+                        setNewInvoice({
+                          ...newInvoice,
+                          invoiceNumber: e.target.value,
+                        })
+                      }
+                      className="w-full border border-slate-200 rounded-lg p-2.5 bg-white font-mono font-bold text-slate-800 focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
                     />
                   </div>
 
@@ -8103,7 +8121,7 @@ export default function MawridDashboard() {
                     <input
                       type="date"
                       required
-                      value={newInvoice.issueDate}
+                      value={newInvoice.issueDate || ""}
                       onChange={(e) =>
                         setNewInvoice({
                           ...newInvoice,
@@ -8121,7 +8139,7 @@ export default function MawridDashboard() {
                     <input
                       type="date"
                       required
-                      value={newInvoice.dueDate}
+                      value={newInvoice.dueDate || ""}
                       onChange={(e) =>
                         setNewInvoice({
                           ...newInvoice,
@@ -8240,8 +8258,6 @@ export default function MawridDashboard() {
                     </div>
                   </div>
                 </div>
-
-
 
                 {/* Left Side Panel: Items Row Editor & VAT/Calculations & Credit Note */}
                 <div className="lg:col-span-7 space-y-4">
@@ -8495,7 +8511,7 @@ export default function MawridDashboard() {
                                         customVatAmount: rounded,
                                       });
                                     }}
-                                    className="w-24 text-center font-mono font-bold text-white bg-transparent text-xs focus:outline-none"
+                                    className="w-24 text-center font-mono font-bold text-slate-800 bg-transparent text-xs focus:outline-none"
                                     placeholder="ادخل القيمة..."
                                   />
                                   <span className="text-slate-600 text-[10px] font-bold">
@@ -8680,7 +8696,7 @@ export default function MawridDashboard() {
                     <input
                       type="hidden"
                       required
-                      value={editingInvoice.supplierId}
+                      value={editingInvoice.supplierId || ""}
                     />
                   </div>
 
@@ -8692,7 +8708,7 @@ export default function MawridDashboard() {
                       type="text"
                       required
                       placeholder="FT-2026-X"
-                      value={editingInvoice.invoiceNumber}
+                      value={editingInvoice.invoiceNumber || ""}
                       onChange={(e) =>
                         setEditingInvoice({
                           ...editingInvoice,
@@ -8728,7 +8744,7 @@ export default function MawridDashboard() {
                       <input
                         type="date"
                         required
-                        value={editingInvoice.dueDate}
+                        value={editingInvoice.dueDate || ""}
                         onChange={(e) =>
                           setEditingInvoice({
                             ...editingInvoice,
@@ -8744,7 +8760,7 @@ export default function MawridDashboard() {
                       </label>
                       <select
                         required
-                        value={editingInvoice.status}
+                        value={editingInvoice.status || "unpaid"}
                         onChange={(e) =>
                           setEditingInvoice({
                             ...editingInvoice,
@@ -9433,7 +9449,7 @@ export default function MawridDashboard() {
                   <input
                     type="text"
                     required
-                    value={editingSupplier.name}
+                    value={editingSupplier.name || ""}
                     onChange={(e) =>
                       setEditingSupplier({
                         ...editingSupplier,
@@ -9451,7 +9467,7 @@ export default function MawridDashboard() {
                   <input
                     type="text"
                     required
-                    value={editingSupplier.company}
+                    value={editingSupplier.company || ""}
                     onChange={(e) =>
                       setEditingSupplier({
                         ...editingSupplier,
@@ -9472,7 +9488,7 @@ export default function MawridDashboard() {
                   <input
                     type="tel"
                     required
-                    value={editingSupplier.phone}
+                    value={editingSupplier.phone || ""}
                     onChange={(e) =>
                       setEditingSupplier({
                         ...editingSupplier,
@@ -9490,7 +9506,7 @@ export default function MawridDashboard() {
                   <input
                     type="text"
                     required
-                    value={editingSupplier.bankAccount}
+                    value={editingSupplier.bankAccount || ""}
                     onChange={(e) =>
                       setEditingSupplier({
                         ...editingSupplier,
@@ -9545,7 +9561,7 @@ export default function MawridDashboard() {
                   ملاحظات وشروط إضافية
                 </label>
                 <textarea
-                  value={editingSupplier.notes}
+                  value={editingSupplier.notes || ""}
                   onChange={(e) =>
                     setEditingSupplier({
                       ...editingSupplier,
@@ -9943,7 +9959,7 @@ export default function MawridDashboard() {
                   </label>
                   <select
                     disabled
-                    value={editingCreditNote.supplierId}
+                    value={editingCreditNote.supplierId || ""}
                     className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-100 font-semibold text-slate-700 focus:outline-none cursor-not-allowed"
                   >
                     {suppliers.map((s) => (
@@ -9960,7 +9976,7 @@ export default function MawridDashboard() {
                   <input
                     type="text"
                     required
-                    value={editingCreditNote.creditNoteNumber}
+                    value={editingCreditNote.creditNoteNumber || ""}
                     onChange={(e) =>
                       setEditingCreditNote({
                         ...editingCreditNote,
@@ -9981,7 +9997,7 @@ export default function MawridDashboard() {
                   <input
                     type="date"
                     required
-                    value={editingCreditNote.dueDate}
+                    value={editingCreditNote.dueDate || ""}
                     onChange={(e) =>
                       setEditingCreditNote({
                         ...editingCreditNote,
