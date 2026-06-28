@@ -3140,7 +3140,7 @@ export default function MawridDashboard() {
         if (supInvoices.length === 0) return;
 
         const totalOriginal = supInvoices.reduce(
-          (sum, inv) => sum + inv.totalAmount,
+          (sum, inv) => sum + (inv.totalAmount - (inv.vatAmount || 0)),
           0,
         );
         const totalCN = supInvoices.reduce(
@@ -3209,7 +3209,8 @@ export default function MawridDashboard() {
           const warehouseName = (inv.warehouse || "").replace(/,/g, " ");
           const vatVal = inv.vatAmount || 0;
 
-          csvContent += `"${name}","${company}","${invoiceNum}","${inv.issueDate || ""}","${inv.dueDate}","${warehouseName}",${inv.totalAmount},${vatVal},${inv.creditNoteAmount || 0},${payableAmount},"${statusText}"\n`;
+          const originalBeforeTax = inv.totalAmount - (inv.vatAmount || 0);
+          csvContent += `"${name}","${company}","${invoiceNum}","${inv.issueDate || ""}","${inv.dueDate}","${warehouseName}",${originalBeforeTax},${vatVal},${inv.creditNoteAmount || 0},${payableAmount},"${statusText}"\n`;
         });
       });
     }
@@ -5522,7 +5523,7 @@ export default function MawridDashboard() {
                     if (supInvoices.length === 0) return;
 
                     const totalOriginal = supInvoices.reduce(
-                      (sum, inv) => sum + inv.totalAmount,
+                      (sum, inv) => sum + (inv.totalAmount - (inv.vatAmount || 0)),
                       0,
                     );
                     const totalCN = supInvoices.reduce(
@@ -5601,11 +5602,13 @@ export default function MawridDashboard() {
                     });
 
                     supInvoices.forEach((inv) => {
+                      const originalBeforeTax = inv.totalAmount - (inv.vatAmount || 0);
+                      const vatAmount = inv.vatAmount || 0;
+                      const creditNoteAmount = inv.creditNoteAmount || 0;
                       items.push({
                         supplier: sup,
                         invoice: inv,
-                        payableAmount:
-                          inv.totalAmount - (inv.creditNoteAmount || 0),
+                        payableAmount: originalBeforeTax + vatAmount - creditNoteAmount,
                       });
                     });
                   });
@@ -6023,7 +6026,7 @@ export default function MawridDashboard() {
                                               {item.invoice.dueDate}
                                             </td>
                                             <td className="py-2.5 px-3 font-mono text-center font-medium">
-                                              {fAmt(item.invoice.totalAmount)}{" "}
+                                              {fAmt(item.invoice.totalAmount - (item.invoice.vatAmount || 0))}{" "}
                                               ج.م
                                             </td>
                                             <td className="py-2.5 px-3 font-mono text-center text-teal-700 font-bold bg-teal-50/20">
