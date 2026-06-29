@@ -3135,7 +3135,7 @@ export default function MawridDashboard() {
     if (reportViewType === "summary") {
       // Summary/Aggregated Excel format
       csvContent +=
-        "المورد والشركة,عمليات الشراء النشطة بالفترة,إجمالي فواتير الشراء الأصلية,إجمالي خصومات الإشعارات الدائنة,إجمالي صافي المطلوب سداده,حالة السداد الإجمالية\n";
+        "المورد والشركة,عمليات الشراء النشطة بالفترة,إجمالي فواتير الشراء الأصلية,إجمالي قيمة الضريبة,إجمالي خصومات الإشعارات الدائنة,إجمالي صافي المطلوب سداده,حالة السداد الإجمالية\n";
 
       reportSuppliers.forEach((sup) => {
         const supInvoices = invoices.filter((i) => {
@@ -3154,6 +3154,10 @@ export default function MawridDashboard() {
 
         const totalOriginal = supInvoices.reduce(
           (sum, inv) => sum + inv.totalAmount,
+          0,
+        );
+        const totalVat = supInvoices.reduce(
+          (sum, inv) => sum + (inv.vatAmount || 0),
           0,
         );
         const totalCN = supInvoices.reduce(
@@ -3180,7 +3184,7 @@ export default function MawridDashboard() {
 
         const nameField = `${sup.name} (${sup.company})`.replace(/,/g, " ");
 
-        csvContent += `"${nameField}",${supInvoices.length},${totalOriginal},${totalCN},${totalNet},"${overallStatusText}"\n`;
+        csvContent += `"${nameField}",${supInvoices.length},${totalOriginal - totalVat},${totalVat},${totalCN},${totalNet},"${overallStatusText}"\n`;
       });
     } else if (reportViewType === "aging") {
       // Debt Aging Excel Format
@@ -5513,6 +5517,7 @@ export default function MawridDashboard() {
                     totalOriginal: number;
                     totalCN: number;
                     totalNet: number;
+                    totalVat: number;
                     overallStatusText: string;
                     badgeClass: string;
                   }> = [];
@@ -5538,6 +5543,10 @@ export default function MawridDashboard() {
 
                     const totalOriginal = supInvoices.reduce(
                       (sum, inv) => sum + inv.totalAmount,
+                      0,
+                    );
+                    const totalVat = supInvoices.reduce(
+                      (sum, inv) => sum + (inv.vatAmount || 0),
                       0,
                     );
                     const totalCN = supInvoices.reduce(
@@ -5576,6 +5585,7 @@ export default function MawridDashboard() {
                       totalOriginal,
                       totalCN,
                       totalNet,
+                      totalVat,
                       overallStatusText,
                       badgeClass,
                     });
@@ -5829,7 +5839,7 @@ export default function MawridDashboard() {
                                     <tr className={`print-only-tr border-b-2 ${tc.headerTr}`}>
                                       <th
                                         colSpan={
-                                          reportViewType === "summary" ? 6 : (reportViewType === "detailed" ? 8 : 7)
+                                          reportViewType === "summary" ? 7 : (reportViewType === "detailed" ? 8 : 7)
                                         }
                                         className="py-3 px-3 text-right bg-slate-50 border border-slate-350"
                                       >
@@ -5857,6 +5867,9 @@ export default function MawridDashboard() {
                                         </th>
                                         <th className="py-2.5 px-3 text-center">
                                           إجمالي الفواتير الأصلية
+                                        </th>
+                                        <th className="py-2.5 px-3 text-center text-teal-800">
+                                          إجمالي قيمة الضريبة
                                         </th>
                                         <th className="py-2.5 px-3 text-center">
                                           إجمالي الخصومات الدائنة
@@ -5926,7 +5939,7 @@ export default function MawridDashboard() {
                                       <tr>
                                         <td
                                           colSpan={
-                                            reportViewType === "summary" ? 6 : (reportViewType === "detailed" ? 8 : 7)
+                                            reportViewType === "summary" ? 7 : (reportViewType === "detailed" ? 8 : 7)
                                           }
                                           className="py-12 text-center text-slate-600 italic font-sans"
                                         >
@@ -5942,6 +5955,7 @@ export default function MawridDashboard() {
                                           totalOriginal: number;
                                           totalCN: number;
                                           totalNet: number;
+                                          totalVat: number;
                                           overallStatusText: string;
                                           badgeClass: string;
                                         }>
@@ -5959,7 +5973,10 @@ export default function MawridDashboard() {
                                             {item.supInvoices.length} فواتير
                                           </td>
                                           <td className="py-2.5 px-3 font-mono text-center font-medium">
-                                            {fAmt(item.totalOriginal)} ج.م
+                                            {fAmt(item.totalOriginal - item.totalVat)} ج.م
+                                          </td>
+                                          <td className="py-2.5 px-3 font-mono text-center text-teal-700 font-bold bg-teal-50/20">
+                                            {fAmt(item.totalVat)} ج.م
                                           </td>
                                           <td className="py-2.5 px-3 font-mono text-rose-600 font-bold text-center">
                                             {item.totalCN > 0
