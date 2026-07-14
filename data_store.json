@@ -1,0 +1,88 @@
+{
+  "suppliers": [
+    {
+      "id": "sup-1782629810083",
+      "name": "العربي",
+      "company": "العربي",
+      "phone": "",
+      "email": "",
+      "bankAccount": "",
+      "category": "تجهيزات ومستلزمات",
+      "address": "",
+      "notes": "",
+      "createdAt": "2026-06-28T06:56:50.083Z"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv-1782629832968",
+      "invoiceNumber": "FT-2026-19284",
+      "supplierId": "sup-1782629810083",
+      "issueDate": "2026-06-01",
+      "dueDate": "2026-07-13",
+      "items": [
+        {
+          "name": "القيمة الأساسية للفاتورة",
+          "price": 15000,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 17100,
+      "status": "unpaid",
+      "notes": "[تم إصدار إشعار دائن مرتبط برقم: CN-FT-2026-19284-5268 بقيمة: 200.00 ج.م]",
+      "warehouse": "المستودع الرئيسي",
+      "creditNoteAmount": 200,
+      "vatRate": 14,
+      "vatAmount": 2100,
+      "customVatAmount": null,
+      "isCustomVat": null,
+      "attachments": []
+    }
+  ],
+  "payments": [],
+  "backups": [],
+  "supplierCategories": [
+    "مواد خام",
+    "خدمات",
+    "أجهزة ومعدات",
+    "مستلزمات مكتبية"
+  ],
+  "warehouses": [
+    "المستودع الرئيسي",
+    "مخزن أكتوبر",
+    "مستودع الإسكندرية"
+  ],
+  "linkedBanks": [],
+  "safeBalance": 0,
+  "creditNotes": [
+    {
+      "id": "cn-1782629843949",
+      "creditNoteNumber": "CN-FT-2026-19284-5268",
+      "supplierId": "sup-1782629810083",
+      "amount": 200,
+      "issueDate": "2026-06-28",
+      "dueDate": "2026-07-13",
+      "status": "active",
+      "items": [
+        {
+          "name": "مرتجع بضائع بالفاتورة",
+          "price": 200,
+          "quantity": 1
+        }
+      ],
+      "notes": "مرتجع / خصم مرتبط بالفاتورة رقم FT-2026-19284 [تم إنشاؤه من الفاتورة: FT-2026-19284]",
+      "attachments": null
+    }
+  ],
+  "users": [
+    {
+      "id": "usr-1784056519395",
+      "name": "Ahmed Salem",
+      "email": "a.salem1798@gmail.com",
+      "passwordHash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "role": "admin",
+      "status": "active",
+      "createdAt": "2026-07-14T19:15:19.395Z"
+    }
+  ]
+}

@@ -67,6 +67,11 @@ export default function MawridAuth({ onLoginSuccess }: MawridAuthProps) {
         })
       });
 
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("عذراً، خادم النظام يقوم بإعادة التشغيل الآن أو الخدمة غير متوفرة مؤقتاً. يرجى المحاولة مرة أخرى بعد ثوانٍ قليلة.");
+      }
+
       const resData = await response.json();
       if (!response.ok) {
         throw new Error(resData.error || "فشل تسجيل الدخول السريع.");
@@ -106,6 +111,11 @@ export default function MawridAuth({ onLoginSuccess }: MawridAuthProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyObj)
       });
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("عذراً، خادم النظام يقوم بإعادة التشغيل الآن أو الخدمة غير متوفرة مؤقتاً. يرجى المحاولة مرة أخرى بعد ثوانٍ قليلة.");
+      }
 
       const resData = await response.json();
       if (!response.ok) {

@@ -10,6 +10,7 @@ import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getDb, isConfigured, getPool } from "./src/db/index.ts";
 import * as schema from "./src/db/schema.ts";
+import { eq } from "drizzle-orm";
 
 // robust global exception & promise rejection catch handlers to prevent the server process from crashing 
 process.on("unhandledRejection", (reason, promise) => {
@@ -745,9 +746,9 @@ async function helperSaveUser(user: any): Promise<void> {
     try {
       const db = getDb();
       // Try to update, otherwise insert
-      const existing = await db.select().from(schema.users).where(require("drizzle-orm").eq(schema.users.id, user.id));
+      const existing = await db.select().from(schema.users).where(eq(schema.users.id, user.id));
       if (existing.length > 0) {
-        await db.update(schema.users).set(user).where(require("drizzle-orm").eq(schema.users.id, user.id));
+        await db.update(schema.users).set(user).where(eq(schema.users.id, user.id));
       } else {
         await db.insert(schema.users).values(user);
       }
@@ -772,7 +773,7 @@ async function helperDeleteUser(userId: string): Promise<void> {
   if (isPostgresActive) {
     try {
       const db = getDb();
-      await db.delete(schema.users).where(require("drizzle-orm").eq(schema.users.id, userId));
+      await db.delete(schema.users).where(eq(schema.users.id, userId));
     } catch (e) {
       console.warn("⚠️ Postgres delete user failed:", e);
     }
