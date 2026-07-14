@@ -14,12 +14,16 @@ export function getApiUrl(path: string): string {
 
   // If we are running in an external frontend environment (e.g. Vercel),
   // automatically default to the Cloud Run backend URL.
-  const isLocalOrRunApp = 
-    window.location.hostname === "localhost" || 
-    window.location.hostname === "127.0.0.1" || 
-    window.location.hostname.endsWith("run.app");
+  const hostname = window.location.hostname.toLowerCase();
+  const isLocalOrDevelopment = 
+    hostname === "localhost" || 
+    hostname === "127.0.0.1" || 
+    hostname.endsWith("run.app") ||
+    hostname.includes("googleusercontent.com") ||
+    hostname.includes("google.com") ||
+    hostname === "";
 
-  if (!isLocalOrRunApp) {
+  if (!isLocalOrDevelopment) {
     const defaultBackend = "https://ais-pre-q3mtusmun2tsb5rur7bk5w-88619399054.europe-west2.run.app";
     const cleanPath = path.startsWith("/") ? path : `/${path}`;
     return `${defaultBackend}${cleanPath}`;
@@ -32,9 +36,13 @@ export function getApiUrl(path: string): string {
  * Checks if the app is currently running on a Vercel or other external deployment.
  */
 export function isVercelEnvironment(): boolean {
-  const isLocalOrRunApp = 
-    window.location.hostname === "localhost" || 
-    window.location.hostname === "127.0.0.1" || 
-    window.location.hostname.endsWith("run.app");
-  return !isLocalOrRunApp;
+  const hostname = window.location.hostname.toLowerCase();
+  const isLocalOrDevelopment = 
+    hostname === "localhost" || 
+    hostname === "127.0.0.1" || 
+    hostname.endsWith("run.app") ||
+    hostname.includes("googleusercontent.com") ||
+    hostname.includes("google.com") ||
+    hostname === "";
+  return !isLocalOrDevelopment;
 }
