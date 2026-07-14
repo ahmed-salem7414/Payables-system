@@ -11,16 +11,30 @@ export function getApiUrl(path: string): string {
     const cleanPath = path.startsWith("/") ? path : `/${path}`;
     return `${cleanBase}${cleanPath}`;
   }
+
+  // If we are running in an external frontend environment (e.g. Vercel),
+  // automatically default to the Cloud Run backend URL.
+  const isLocalOrRunApp = 
+    window.location.hostname === "localhost" || 
+    window.location.hostname === "127.0.0.1" || 
+    window.location.hostname.endsWith("run.app");
+
+  if (!isLocalOrRunApp) {
+    const defaultBackend = "https://ais-pre-q3mtusmun2tsb5rur7bk5w-88619399054.europe-west2.run.app";
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return `${defaultBackend}${cleanPath}`;
+  }
+
   return path;
 }
 
 /**
- * Checks if the app is currently running on a Vercel deployment.
+ * Checks if the app is currently running on a Vercel or other external deployment.
  */
 export function isVercelEnvironment(): boolean {
-  return (
-    window.location.hostname.endsWith("vercel.app") ||
-    window.location.hostname.includes("amplifyapp.com") ||
-    window.location.hostname.includes("github.io")
-  );
+  const isLocalOrRunApp = 
+    window.location.hostname === "localhost" || 
+    window.location.hostname === "127.0.0.1" || 
+    window.location.hostname.endsWith("run.app");
+  return !isLocalOrRunApp;
 }
