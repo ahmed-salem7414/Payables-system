@@ -755,6 +755,7 @@ export default function MawridDashboard() {
     swiftCode: "",
     category: "تجهيزات ومستلزمات",
     address: "",
+    taxRegistrationNumber: "",
     notes: "",
   });
 
@@ -1377,6 +1378,7 @@ export default function MawridDashboard() {
       swiftCode: "",
       category: "تجهيزات ومستلزمات",
       address: "",
+      taxRegistrationNumber: "",
       notes: "",
     });
     showToast(`تمت إضافة المورد ${createdSupplier.name} بنجاح.`);
@@ -3977,15 +3979,19 @@ export default function MawridDashboard() {
                               <span className="text-slate-600 block mb-0.5">
                                 رقم الهاتف:
                               </span>
-                              <span className="font-semibold text-slate-800 font-mono">{sup.phone}
+                              <span className="font-semibold text-slate-800 font-mono">{sup.phone || "—"}</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-600 block mb-0.5">
+                                رقم التسجيل الضريبي:
                               </span>
+                              <span className="font-semibold text-teal-800 font-mono">{sup.taxRegistrationNumber || "—"}</span>
                             </div>
                             <div>
                               <span className="text-slate-600 block mb-0.5">
                                 البريد الإلكتروني:
                               </span>
-                              <span className="font-semibold text-slate-800 break-all">{sup.email}
-                              </span>
+                              <span className="font-semibold text-slate-800 break-all">{sup.email || "—"}</span>
                             </div>
                             <div className="col-span-1 sm:col-span-2">
                               <span className="text-slate-600 block mb-0.5">
@@ -7795,9 +7801,15 @@ export default function MawridDashboard() {
                       <strong className="text-slate-800 font-mono break-all">{printingSupplier.email || "—"}</strong>
                     </div>
                   </div>
-                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-xs font-sans">
-                    <span className="text-slate-500 block mb-1 font-semibold">العنوان الجغرافي والمقر الرسمي المعتمد</span>
-                    <strong className="text-slate-800">{printingSupplier.address || "—"}</strong>
+                  <div className="grid grid-cols-2 gap-6 text-xs font-sans">
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                      <span className="text-slate-500 block mb-1 font-semibold">رقم التسجيل الضريبي</span>
+                      <strong className="text-teal-800 font-mono">{printingSupplier.taxRegistrationNumber || "—"}</strong>
+                    </div>
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                      <span className="text-slate-500 block mb-1 font-semibold">العنوان الجغرافي والمقر الرسمي المعتمد</span>
+                      <strong className="text-slate-800">{printingSupplier.address || "—"}</strong>
+                    </div>
                   </div>
 
                   <h3 className="text-sm font-bold text-emerald-800 border-b border-emerald-100 pb-2 pt-2">
@@ -7897,7 +7909,7 @@ export default function MawridDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
-                    رقم الهاتف التواصل *
+                    رقم الهاتف التواصل (اختياري)
                   </label>
                   <input
                     type="tel"
@@ -7911,7 +7923,27 @@ export default function MawridDashboard() {
                 </div>
                 <div>
                   <label className="text-slate-600 block mb-1">
-                    رقم الحساب البنكي / International IBAN *
+                    رقم التسجيل الضريبي (اختياري)
+                  </label>
+                  <input
+                    type="text"
+                    value={newSupplier.taxRegistrationNumber || ""}
+                    onChange={(e) =>
+                      setNewSupplier({
+                        ...newSupplier,
+                        taxRegistrationNumber: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="123-456-789"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    رقم الحساب البنكي / International IBAN (اختياري)
                   </label>
                   <input
                     type="text"
@@ -7926,12 +7958,9 @@ export default function MawridDashboard() {
                     placeholder="EG000000000000000000000000000"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
-                    الاسم طبقا للحساب البنكي
+                    الاسم طبقا للحساب البنكي (اختياري)
                   </label>
                   <input
                     type="text"
@@ -7946,9 +7975,11 @@ export default function MawridDashboard() {
                     placeholder="أحمد الشافعي البنكي"
                   />
                 </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
-                    SWIFT CODE
+                    SWIFT CODE (اختياري)
                   </label>
                   <input
                     type="text"
@@ -9514,11 +9545,10 @@ export default function MawridDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
-                    رقم الهاتف التواصل *
+                    رقم الهاتف التواصل (اختياري)
                   </label>
                   <input
                     type="tel"
-                    required
                     value={editingSupplier.phone || ""}
                     onChange={(e) =>
                       setEditingSupplier({
@@ -9532,11 +9562,30 @@ export default function MawridDashboard() {
                 </div>
                 <div>
                   <label className="text-slate-600 block mb-1">
-                    رقم الحساب البنكي / International IBAN *
+                    رقم التسجيل الضريبي (اختياري)
                   </label>
                   <input
                     type="text"
-                    required
+                    value={editingSupplier.taxRegistrationNumber || ""}
+                    onChange={(e) =>
+                      setEditingSupplier({
+                        ...editingSupplier,
+                        taxRegistrationNumber: e.target.value,
+                      })
+                    }
+                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-white text-slate-800 font-semibold placeholder:text-slate-400 font-sans focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="123-456-789"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-600 block mb-1">
+                    رقم الحساب البنكي / International IBAN (اختياري)
+                  </label>
+                  <input
+                    type="text"
                     value={editingSupplier.bankAccount || ""}
                     onChange={(e) =>
                       setEditingSupplier({
@@ -9548,12 +9597,9 @@ export default function MawridDashboard() {
                     placeholder="EG000000000000000000000000000"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
-                    الاسم طبقا للحساب البنكي
+                    الاسم طبقا للحساب البنكي (اختياري)
                   </label>
                   <input
                     type="text"
@@ -9568,9 +9614,12 @@ export default function MawridDashboard() {
                     placeholder="أحمد الشافعي البنكي"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-slate-600 block mb-1">
-                    SWIFT CODE
+                    SWIFT CODE (اختياري)
                   </label>
                   <input
                     type="text"
@@ -9614,7 +9663,7 @@ export default function MawridDashboard() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#10b981] hover:bg-emerald-500 active:bg-emerald-700 text-slate-900 font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5 transition-all"
+                  className="bg-[#10b981] hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg cursor-pointer flex items-center gap-1.5 transition-all"
                 >
                   <Save className="w-4 h-4" />
                   <span>حفظ التعديلات</span>

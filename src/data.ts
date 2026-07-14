@@ -35,6 +35,7 @@ export const INITIAL_SUPPLIERS: Supplier[] = [
     bankAccount: "EG93000201201928374859102",
     category: "تجهيزات ومستلزمات",
     address: "المنطقة الصناعية، السادس من أكتوبر، الجيزة",
+    taxRegistrationNumber: "100-245-678",
     notes: "المورد الرئيسي لحديد التسليح والقطاعات المعدنية الهيكلية.",
     createdAt: "2026-01-15T08:30:00Z"
   },
@@ -47,6 +48,7 @@ export const INITIAL_SUPPLIERS: Supplier[] = [
     bankAccount: "EG42000301902837461529348",
     category: "شحن ولوجستيات",
     address: "مبنى الصادرات، ميناء الإسكندرية",
+    taxRegistrationNumber: "200-384-912",
     notes: "شريك الشحن البحري والبري للمواد والتجهيزات المستوردة.",
     createdAt: "2026-02-10T11:45:00Z"
   },
@@ -59,6 +61,7 @@ export const INITIAL_SUPPLIERS: Supplier[] = [
     bankAccount: "EG15000501203948576210349",
     category: "خدمات مكتبية وتكنولوجيا",
     address: "بناية رقم ٤، شارع التسعين، التجمع الخامس، القاهرة",
+    taxRegistrationNumber: "300-192-834",
     notes: "توريد الأجهزة المكتبية وصيانة الحواسيب وتجهيز غرف الاجتماعات.",
     createdAt: "2026-03-01T14:20:00Z"
   },
@@ -71,6 +74,7 @@ export const INITIAL_SUPPLIERS: Supplier[] = [
     bankAccount: "EG72000801293847562019348",
     category: "تعبئة وتغليف",
     address: "المنطقة الحرة، العامرية، الإسكندرية",
+    taxRegistrationNumber: "400-581-293",
     notes: "يوفر علب البولي-إيثيلين ومواد التغليف الكرتونية المعزولة طبياً.",
     createdAt: "2026-04-12T09:15:00Z"
   }

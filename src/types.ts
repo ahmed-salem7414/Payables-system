@@ -31,6 +31,7 @@ export interface Supplier {
   swiftCode?: string;       // SWIFT CODE
   category: string;    // فئة الموردين (مواد خام، خدمات، لوجستيات، إلخ)
   address: string;     // العنوان
+  taxRegistrationNumber?: string; // رقم التسجيل الضريبي
   notes?: string;      // مذكرات إضافية
   createdAt: string;   // تاريخ الإضافة
 }
