@@ -80,6 +80,7 @@ import {
   INITIAL_DOCTORS,
 } from "../data";
 import { MersalLogo } from "./MersalLogo";
+import { getApiUrl } from "../utils/api";
 import MawridAuth from "./MawridAuth";
 import MawridUserManagement from "./MawridUserManagement";
 import {
@@ -992,7 +993,7 @@ export default function MawridDashboard() {
     setFirebaseStatus("connecting");
     showToast("جاري إعادة تشغيل قنوات الاتصال والتحقق من سلامة الجداول...", "info");
     try {
-      const res = await fetch("/api/reconnect-db", {
+      const res = await fetch(getApiUrl("/api/reconnect-db"), {
         method: "POST",
         headers: { "Content-Type": "application/json" }
       });
@@ -1020,7 +1021,7 @@ export default function MawridDashboard() {
     setIsResettingDb(true);
     showToast("جاري تصفير قاعدة بيانات الموردين وإعادة تهيئة الجداول كأول مرة...", "info");
     try {
-      const res = await fetch("/api/reset-db", {
+      const res = await fetch(getApiUrl("/api/reset-db"), {
         method: "POST",
         headers: { "Content-Type": "application/json" }
       });
@@ -1055,7 +1056,7 @@ export default function MawridDashboard() {
     const initializeDataSystem = async () => {
       try {
         setFirebaseStatus("connecting");
-        const res = await fetch("/api/get-store");
+        const res = await fetch(getApiUrl("/api/get-store"));
         if (res.ok) {
           const data = await res.json();
           if (data) {
@@ -1116,7 +1117,7 @@ export default function MawridDashboard() {
       };
 
       try {
-        const res = await fetch("/api/save-store", {
+        const res = await fetch(getApiUrl("/api/save-store"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(stateDump),
@@ -2945,7 +2946,7 @@ export default function MawridDashboard() {
     setAiReportSummary("");
 
     try {
-      const resp = await fetch("/api/reports/ai-summary", {
+      const resp = await fetch(getApiUrl("/api/reports/ai-summary"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -3003,7 +3004,7 @@ export default function MawridDashboard() {
 
     try {
       // Send chat request to our Express server backend API
-      const response = await fetch("/api/chat", {
+      const response = await fetch(getApiUrl("/api/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

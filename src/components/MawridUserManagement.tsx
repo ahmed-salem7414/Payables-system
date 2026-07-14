@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { getApiUrl } from "../utils/api";
 import { 
   Users, 
   UserPlus, 
@@ -47,7 +48,7 @@ export default function MawridUserManagement({ onShowToast, currentUserId }: Maw
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/users");
+      const res = await fetch(getApiUrl("/api/auth/users"));
       const data = await res.json();
       if (res.ok && data.success) {
         setUsers(data.users || []);
@@ -74,7 +75,7 @@ export default function MawridUserManagement({ onShowToast, currentUserId }: Maw
     }
 
     try {
-      const res = await fetch("/api/auth/users/update-role", {
+      const res = await fetch(getApiUrl("/api/auth/users/update-role"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, role: targetRole })
@@ -102,7 +103,7 @@ export default function MawridUserManagement({ onShowToast, currentUserId }: Maw
     const nextStatus = currentStatus === "active" ? "suspended" : "active";
 
     try {
-      const res = await fetch("/api/auth/users/update-status", {
+      const res = await fetch(getApiUrl("/api/auth/users/update-status"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, status: nextStatus })
@@ -132,7 +133,7 @@ export default function MawridUserManagement({ onShowToast, currentUserId }: Maw
     }
 
     try {
-      const res = await fetch("/api/auth/users/delete", {
+      const res = await fetch(getApiUrl("/api/auth/users/delete"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId })
@@ -159,7 +160,7 @@ export default function MawridUserManagement({ onShowToast, currentUserId }: Maw
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch(getApiUrl("/api/auth/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

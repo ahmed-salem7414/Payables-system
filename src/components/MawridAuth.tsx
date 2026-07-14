@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { getApiUrl, isVercelEnvironment } from "../utils/api";
 import { 
   Lock, 
   Mail, 
@@ -10,7 +11,9 @@ import {
   ArrowLeftRight, 
   Users,
   Eye,
-  EyeOff
+  EyeOff,
+  Globe,
+  Settings
 } from "lucide-react";
 
 interface UserInfo {
@@ -39,6 +42,10 @@ export default function MawridAuth({ onLoginSuccess }: MawridAuthProps) {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // External server base URL state
+  const [apiBaseUrl, setApiBaseUrl] = useState(() => localStorage.getItem("mawrid_api_base_url") || "");
+  const [showApiSettings, setShowApiSettings] = useState(() => isVercelEnvironment() && !localStorage.getItem("mawrid_api_base_url"));
+
   // Quick login handler
   const handleQuickLogin = async (presetRole: "admin" | "accountant" | "viewer") => {
     setIsLoading(true);
@@ -58,7 +65,7 @@ export default function MawridAuth({ onLoginSuccess }: MawridAuthProps) {
     };
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(getApiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -69,7 +76,7 @@ export default function MawridAuth({ onLoginSuccess }: MawridAuthProps) {
 
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("عذراً، خادم النظام يقوم بإعادة التشغيل الآن أو الخدمة غير متوفرة مؤقتاً. يرجى المحاولة مرة أخرى بعد ثوانٍ قليلة.");
+        throw new Error("عذراً، خادم النظام غير متصل أو رابط الخادم غير صحيح. يرجى التحقق من الرابط والمحاولة مرة أخرى.");
       }
 
       const resData = await response.json();
@@ -106,7 +113,7 @@ export default function MawridAuth({ onLoginSuccess }: MawridAuthProps) {
       : { name, email, password, role };
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(getApiUrl(endpoint), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyObj)
@@ -114,7 +121,7 @@ export default function MawridAuth({ onLoginSuccess }: MawridAuthProps) {
 
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("عذراً، خادم النظام يقوم بإعادة التشغيل الآن أو الخدمة غير متوفرة مؤقتاً. يرجى المحاولة مرة أخرى بعد ثوانٍ قليلة.");
+        throw new Error("عذراً، خادم النظام غير متصل أو رابط الخادم غير صحيح. يرجى التحقق من الرابط والمحاولة مرة أخرى.");
       }
 
       const resData = await response.json();
@@ -152,14 +159,90 @@ export default function MawridAuth({ onLoginSuccess }: MawridAuthProps) {
       {/* Main container */}
       <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200/80 shadow-2xl p-6 md:p-8 relative z-10 my-8">
         
+        {/* API Settings toggle button */}
+        <div className="absolute top-4 left-4 z-20">
+          <button
+            onClick={() => setShowApiSettings(!showApiSettings)}
+            className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
+              showApiSettings 
+                ? "bg-emerald-50 text-emerald-600 border-emerald-200" 
+                : "bg-slate-50 text-slate-500 hover:text-slate-700 border-slate-200"
+            }`}
+            title="إعدادات الاتصال بالخادم"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        </div>
+
         {/* Header Branding */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center p-3 bg-emerald-50 rounded-xl text-emerald-600 mb-3 border border-emerald-100 shadow-inner">
             <ShieldCheck className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-black text-slate-800 tracking-tight">نظام موِرد للمحاسبة</h1>
           <p className="text-xs text-slate-500 mt-1 font-medium">بوابة تسجيل الدخول وإدارة الصلاحيات والوصول</p>
         </div>
+
+        {/* API Server Configuration Panel */}
+        <AnimatePresence>
+          {showApiSettings && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden mb-6"
+            >
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 text-right">
+                <div className="flex items-center gap-2 text-slate-800">
+                  <Globe className="w-4 h-4 text-emerald-500" />
+                  <span className="text-xs font-bold">ربط خادم نظام مورد (Backend API)</span>
+                </div>
+                <p className="text-[10px] text-slate-500 leading-normal">
+                  إذا كنت تقوم بتشغيل الواجهة الأمامية من منصة خارجية مثل Vercel، يرجى كتابة رابط الخادم النشط في Cloud Run لربط قاعدة البيانات بشكل صحيح:
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="https://your-cloudrun-url.run.app"
+                    value={apiBaseUrl}
+                    onChange={(e) => setApiBaseUrl(e.target.value)}
+                    className="flex-1 bg-white border border-slate-200 rounded-lg text-xs px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-left font-mono"
+                    dir="ltr"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (apiBaseUrl.trim()) {
+                        localStorage.setItem("mawrid_api_base_url", apiBaseUrl.trim());
+                      } else {
+                        localStorage.removeItem("mawrid_api_base_url");
+                      }
+                      setShowApiSettings(false);
+                      window.location.reload(); // Reload to apply API URL changes
+                    }}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer shadow-sm shrink-0"
+                  >
+                    حفظ
+                  </button>
+                </div>
+                {apiBaseUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setApiBaseUrl("");
+                      localStorage.removeItem("mawrid_api_base_url");
+                      setShowApiSettings(false);
+                      window.location.reload();
+                    }}
+                    className="text-[10px] text-red-500 hover:text-red-600 font-bold underline"
+                  >
+                    حذف الرابط والعودة للوضع الافتراضي
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Form Auth Tabs */}
         <div className="flex bg-slate-100 p-1 rounded-xl mb-6 border border-slate-200/40">
