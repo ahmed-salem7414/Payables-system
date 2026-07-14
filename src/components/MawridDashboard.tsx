@@ -131,7 +131,13 @@ export default function MawridDashboard() {
   // Current Active User Context & Permissions Role
   const [currentUser, setCurrentUser] = useState<any>(() => {
     const saved = localStorage.getItem("mawrid_user");
-    return saved ? JSON.parse(saved) : null;
+    return saved ? JSON.parse(saved) : {
+      id: "usr-admin",
+      name: "مدير النظام",
+      email: "admin@mawrid.com",
+      role: "admin",
+      status: "active"
+    };
   });
 
   const [currentRole, setCurrentRole] = useState<UserRole>(() => {
@@ -3660,17 +3666,10 @@ export default function MawridDashboard() {
                   </span>
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  setCurrentUser(null);
-                  localStorage.removeItem("mawrid_user");
-                  localStorage.removeItem("mawrid_user_role");
-                  showToast("تم تسجيل الخروج بنجاح. نراك لاحقاً!", "info");
-                }}
-                className="bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-slate-200 hover:border-red-200 text-[10px] font-black px-2.5 py-1.5 rounded-lg transition-all cursor-pointer shadow-sm"
-              >
-                تسجيل الخروج
-              </button>
+              <div className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-black px-2.5 py-1.5 rounded-lg select-none shadow-sm flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                نشط بكامل الصلاحيات
+              </div>
             </div>
           </div>
         </div>
