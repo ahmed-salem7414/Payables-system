@@ -25,7 +25,7 @@ process.on("uncaughtException", (err) => {
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
 // Allow CORS for external environments (e.g. Vercel frontend)
 app.use((req, res, next) => {
