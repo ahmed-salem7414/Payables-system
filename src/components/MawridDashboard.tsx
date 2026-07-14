@@ -82,7 +82,6 @@ import {
 import { MersalLogo } from "./MersalLogo";
 import { getApiUrl } from "../utils/api";
 import MawridAuth from "./MawridAuth";
-import MawridUserManagement from "./MawridUserManagement";
 import {
   testConnection,
   loadFromUserFirestore,
@@ -3784,19 +3783,7 @@ export default function MawridDashboard() {
               <span>النسخ الاحتياطي التلقائي</span>
             </button>
 
-            {currentRole === UserRole.ADMIN && (
-              <button
-                onClick={() => setActiveTab("users_management")}
-                className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
-                  activeTab === "users_management"
-                    ? "bg-emerald-500/10 text-emerald-600 shadow-[0_2px_12px_rgba(16,185,129,0.08)] border border-emerald-500/25"
-                    : "text-slate-600 hover:bg-slate-100/60 hover:text-slate-900"
-                }`}
-              >
-                <Shield className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
-                <span>إدارة المستخدمين والصلاحيات</span>
-              </button>
-            )}
+
           </div>
         </aside>
 
@@ -6392,19 +6379,7 @@ export default function MawridDashboard() {
             </motion.div>
           )}
 
-          {/* VIEW: USER ROLE AND PERMISSIONS MANAGEMENT */}
-          {activeTab === "users_management" && currentRole === UserRole.ADMIN && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6 text-slate-850"
-            >
-              <MawridUserManagement 
-                onShowToast={showToast} 
-                currentUserId={currentUser?.id || "usr-admin"} 
-              />
-            </motion.div>
-          )}
+
 
           {/* VIEW: WAREHOUSES MANAGEMENT */}
           {activeTab === "warehouses" && (
