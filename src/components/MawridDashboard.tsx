@@ -80,6 +80,8 @@ import {
   INITIAL_DOCTORS,
 } from "../data";
 import { MersalLogo } from "./MersalLogo";
+import MawridAuth from "./MawridAuth";
+import MawridUserManagement from "./MawridUserManagement";
 import {
   testConnection,
   loadFromUserFirestore,
@@ -126,7 +128,19 @@ export default function MawridDashboard() {
   });
 
   // Current Active User Context & Permissions Role
+  const [currentUser, setCurrentUser] = useState<any>(() => {
+    const saved = localStorage.getItem("mawrid_user");
+    return saved ? JSON.parse(saved) : null;
+  });
+
   const [currentRole, setCurrentRole] = useState<UserRole>(() => {
+    const savedUserStr = localStorage.getItem("mawrid_user");
+    if (savedUserStr) {
+      const savedUser = JSON.parse(savedUserStr);
+      if (savedUser.role === "admin") return UserRole.ADMIN;
+      if (savedUser.role === "accountant") return UserRole.ACCOUNTANT;
+      if (savedUser.role === "viewer") return UserRole.VIEWER;
+    }
     const saved = localStorage.getItem("mawrid_user_role");
     return (saved as UserRole) || UserRole.ADMIN;
   });
@@ -3466,6 +3480,25 @@ export default function MawridDashboard() {
     });
   };
 
+  if (!currentUser) {
+    return (
+      <MawridAuth 
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          localStorage.setItem("mawrid_user", JSON.stringify(user));
+          
+          let compatRole = UserRole.VIEWER;
+          if (user.role === "admin") compatRole = UserRole.ADMIN;
+          else if (user.role === "accountant") compatRole = UserRole.ACCOUNTANT;
+          
+          setCurrentRole(compatRole);
+          localStorage.setItem("mawrid_user_role", compatRole);
+          showToast(`مرحباً بك مجدداً، ${user.name}! تم تسجيل الدخول بنجاح.`, "success");
+        }}
+      />
+    );
+  }
+
   return (
     <div className={`min-h-screen flex flex-col bg-[#f8fafc] text-slate-850 font-sans selection:bg-emerald-500 selection:text-white pb-10 ${printingDoctor ? "print-mode-doctor" : ""} ${printingSupplier ? "print-mode-supplier" : ""}`}>
       {/* Toast Alert */}
@@ -3601,34 +3634,42 @@ export default function MawridDashboard() {
               </AnimatePresence>
             </div>
 
-            {/* Simulated Live Profiles & Permissions switcher */}
-            <div className="flex items-center gap-2 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200">
-              <div className="hidden lg:flex flex-col text-left px-2">
-                <span className="text-[10px] text-slate-600 font-medium">
-                  حساب الصلاحيات النشط:
-                </span>
-                <span className="text-xs font-bold text-slate-800">
-                  {currentRole === UserRole.ADMIN
-                    ? "مدير النظام (كامل الصلاحية)"
+            {/* Real Active User Profile with Logout */}
+            <div className="flex items-center gap-3 bg-slate-100/80 p-1.5 px-3 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                  currentRole === UserRole.ADMIN 
+                    ? "bg-purple-100 text-purple-700 border border-purple-200" 
                     : currentRole === UserRole.ACCOUNTANT
-                      ? "محاسب / مدير حسابات"
-                      : "مراقب مالي (عرض فقط)"}
-                </span>
+                      ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                      : "bg-blue-100 text-blue-700 border border-blue-200"
+                }`}>
+                  {currentUser.name.charAt(0)}
+                </div>
+                <div className="hidden sm:flex flex-col text-right">
+                  <span className="text-xs font-extrabold text-slate-800 leading-tight">
+                    {currentUser.name}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-bold mt-0.5">
+                    {currentRole === UserRole.ADMIN
+                      ? "مدير النظام"
+                      : currentRole === UserRole.ACCOUNTANT
+                        ? "محاسب مالي"
+                        : "مراقب مالي"}
+                  </span>
+                </div>
               </div>
-              <select
-                value={currentRole}
-                onChange={(e) => {
-                  setCurrentRole(e.target.value as UserRole);
-                  showToast(
-                    `تم التغيير إلى صلاحيات: ${e.target.value === UserRole.ADMIN ? "مدير النظام" : e.target.value === UserRole.ACCOUNTANT ? "المحاسب" : "مراقب مالي"}`,
-                  );
+              <button
+                onClick={() => {
+                  setCurrentUser(null);
+                  localStorage.removeItem("mawrid_user");
+                  localStorage.removeItem("mawrid_user_role");
+                  showToast("تم تسجيل الخروج بنجاح. نراك لاحقاً!", "info");
                 }}
-                className="bg-white text-slate-800 border border-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                className="bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-slate-200 hover:border-red-200 text-[10px] font-black px-2.5 py-1.5 rounded-lg transition-all cursor-pointer shadow-sm"
               >
-                <option value={UserRole.ADMIN}>مدير النظام</option>
-                <option value={UserRole.ACCOUNTANT}>محاسب مالي</option>
-                <option value={UserRole.VIEWER}>مراقب مالي</option>
-              </select>
+                تسجيل الخروج
+              </button>
             </div>
           </div>
         </div>
@@ -3742,6 +3783,20 @@ export default function MawridDashboard() {
               <Database className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
               <span>النسخ الاحتياطي التلقائي</span>
             </button>
+
+            {currentRole === UserRole.ADMIN && (
+              <button
+                onClick={() => setActiveTab("users_management")}
+                className={`shrink-0 lg:shrink flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-3 text-xs lg:text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${
+                  activeTab === "users_management"
+                    ? "bg-emerald-500/10 text-emerald-600 shadow-[0_2px_12px_rgba(16,185,129,0.08)] border border-emerald-500/25"
+                    : "text-slate-600 hover:bg-slate-100/60 hover:text-slate-900"
+                }`}
+              >
+                <Shield className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
+                <span>إدارة المستخدمين والصلاحيات</span>
+              </button>
+            )}
           </div>
         </aside>
 
@@ -6334,6 +6389,20 @@ export default function MawridDashboard() {
                   ))
                 )}
               </div>
+            </motion.div>
+          )}
+
+          {/* VIEW: USER ROLE AND PERMISSIONS MANAGEMENT */}
+          {activeTab === "users_management" && currentRole === UserRole.ADMIN && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6 text-slate-850"
+            >
+              <MawridUserManagement 
+                onShowToast={showToast} 
+                currentUserId={currentUser?.id || "usr-admin"} 
+              />
             </motion.div>
           )}
 

@@ -74,3 +74,15 @@ export const systemConfig = pgTable("system_config", {
   key: varchar("key", { length: 128 }).primaryKey(),
   value: jsonb("value").notNull(),
 });
+
+// Users Table for Auth and Permissions Management
+export const users = pgTable("users", {
+  id: varchar("id", { length: 128 }).primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull(), // 'admin' | 'accountant' | 'viewer'
+  status: text("status").notNull(), // 'active' | 'suspended'
+  createdAt: text("created_at").notNull(),
+});
+

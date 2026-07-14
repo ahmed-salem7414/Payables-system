@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
@@ -61,7 +62,7 @@ try {
 } catch (error: any) {
   isFirebaseActive = false;
   lastFirebaseError = error?.message || String(error);
-  console.error("❌ Firebase Admin initialization failed:", error);
+  console.warn("⚠️ Firebase Admin initialization failed (will fallback to PostgreSQL or local file storage):", error);
 }
 
 function getFirestoreDb() {
@@ -202,7 +203,7 @@ async function initializeFirestore() {
   } catch (error: any) {
     isFirebaseActive = false;
     lastFirebaseError = error?.message || String(error);
-    console.error("⚠️ Firestore initialization failed due to permissions or configuration. Disabling server-side Firestore operations:", error);
+    console.warn("⚠️ Firestore verification failed due to permissions or configuration. Falling back to PostgreSQL or local storage gracefully:", error);
   }
 }
 
@@ -217,6 +218,13 @@ async function loadFromPostgres(): Promise<any> {
     const cns = await db.select().from(schema.creditNotes);
     const cfgs = await db.select().from(schema.systemConfig);
 
+    let usrs: any[] = [];
+    try {
+      usrs = await db.select().from(schema.users);
+    } catch (e) {
+      console.warn("⚠️ users table load failed (likely not migrated yet):", e);
+    }
+
     // Reconstruct the configs
     const supplierCategories = cfgs.find(c => c.key === "supplierCategories")?.value || ["مواد خام", "خدمات", "أجهزة ومعدات", "مستلزمات مكتبية"];
     const warehouses = cfgs.find(c => c.key === "warehouses")?.value || ["المستودع الرئيسي", "مخزن أكتوبر", "مستودع الإسكندرية"];
@@ -229,6 +237,7 @@ async function loadFromPostgres(): Promise<any> {
       payments: pays,
       backups: bks,
       creditNotes: cns,
+      users: usrs,
       supplierCategories,
       warehouses,
       linkedBanks,
@@ -238,6 +247,10 @@ async function loadFromPostgres(): Promise<any> {
     console.error("Failed to load from Postgres:", error);
     throw error;
   }
+}
+
+function hashPassword(password: string): string {
+  return crypto.createHash("sha256").update(password).digest("hex");
 }
 
 async function saveToPostgres(data: any) {
@@ -253,6 +266,12 @@ async function saveToPostgres(data: any) {
       await tx.delete(schema.backups);
       await tx.delete(schema.creditNotes);
       await tx.delete(schema.systemConfig);
+
+      try {
+        await tx.delete(schema.users);
+      } catch (e) {
+        console.warn("⚠️ users delete bypassed during transactional sync (table not migrated):", e);
+      }
 
       // Insert suppliers
       if (Array.isArray(data.suppliers) && data.suppliers.length > 0) {
@@ -326,6 +345,15 @@ async function saveToPostgres(data: any) {
         await tx.insert(schema.creditNotes).values(creditNotesToSave);
       }
 
+      // Insert users if available
+      if (Array.isArray(data.users) && data.users.length > 0) {
+        try {
+          await tx.insert(schema.users).values(data.users);
+        } catch (e) {
+          console.warn("⚠️ users insert bypassed during transactional sync (table not migrated):", e);
+        }
+      }
+
       // Insert config key-values
       const configsToSave = [
         { key: "supplierCategories", value: data.supplierCategories || [] },
@@ -367,6 +395,21 @@ async function initializePostgres(forceRecreate = false) {
         const localData = JSON.parse(fs.readFileSync(STORE_FILE, "utf-8"));
         await saveToPostgres(localData);
         console.log("✅ Seed completed successfully!");
+      } else {
+        // Seed users only if empty in DB but exists locally
+        try {
+          const existingUsers = await db.select().from(schema.users);
+          if (existingUsers.length === 0 && fs.existsSync(STORE_FILE)) {
+            console.log("💾 Seeding users table in Postgres...");
+            const localData = JSON.parse(fs.readFileSync(STORE_FILE, "utf-8"));
+            if (Array.isArray(localData.users) && localData.users.length > 0) {
+              await db.insert(schema.users).values(localData.users);
+              console.log("✅ Users seed in Postgres completed!");
+            }
+          }
+        } catch (ue) {
+          console.warn("⚠️ Bypassed users table seed in Postgres (not migrated):", ue);
+        }
       }
     }
   } catch (error: any) {
@@ -379,6 +422,36 @@ async function initializePostgres(forceRecreate = false) {
 async function initializeDataStore() {
   console.log("🔌 System Initializing Local Cache File...");
   try {
+    const defaultUsers = [
+      {
+        id: "usr-admin",
+        name: "مدير النظام",
+        email: "admin@mawrid.com",
+        passwordHash: hashPassword("admin"),
+        role: "admin",
+        status: "active",
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: "usr-accountant",
+        name: "المحاسب المالي",
+        email: "accountant@mawrid.com",
+        passwordHash: hashPassword("accountant"),
+        role: "accountant",
+        status: "active",
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: "usr-viewer",
+        name: "المراقب المالي",
+        email: "viewer@mawrid.com",
+        passwordHash: hashPassword("viewer"),
+        role: "viewer",
+        status: "active",
+        createdAt: new Date().toISOString()
+      }
+    ];
+
     if (!fs.existsSync(STORE_FILE)) {
       console.log("Initializing first-time pristine defaults to local file store...");
       const pristineState = {
@@ -390,11 +463,22 @@ async function initializeDataStore() {
         warehouses: ["المستودع الرئيسي", "مخزن أكتوبر", "مستودع الإسكندرية"],
         linkedBanks: [],
         safeBalance: 0,
-        creditNotes: []
+        creditNotes: [],
+        users: defaultUsers
       };
       fs.writeFileSync(STORE_FILE, JSON.stringify(pristineState, null, 2), "utf-8");
     } else {
-      console.log("✅ Local data_store.json detected.");
+      console.log("✅ Local data_store.json detected. Verifying user seeding...");
+      const localData = JSON.parse(fs.readFileSync(STORE_FILE, "utf-8"));
+      let updated = false;
+      if (!localData.users || !Array.isArray(localData.users) || localData.users.length === 0) {
+        localData.users = defaultUsers;
+        updated = true;
+      }
+      if (updated) {
+        fs.writeFileSync(STORE_FILE, JSON.stringify(localData, null, 2), "utf-8");
+        console.log("✅ Seeded default test accounts into local cache file!");
+      }
     }
   } catch (error) {
     console.error("Error during Datastore initialization:", error);
@@ -613,6 +697,252 @@ app.post("/api/reset-db", async (req, res) => {
       postgresError: err?.message || String(err),
       message: "فشلت عملية إعادة التهيئة: " + (err?.message || String(err))
     });
+  }
+});
+
+
+// ==========================================
+// AUTHENTICATION & USER MANAGEMENT API ROUTES
+// ==========================================
+
+// Helper to load users from the best available source
+async function helperGetUsersList(): Promise<any[]> {
+  // 1. Try Postgres
+  if (isPostgresActive) {
+    try {
+      const db = getDb();
+      return await db.select().from(schema.users);
+    } catch (e) {
+      console.warn("⚠️ Postgres users load skipped, falling back to local file:", e);
+    }
+  }
+  // 2. Fallback to data_store.json
+  if (fs.existsSync(STORE_FILE)) {
+    const data = JSON.parse(fs.readFileSync(STORE_FILE, "utf-8"));
+    return Array.isArray(data.users) ? data.users : [];
+  }
+  return [];
+}
+
+// Helper to save a single user or full users list
+async function helperSaveUser(user: any): Promise<void> {
+  // 1. Save locally
+  if (fs.existsSync(STORE_FILE)) {
+    const data = JSON.parse(fs.readFileSync(STORE_FILE, "utf-8"));
+    if (!Array.isArray(data.users)) data.users = [];
+    
+    const existingIndex = data.users.findIndex((u: any) => u.id === user.id || u.email.toLowerCase() === user.email.toLowerCase());
+    if (existingIndex > -1) {
+      data.users[existingIndex] = { ...data.users[existingIndex], ...user };
+    } else {
+      data.users.push(user);
+    }
+    fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2), "utf-8");
+  }
+
+  // 2. Save to Postgres
+  if (isPostgresActive) {
+    try {
+      const db = getDb();
+      // Try to update, otherwise insert
+      const existing = await db.select().from(schema.users).where(require("drizzle-orm").eq(schema.users.id, user.id));
+      if (existing.length > 0) {
+        await db.update(schema.users).set(user).where(require("drizzle-orm").eq(schema.users.id, user.id));
+      } else {
+        await db.insert(schema.users).values(user);
+      }
+    } catch (e) {
+      console.warn("⚠️ Postgres save user failed:", e);
+    }
+  }
+}
+
+// Helper to delete user
+async function helperDeleteUser(userId: string): Promise<void> {
+  // 1. Delete locally
+  if (fs.existsSync(STORE_FILE)) {
+    const data = JSON.parse(fs.readFileSync(STORE_FILE, "utf-8"));
+    if (Array.isArray(data.users)) {
+      data.users = data.users.filter((u: any) => u.id !== userId);
+      fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2), "utf-8");
+    }
+  }
+
+  // 2. Delete from Postgres
+  if (isPostgresActive) {
+    try {
+      const db = getDb();
+      await db.delete(schema.users).where(require("drizzle-orm").eq(schema.users.id, userId));
+    } catch (e) {
+      console.warn("⚠️ Postgres delete user failed:", e);
+    }
+  }
+}
+
+// 1. Authentication: Login
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: "يرجى إدخال البريد الإلكتروني وكلمة المرور." });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const usersList = await helperGetUsersList();
+    const user = usersList.find((u: any) => u.email.toLowerCase() === normalizedEmail);
+
+    if (!user) {
+      return res.status(401).json({ error: "البريد الإلكتروني هذا غير مسجل في النظام." });
+    }
+
+    const hashedInput = hashPassword(password);
+    if (user.passwordHash !== hashedInput) {
+      return res.status(401).json({ error: "كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى." });
+    }
+
+    if (user.status === "suspended") {
+      return res.status(403).json({ error: "هذا الحساب معطل حالياً من قبل الإدارة. يرجى مراجعة مدير النظام." });
+    }
+
+    // Success response: return user info without password hash
+    const { passwordHash, ...safeUser } = user;
+    return res.json({
+      success: true,
+      message: "تم تسجيل الدخول بنجاح!",
+      user: safeUser
+    });
+  } catch (error: any) {
+    console.error("Login error:", error);
+    return res.status(500).json({ error: "حدث خطأ أثناء عملية تسجيل الدخول." });
+  }
+});
+
+// 2. Authentication: Register
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ error: "يرجى ملء كافة الحقول المطلوبة." });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const usersList = await helperGetUsersList();
+    const alreadyExists = usersList.some((u: any) => u.email.toLowerCase() === normalizedEmail);
+
+    if (alreadyExists) {
+      return res.status(400).json({ error: "البريد الإلكتروني هذا مسجل بالفعل." });
+    }
+
+    const newUser = {
+      id: "usr-" + Date.now(),
+      name: name.trim(),
+      email: normalizedEmail,
+      passwordHash: hashPassword(password),
+      role: role, // 'admin' | 'accountant' | 'viewer'
+      status: "active",
+      createdAt: new Date().toISOString()
+    };
+
+    await helperSaveUser(newUser);
+
+    const { passwordHash, ...safeUser } = newUser;
+    return res.json({
+      success: true,
+      message: "تم تسجيل الحساب الجديد بنجاح!",
+      user: safeUser
+    });
+  } catch (error: any) {
+    console.error("Registration error:", error);
+    return res.status(500).json({ error: "حدث خطأ أثناء تسجيل الحساب الجديد." });
+  }
+});
+
+// 3. User Management: List Users (Admin only client-side check)
+app.get("/api/auth/users", async (req, res) => {
+  try {
+    const usersList = await helperGetUsersList();
+    const safeUsers = usersList.map(({ passwordHash, ...safe }) => safe);
+    return res.json({
+      success: true,
+      users: safeUsers
+    });
+  } catch (error: any) {
+    console.error("Get users error:", error);
+    return res.status(500).json({ error: "حدث خطأ أثناء جلب قائمة المستخدمين." });
+  }
+});
+
+// 4. User Management: Update User Role (Admin only check client-side)
+app.post("/api/auth/users/update-role", async (req, res) => {
+  try {
+    const { userId, role } = req.body;
+    if (!userId || !role) {
+      return res.status(400).json({ error: "البيانات غير مكتملة." });
+    }
+
+    const usersList = await helperGetUsersList();
+    const user = usersList.find((u: any) => u.id === userId);
+    if (!user) {
+      return res.status(404).json({ error: "المستخدم غير موجود." });
+    }
+
+    user.role = role;
+    await helperSaveUser(user);
+
+    return res.json({
+      success: true,
+      message: "تم تحديث الصلاحية بنجاح!"
+    });
+  } catch (error: any) {
+    console.error("Update role error:", error);
+    return res.status(500).json({ error: "حدث خطأ أثناء تحديث الصلاحية." });
+  }
+});
+
+// 5. User Management: Update User Status (Suspend/Activate)
+app.post("/api/auth/users/update-status", async (req, res) => {
+  try {
+    const { userId, status } = req.body;
+    if (!userId || !status) {
+      return res.status(400).json({ error: "البيانات غير مكتملة." });
+    }
+
+    const usersList = await helperGetUsersList();
+    const user = usersList.find((u: any) => u.id === userId);
+    if (!user) {
+      return res.status(404).json({ error: "المستخدم غير موجود." });
+    }
+
+    user.status = status; // 'active' | 'suspended'
+    await helperSaveUser(user);
+
+    return res.json({
+      success: true,
+      message: status === "active" ? "تم تفعيل الحساب بنجاح!" : "تم تعطيل الحساب بنجاح!"
+    });
+  } catch (error: any) {
+    console.error("Update status error:", error);
+    return res.status(500).json({ error: "حدث خطأ أثناء تعديل حالة الحساب." });
+  }
+});
+
+// 6. User Management: Delete User
+app.post("/api/auth/users/delete", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: "البيانات غير مكتملة." });
+    }
+
+    await helperDeleteUser(userId);
+
+    return res.json({
+      success: true,
+      message: "تم حذف المستخدم بنجاح من النظام!"
+    });
+  } catch (error: any) {
+    console.error("Delete user error:", error);
+    return res.status(500).json({ error: "حدث خطأ أثناء حذف المستخدم." });
   }
 });
 
