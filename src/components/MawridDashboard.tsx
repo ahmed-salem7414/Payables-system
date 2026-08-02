@@ -626,6 +626,9 @@ export default function MawridDashboard() {
   const [invoiceTypeFilter, setInvoiceTypeFilter] = useState<
     "all" | "invoices" | "credit_notes"
   >("all");
+  const [invoiceStartDate, setInvoiceStartDate] = useState<string>("");
+  const [invoiceEndDate, setInvoiceEndDate] = useState<string>("");
+  const [invoiceDateType, setInvoiceDateType] = useState<"issue_date" | "due_date">("issue_date");
 
   // Selected Report Parameters
   const [reportStartDate, setReportStartDate] = useState<string>(() => {
@@ -3312,7 +3315,12 @@ export default function MawridDashboard() {
         supplier.company.toLowerCase().includes(invoiceSearch.toLowerCase()));
     const matchesStatus =
       invoiceStatusFilter === "all" || i.status === invoiceStatusFilter;
-    return matchesSearch && matchesStatus;
+
+    const targetDate = (invoiceDateType === "due_date" ? i.dueDate : i.issueDate) || "";
+    const matchesStartDate = !invoiceStartDate || targetDate >= invoiceStartDate;
+    const matchesEndDate = !invoiceEndDate || targetDate <= invoiceEndDate;
+
+    return matchesSearch && matchesStatus && matchesStartDate && matchesEndDate;
   });
 
   const filteredCreditNotes = creditNotes.filter((cn) => {
@@ -3329,7 +3337,12 @@ export default function MawridDashboard() {
       invoiceStatusFilter === "all" ||
       (invoiceStatusFilter === "unpaid" && cn.status === "active") ||
       (invoiceStatusFilter === "paid" && cn.status === "applied");
-    return matchesSearch && matchesStatus;
+
+    const targetDate = cn.issueDate || "";
+    const matchesStartDate = !invoiceStartDate || targetDate >= invoiceStartDate;
+    const matchesEndDate = !invoiceEndDate || targetDate <= invoiceEndDate;
+
+    return matchesSearch && matchesStatus && matchesStartDate && matchesEndDate;
   });
 
   // Analytics distribution data for Recharts
@@ -4441,28 +4454,36 @@ export default function MawridDashboard() {
                   className="space-y-6"
                 >
                   {/* Search and filter toolbar */}
-                  <div className="bg-white backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-fadeIn">
-                    <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-                      {/* Invoice search */}
-                      <div className="relative w-full md:w-64">
-                        <input
-                          type="text"
-                          placeholder="ابحث برقم الفاتورة، الإشعار أو المورد..."
-                          value={invoiceSearch}
-                          onChange={(e) => setInvoiceSearch(e.target.value)}
-                          className="w-full text-xs border border-slate-200/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 border-slate-200 text-slate-800 transition-all"
-                        />
-                        <Search className="w-4 h-4 text-slate-500 absolute right-3 top-3.5" />
+                  <div className="bg-white backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-xl space-y-3 animate-fadeIn">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                      {/* Search */}
+                      <div className="lg:col-span-4 flex flex-col gap-1 w-full">
+                        <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
+                          <Search className="w-3 h-3 text-slate-500" /> البحث:
+                        </label>
+                        <div className="relative w-full">
+                          <input
+                            type="text"
+                            placeholder="ابحث برقم الفاتورة، الإشعار أو المورد..."
+                            value={invoiceSearch}
+                            onChange={(e) => setInvoiceSearch(e.target.value)}
+                            className="w-full text-xs border border-slate-200/80 px-3 py-2.5 pr-8 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 text-slate-800 font-bold h-[42px] transition-all"
+                          />
+                          <Search className="w-4 h-4 text-slate-400 absolute right-2.5 top-[13px]" />
+                        </div>
                       </div>
 
                       {/* Status filter */}
-                      <div className="w-full md:w-auto">
+                      <div className="lg:col-span-3 flex flex-col gap-1 w-full">
+                        <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
+                          <span>🏷️</span> الحالة:
+                        </label>
                         <select
                           value={invoiceStatusFilter}
                           onChange={(e) =>
                             setInvoiceStatusFilter(e.target.value)
                           }
-                          className="w-full text-xs border border-slate-200/80 px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer bg-[#f8fafc]/80 text-slate-900 font-bold transition-all"
+                          className="w-full text-xs border border-slate-200/80 px-2.5 py-2.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer bg-slate-50 text-slate-800 font-bold font-sans h-[42px] transition-all"
                         >
                           <option value="all">كل حالات السداد / التطبيق</option>
                           <option value="unpaid">غير مسدد / كإشعار نشط</option>
@@ -4471,15 +4492,90 @@ export default function MawridDashboard() {
                           </option>
                         </select>
                       </div>
+
+                      {/* Date type filter */}
+                      <div className="lg:col-span-2 flex flex-col gap-1 w-full">
+                        <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
+                          <span>📅</span> التاريخ بـ:
+                        </label>
+                        <select
+                          value={invoiceDateType}
+                          onChange={(e) =>
+                            setInvoiceDateType(e.target.value as "issue_date" | "due_date")
+                          }
+                          className="w-full text-xs border border-slate-200/80 px-2 py-2.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500 cursor-pointer bg-slate-50 text-slate-800 font-bold font-sans h-[42px] transition-all"
+                        >
+                          <option value="issue_date">🕒 تاريخ الإصدار</option>
+                          <option value="due_date">⚠️ تاريخ الاستحقاق</option>
+                        </select>
+                      </div>
+
+                      {/* Date Range (من - إلى) */}
+                      <div className="lg:col-span-3 flex flex-col gap-1 w-full">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] text-slate-800 font-bold font-sans flex items-center gap-1">
+                            <span>📅</span> نطاق التواريخ (من - إلى):
+                          </label>
+                          {(invoiceStartDate || invoiceEndDate) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setInvoiceStartDate("");
+                                setInvoiceEndDate("");
+                              }}
+                              className="text-[10px] text-rose-600 hover:text-rose-700 font-bold hover:underline cursor-pointer"
+                            >
+                              مسح التاريخ
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 w-full">
+                          <div className="relative">
+                            <span className="absolute right-2 top-[13px] text-[9px] font-bold text-slate-400 select-none">من</span>
+                            <input
+                              type="date"
+                              value={invoiceStartDate}
+                              onChange={(e) => setInvoiceStartDate(e.target.value)}
+                              className="bg-slate-50 text-slate-800 border border-slate-200 text-xs pr-6 pl-1 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full h-[42px] transition-all text-right"
+                            />
+                          </div>
+                          <div className="relative">
+                            <span className="absolute right-2 top-[13px] text-[9px] font-bold text-slate-400 select-none">إلى</span>
+                            <input
+                              type="date"
+                              value={invoiceEndDate}
+                              onChange={(e) => setInvoiceEndDate(e.target.value)}
+                              className="bg-slate-50 text-slate-800 border border-slate-200 text-xs pr-6 pl-1 py-2 rounded-xl focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold font-mono w-full h-[42px] transition-all text-right"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    <button
-                      onClick={() => setShowAddInvoiceModal(true)}
-                      className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md cursor-pointer transition-all duration-200"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>تسجيل فاتورة جديدة</span>
-                    </button>
+                    {/* Bottom bar with action button & active filter badges */}
+                    <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {(invoiceStartDate || invoiceEndDate) && (
+                          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xs">
+                            <span>📅 مفلتر بتاريخ ({invoiceDateType === "due_date" ? "الاستحقاق" : "الإصدار"}):</span>
+                            <span className="font-mono dir-ltr">{invoiceStartDate || "البداية"} ← {invoiceEndDate || "الآن"}</span>
+                          </span>
+                        )}
+                        {invoiceSearch && (
+                          <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
+                            بحث: "{invoiceSearch}"
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => setShowAddInvoiceModal(true)}
+                        className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md cursor-pointer transition-all duration-200 mr-auto"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>تسجيل فاتورة جديدة</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Sub-tabs selector for Invoices & Credit Notes */}
